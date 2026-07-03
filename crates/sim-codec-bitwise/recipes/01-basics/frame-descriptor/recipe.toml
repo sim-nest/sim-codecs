@@ -1,0 +1,8 @@
+id = "frame-descriptor"
+title = "Frame descriptor"
+codec = "lisp"
+setup = "setup.siml"
+purpose = "purpose.md"
+order = 10
+tags = ["codec", "bitwise", "frame"]
+requires = ["core", "codec/lisp", "codec/bitwise"]

@@ -1,0 +1,8 @@
+id = "tagged-string"
+title = "Tagged string"
+codec = "json"
+setup = "setup.simj"
+purpose = "purpose.md"
+order = 10
+tags = ["codec", "json", "tagged"]
+requires = ["codec/json"]

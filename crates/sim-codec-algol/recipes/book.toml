@@ -1,0 +1,5 @@
+book = "codec/algol"
+title = "Algol Codec"
+summary = "Rust-clean textual expression surface with Pratt parsing."
+order = 260
+chapters = ["01-basics"]

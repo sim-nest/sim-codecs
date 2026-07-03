@@ -1,0 +1,5 @@
+book = "codec/bitwise"
+title = "Bitwise Codec"
+summary = "Canonical minimal bit-packed expression frames."
+order = 225
+chapters = ["01-basics"]

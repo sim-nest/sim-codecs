@@ -1,0 +1,5 @@
+book = "codec/compare"
+title = "Codec Compare"
+summary = "Measured bitwise-vs-binary size and speed comparison."
+order = 226
+chapters = ["01-basics"]

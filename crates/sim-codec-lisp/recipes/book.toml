@@ -1,0 +1,5 @@
+book = "codec/lisp"
+title = "Lisp Codec"
+summary = "Lisp surface forms for SIM expressions."
+order = 20
+chapters = ["01-basics", "02-loadable"]

@@ -1,0 +1,5 @@
+book = "codec/doc"
+title = "Document Codec"
+summary = "Document decoding and provenance-preserving chunk descriptors."
+order = 40
+chapters = ["01-basics"]

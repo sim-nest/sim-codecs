@@ -1,0 +1,5 @@
+book = "codec/mcp"
+title = "MCP Codec"
+summary = "MCP JSON-RPC request, response, notification, and error envelopes."
+order = 250
+chapters = ["01-basics"]

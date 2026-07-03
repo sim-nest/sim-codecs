@@ -1,0 +1,8 @@
+id = "positions-and-limits"
+title = "Positions and limits"
+codec = "lisp"
+setup = "setup.siml"
+purpose = "purpose.md"
+order = 10
+tags = ["codec", "position", "limits"]
+requires = ["core", "codec/lisp"]

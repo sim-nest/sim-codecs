@@ -1,0 +1,3 @@
+title = "Loadable"
+order = 20
+summary = "Decode a source form through the loadable Lisp codec."

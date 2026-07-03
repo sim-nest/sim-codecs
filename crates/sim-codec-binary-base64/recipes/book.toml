@@ -1,0 +1,5 @@
+book = "codec/binary-base64"
+title = "Binary Base64 Codec"
+summary = "ASCII-safe Base64 text wrapper around binary frames."
+order = 230
+chapters = ["01-basics"]

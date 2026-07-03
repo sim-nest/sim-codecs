@@ -1,0 +1,5 @@
+book = "codec/core"
+title = "Codec Core"
+summary = "Shared codec runtime traits, positions, and limits."
+order = 210
+chapters = ["01-basics"]

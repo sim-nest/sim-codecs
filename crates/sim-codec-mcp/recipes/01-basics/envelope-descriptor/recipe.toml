@@ -1,0 +1,8 @@
+id = "envelope-descriptor"
+title = "Envelope descriptor"
+codec = "lisp"
+setup = "setup.siml"
+purpose = "purpose.md"
+order = 10
+tags = ["codec", "mcp", "json-rpc"]
+requires = ["core", "codec/lisp"]

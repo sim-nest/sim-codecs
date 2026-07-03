@@ -1,0 +1,11 @@
+id = "native-script"
+title = "Decode a native-loaded script"
+codec = "lisp"
+setup = "setup.siml"
+purpose = "purpose.md"
+order = 20
+tags = ["codec", "lisp", "native"]
+requires = ["codec/lisp"]
+[[expect]]
+form = 0
+result = "native-codec-loaded"

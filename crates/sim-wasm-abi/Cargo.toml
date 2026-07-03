@@ -1,0 +1,23 @@
+[package]
+name = "sim-wasm-abi"
+version = "0.1.0"
+edition = "2024"
+license = "MPL-2.0"
+description = "SIM workspace package for sim wasm abi."
+readme = "README.md"
+publish = true
+repository = "https://github.com/sim-nest/sim-codecs"
+homepage = "https://github.com/sim-nest/sim-codecs"
+
+[features]
+default = []
+audio = []
+model = []
+
+[dependencies]
+sim-codec-binary = { version = "0.1.0", path = "../sim-codec-binary" }
+sim-kernel = { version = "0.1.0" }
+wasmi = "0.51.5"
+
+[dev-dependencies]
+wat = "1.245.1"

@@ -1,0 +1,8 @@
+id = "pratt-surface"
+title = "Pratt surface descriptor"
+codec = "lisp"
+setup = "setup.siml"
+purpose = "purpose.md"
+order = 10
+tags = ["codec", "algol", "pratt"]
+requires = ["core", "codec/lisp"]

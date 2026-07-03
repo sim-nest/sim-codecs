@@ -1,0 +1,29 @@
+
+[workspace]
+resolver = "3"
+members = [
+  "crates/sim-codec",
+  "crates/sim-codec-algol",
+  "crates/sim-codec-binary",
+  "crates/sim-codec-binary-base64",
+  "crates/sim-codec-bitwise",
+  "crates/sim-codec-bitwise-base64",
+  "crates/sim-codec-compare",
+  "crates/sim-codec-chat",
+  "crates/sim-codec-doc",
+  "crates/sim-codec-json",
+  "crates/sim-codec-lisp",
+  "crates/sim-codec-mcp",
+  "crates/sim-test-support",
+  "crates/sim-wasm-abi",
+  "xtask",
+]
+
+[workspace.package]
+edition = "2024"
+license = "MPL-2.0"
+repository = "https://github.com/sim-nest/sim-codecs"
+homepage = "https://github.com/sim-nest/sim-codecs"
+
+[workspace.lints.rust]
+unsafe_code = "forbid"

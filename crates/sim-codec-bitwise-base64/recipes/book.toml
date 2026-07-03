@@ -1,0 +1,5 @@
+book = "codec/bitwise-base64"
+title = "Bitwise Base64 Codec"
+summary = "ASCII-safe Base64 text wrapper around canonical bitwise frames."
+order = 235
+chapters = ["01-basics"]

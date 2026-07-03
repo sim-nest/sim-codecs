@@ -1,0 +1,5 @@
+book = "codec/binary"
+title = "Binary Codec"
+summary = "Canonical SLB8 expression frames."
+order = 220
+chapters = ["01-basics"]

@@ -1,0 +1,5 @@
+book = "codec/chat"
+title = "Chat Codec"
+summary = "Chat transcript request and response forms."
+order = 240
+chapters = ["01-basics"]

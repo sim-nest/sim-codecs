@@ -1,0 +1,5 @@
+book = "codec/json"
+title = "JSON Codec"
+summary = "Tagged JSON expression forms."
+order = 30
+chapters = ["01-basics"]

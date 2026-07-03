@@ -1,0 +1,8 @@
+id = "run-report"
+title = "Run the comparison report"
+codec = "lisp"
+setup = "setup.siml"
+purpose = "purpose.md"
+order = 10
+tags = ["codec", "compare", "bitwise", "binary"]
+requires = ["core", "codec/lisp"]

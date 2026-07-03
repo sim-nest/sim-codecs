@@ -1,0 +1,19 @@
+[package]
+name = "sim-test-support"
+version = "0.1.0"
+edition = "2024"
+license = "MPL-2.0"
+description = "Shared test harness for SIM crates."
+readme = "README.md"
+publish = true
+repository = "https://github.com/sim-nest/sim-codecs"
+homepage = "https://github.com/sim-nest/sim-codecs"
+
+[dependencies]
+sim-citizen-derive = { version = "0.1.0" }
+sim-codec = { version = "0.1.0", path = "../sim-codec" }
+sim-kernel = { version = "0.1.0" }
+sim-value = { version = "0.1.0" }
+
+[lints]
+workspace = true

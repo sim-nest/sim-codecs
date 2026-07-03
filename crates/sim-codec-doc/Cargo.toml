@@ -1,0 +1,24 @@
+[package]
+name = "sim-codec-doc"
+version = "0.1.0"
+edition = "2024"
+license = "MPL-2.0"
+description = "SIM workspace package for sim codec doc."
+readme = "README.md"
+publish = true
+repository = "https://github.com/sim-nest/sim-codecs"
+homepage = "https://github.com/sim-nest/sim-codecs"
+
+[dependencies]
+sim-codec = { version = "0.1.0", path = "../sim-codec" }
+sim-cookbook = { version = "0.1.0" }
+sim-kernel = { version = "0.1.0" }
+sim-value = { version = "0.1.0" }
+
+[dev-dependencies]
+sim-codec-json = { version = "0.1.0", path = "../sim-codec-json" }
+sim-codec-lisp = { version = "0.1.0", path = "../sim-codec-lisp" }
+sim-test-support = { version = "0.1.0", path = "../sim-test-support" }
+
+[build-dependencies]
+sim-cookbook = { version = "0.1.0" }
