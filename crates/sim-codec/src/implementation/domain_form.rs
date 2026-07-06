@@ -82,6 +82,80 @@ impl DomainForm {
             None => Err(DomainFormError::MissingField(key.to_owned())),
         }
     }
+
+    /// The atom or string text of keyed field `key`.
+    ///
+    /// Accepts either a bare atom or a quoted string, returning the underlying
+    /// text in both cases (the reverse of the `#(...)` writer, which renders a
+    /// symbol as an atom and a string with quotes).
+    pub fn field_atom_or_string(&self, name: &str) -> Result<&str, DomainFormError> {
+        match self.field(name) {
+            Some(DomainValue::Atom(value) | DomainValue::String(value)) => Ok(value),
+            Some(_) => Err(DomainFormError::WrongFieldKind(name.to_owned())),
+            None => Err(DomainFormError::MissingField(name.to_owned())),
+        }
+    }
+
+    /// The rendered [`render_text`](DomainValue::render_text) form of keyed
+    /// field `name`.
+    ///
+    /// Errors with [`MissingField`](DomainFormError::MissingField) when the
+    /// field is absent; any present value renders (an atom to its text, a
+    /// string to its quoted form, a list or nested form to its `#(...)`/`[...]`
+    /// text).
+    pub fn field_text(&self, name: &str) -> Result<String, DomainFormError> {
+        match self.field(name) {
+            Some(value) => Ok(value.render_text()),
+            None => Err(DomainFormError::MissingField(name.to_owned())),
+        }
+    }
+}
+
+impl DomainValue {
+    /// The nested form, if this value is a `#(...)` form.
+    ///
+    /// Errors with [`WrongValueKind`](DomainFormError::WrongValueKind) for a
+    /// list, string, or atom.
+    pub fn as_form(&self) -> Result<&DomainForm, DomainFormError> {
+        match self {
+            DomainValue::Form(form) => Ok(form),
+            _ => Err(DomainFormError::WrongValueKind),
+        }
+    }
+
+    /// The text of this value when it is a bare atom or a quoted string.
+    ///
+    /// Errors with [`WrongValueKind`](DomainFormError::WrongValueKind) for a
+    /// list or nested form.
+    pub fn atom_or_string(&self) -> Result<&str, DomainFormError> {
+        match self {
+            DomainValue::Atom(value) | DomainValue::String(value) => Ok(value),
+            _ => Err(DomainFormError::WrongValueKind),
+        }
+    }
+
+    /// Renders this value back to its ASCII `#(...)` source text: an atom to
+    /// its literal text, a string to its escaped quoted form, a list to
+    /// `[a,b,...]`, and a nested form via [`format_domain_form`].
+    ///
+    /// Round-trips through [`parse_domain_form`] for a top-level form value.
+    pub fn render_text(&self) -> String {
+        match self {
+            DomainValue::Form(form) => format_domain_form(form),
+            DomainValue::List(items) => format!(
+                "[{}]",
+                items
+                    .iter()
+                    .map(DomainValue::render_text)
+                    .collect::<Vec<_>>()
+                    .join(",")
+            ),
+            DomainValue::String(value) => {
+                format!("\"{}\"", value.replace('\\', "\\\\").replace('"', "\\\""))
+            }
+            DomainValue::Atom(value) => value.clone(),
+        }
+    }
 }
 
 /// A domain-form parse or access error.
@@ -101,6 +175,9 @@ pub enum DomainFormError {
     MissingField(String),
     /// A field had the wrong value kind.
     WrongFieldKind(String),
+    /// A value had the wrong kind for a keyless accessor (not the atom,
+    /// string, or form that was expected).
+    WrongValueKind,
 }
 
 /// Parse a top-level `#(...)` domain form.
@@ -416,5 +493,78 @@ mod tests {
     fn escaped_quotes_round_trip() {
         let form = parse_domain_form("#(S v=\"he said \\\"hi\\\"\")").expect("parse");
         assert_eq!(form.string("v").unwrap(), "he said \"hi\"");
+    }
+
+    #[test]
+    fn field_atom_or_string_accepts_both_kinds() {
+        let form = parse_domain_form("#(N a=bare s=\"quoted\")").expect("parse");
+        assert_eq!(form.field_atom_or_string("a").unwrap(), "bare");
+        assert_eq!(form.field_atom_or_string("s").unwrap(), "quoted");
+    }
+
+    #[test]
+    fn field_atom_or_string_rejects_list_and_missing() {
+        let form = parse_domain_form("#(N tags=[a,b])").expect("parse");
+        assert_eq!(
+            form.field_atom_or_string("tags"),
+            Err(DomainFormError::WrongFieldKind("tags".to_owned()))
+        );
+        assert_eq!(
+            form.field_atom_or_string("nope"),
+            Err(DomainFormError::MissingField("nope".to_owned()))
+        );
+    }
+
+    #[test]
+    fn field_text_renders_every_value_kind() {
+        let form = parse_domain_form("#(N a=bare s=\"q\\\"x\" tags=[a,b] inner=#(Rest dur=1/4))")
+            .expect("parse");
+        assert_eq!(form.field_text("a").unwrap(), "bare");
+        assert_eq!(form.field_text("s").unwrap(), "\"q\\\"x\"");
+        assert_eq!(form.field_text("tags").unwrap(), "[a,b]");
+        assert_eq!(form.field_text("inner").unwrap(), "#(Rest dur=1/4)");
+        assert_eq!(
+            form.field_text("nope"),
+            Err(DomainFormError::MissingField("nope".to_owned()))
+        );
+    }
+
+    #[test]
+    fn value_as_form_and_atom_or_string() {
+        let form = parse_domain_form("#(N inner=#(Rest dur=1/4) a=bare s=\"q\")").expect("parse");
+        assert_eq!(form.field("inner").unwrap().as_form().unwrap().name, "Rest");
+        assert_eq!(
+            form.field("a").unwrap().as_form(),
+            Err(DomainFormError::WrongValueKind)
+        );
+        assert_eq!(form.field("a").unwrap().atom_or_string().unwrap(), "bare");
+        assert_eq!(form.field("s").unwrap().atom_or_string().unwrap(), "q");
+        assert_eq!(
+            form.field("inner").unwrap().atom_or_string(),
+            Err(DomainFormError::WrongValueKind)
+        );
+    }
+
+    #[test]
+    fn render_text_round_trips_a_form_value() {
+        let source = "#(Note dur=4/4 sym=\"a\\\"b\" pitches=[60,64])";
+        let form = parse_domain_form(source).expect("parse");
+        let value = DomainValue::Form(form.clone());
+        let rendered = value.render_text();
+        assert_eq!(parse_domain_form(&rendered).unwrap(), form);
+    }
+
+    #[test]
+    fn render_text_formats_list_and_string_and_atom() {
+        assert_eq!(DomainValue::Atom("60".to_owned()).render_text(), "60");
+        assert_eq!(
+            DomainValue::String("a\"b\\c".to_owned()).render_text(),
+            "\"a\\\"b\\\\c\""
+        );
+        let list = DomainValue::List(vec![
+            DomainValue::Atom("a".to_owned()),
+            DomainValue::String("b".to_owned()),
+        ]);
+        assert_eq!(list.render_text(), "[a,\"b\"]");
     }
 }
