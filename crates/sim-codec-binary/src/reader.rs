@@ -15,6 +15,14 @@ use crate::{
     BinaryTag, DecodeLimits, FLAG_NONE, FLAG_ORIGIN, FLAG_TREE_ORIGIN, FrameTables, MAGIC, VERSION,
 };
 
+/// Cap on the initial capacity reserved for an attacker-declared collection
+/// length. The declared length is checked against its decode-limit ceiling, but
+/// eager `Vec::with_capacity(len)` lets a small frame that declares a large
+/// count force a multi-megabyte reservation before any item actually decodes.
+/// We reserve at most this many slots up front and let the vector grow as items
+/// decode; the frame-size and node-count budgets bound the realized total.
+pub(crate) const ALLOC_RESERVE_CAP: usize = 4096;
+
 pub(crate) struct BinaryReader<'a> {
     codec: sim_kernel::CodecId,
     bytes: &'a [u8],
@@ -67,19 +75,19 @@ impl<'a> BinaryReader<'a> {
         self.flags = flags;
 
         let libs_len = self.read_count("lib table")?;
-        let mut libs = Vec::with_capacity(libs_len);
+        let mut libs = Vec::with_capacity(libs_len.min(ALLOC_RESERVE_CAP));
         for _ in 0..libs_len {
             libs.push(self.read_string()?);
         }
 
         let symbols_len = self.read_count("symbol table")?;
-        let mut symbols = Vec::with_capacity(symbols_len);
+        let mut symbols = Vec::with_capacity(symbols_len.min(ALLOC_RESERVE_CAP));
         for _ in 0..symbols_len {
             symbols.push(self.read_symbol_record(&libs)?);
         }
 
         let domains_len = self.read_count("number domain table")?;
-        let mut number_domains = Vec::with_capacity(domains_len);
+        let mut number_domains = Vec::with_capacity(domains_len.min(ALLOC_RESERVE_CAP));
         for _ in 0..domains_len {
             number_domains.push(self.read_symbol_record(&libs)?);
         }
@@ -138,7 +146,7 @@ impl<'a> BinaryReader<'a> {
         let end = self.read_len()?;
         let trivia_len =
             self.read_count_with_limit("origin trivia", self.limits.max_trivia_items)?;
-        let mut trivia = Vec::with_capacity(trivia_len);
+        let mut trivia = Vec::with_capacity(trivia_len.min(ALLOC_RESERVE_CAP));
         for _ in 0..trivia_len {
             let tag = self.read_u8()?;
             let text = self.read_string()?;

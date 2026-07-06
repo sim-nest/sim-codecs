@@ -370,3 +370,32 @@ fn decode_enforces_underlying_bitwise_limits() {
         other => panic!("unexpected error {other:?}"),
     }
 }
+
+#[test]
+fn decode_rejects_oversized_whitespace_heavy_input_before_allocation() {
+    let mut cx = cx();
+    // A tiny amount of real base64 buried in a large whitespace pad. The raw
+    // input length (>> max_input_bytes) must be rejected before the wrapper
+    // allocates the whitespace-stripping buffer or the decoded frame buffer.
+    let padded = format!("{}QQ=={}", " ".repeat(4096), "\n".repeat(4096));
+    let err = decode_with_codec_and_limits(
+        &mut cx,
+        &symbol(),
+        Input::Text(padded),
+        ReadPolicy::default(),
+        DecodeLimits {
+            max_input_bytes: 64,
+            ..DecodeLimits::default()
+        },
+    )
+    .unwrap_err();
+    match err {
+        sim_kernel::Error::CodecError { message, .. } => {
+            assert!(
+                message.contains("input bytes limit exceeded"),
+                "unexpected message {message:?}"
+            );
+        }
+        other => panic!("unexpected error {other:?}"),
+    }
+}

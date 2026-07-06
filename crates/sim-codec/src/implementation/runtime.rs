@@ -247,7 +247,11 @@ pub struct CodecRuntime {
     pub located_encoder: Option<Arc<dyn LocatedEncoder>>,
     /// Full-tree (lossless) encoder, if available.
     pub tree_encoder: Option<Arc<dyn TreeEncoder>>,
-    /// Shape describing the expressions this codec accepts/produces.
+    /// Advisory browse metadata: a `Shape` that describes the expressions this
+    /// codec is intended for, surfaced in the codec's browse table so callers
+    /// can discover a codec's domain. It is descriptive only -- decode does not
+    /// validate results against it (each codec enforces its own grammar and
+    /// [`DecodeLimits`](crate::DecodeLimits) directly).
     pub expr_shape: ShapeRef,
     /// Shape describing this codec's options table.
     pub options_shape: ShapeRef,

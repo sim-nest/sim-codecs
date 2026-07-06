@@ -21,15 +21,18 @@ pub(crate) use rewrite::{raw_number_expr, raw_number_tag};
 /// origin so source layout round-trips.
 ///
 /// Uses [`crate::default_pratt_table`] and a default decode budget; call
-/// [`decode_algol_located_with_budget`] to supply an explicit budget. Raw
-/// number literals are carried as a tagged extension form and lowered to
-/// concrete number domains later by the runtime decoder.
+/// [`decode_algol_located_with_budget`] to supply an explicit budget. The
+/// default [`DecodeLimits::max_input_bytes`] ceiling is applied to `source`
+/// before parsing, so this convenience entry point is bounded even when called
+/// directly. Raw number literals are carried as a tagged extension form and
+/// lowered to concrete number domains later by the runtime decoder.
 pub fn decode_algol_located(
     codec: sim_kernel::CodecId,
     source_id: impl Into<String>,
     source: &str,
 ) -> Result<LocatedExpr> {
     let mut budget = DecodeBudget::new(DecodeLimits::default());
+    budget.check_input_bytes(codec, source.len())?;
     decode_algol_located_with_budget(codec, source_id, source, &mut budget)
 }
 
@@ -57,9 +60,12 @@ pub fn decode_algol_located_with_budget(
 /// `table`, lowering raw number literals through `cx`.
 ///
 /// This is the entry point the `Shape` engine uses to parse infix grammar with
-/// a custom operator table rather than [`crate::default_pratt_table`]. Number
-/// literals are lowered lossily: a literal no number domain accepts is left as
-/// the tagged raw form rather than raising an error.
+/// a custom operator table rather than [`crate::default_pratt_table`]. It
+/// applies the default [`DecodeLimits::max_input_bytes`] ceiling to `source`
+/// before parsing; call [`parse_algol_expr_with_table_and_budget`] to honor a
+/// caller-supplied budget. Number literals are lowered lossily: a literal no
+/// number domain accepts is left as the tagged raw form rather than raising an
+/// error.
 ///
 /// # Examples
 ///
@@ -79,6 +85,7 @@ pub fn parse_algol_expr_with_table(
     source: &str,
 ) -> Result<Expr> {
     let mut budget = DecodeBudget::new(DecodeLimits::default());
+    budget.check_input_bytes(sim_kernel::CodecId(0), source.len())?;
     parse_algol_expr_with_table_and_budget(cx, table, source, &mut budget)
 }
 

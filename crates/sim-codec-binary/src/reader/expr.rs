@@ -7,15 +7,7 @@ use sim_kernel::{Expr, NumberLiteral, Result};
 
 use crate::BinaryTag;
 
-use super::BinaryReader;
-
-/// Cap on the initial capacity reserved for an attacker-declared collection
-/// length. The declared length is checked against the collection-length limit,
-/// but eager `Vec::with_capacity(len)` at every nesting level lets a small,
-/// deeply nested input force gigabytes of simultaneous reservations. We reserve
-/// at most this many slots up front and let the vector grow as items actually
-/// decode; the node-count and depth budgets bound the realized total.
-const ALLOC_RESERVE_CAP: usize = 4096;
+use super::{ALLOC_RESERVE_CAP, BinaryReader};
 
 impl<'a> BinaryReader<'a> {
     pub(crate) fn read_expr(&mut self) -> Result<Expr> {

@@ -3,6 +3,7 @@
 //! A small, dependency-free base64 codec (standard `+/` alphabet with padding)
 //! used to wrap and unwrap binary frames as ASCII text.
 
+use sim_codec::{DecodeBudget, DecodeLimits};
 use sim_kernel::{CodecId, Error, Result};
 
 const ALPHABET: &[u8; 64] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
@@ -33,16 +34,45 @@ pub fn encode_base64(bytes: &[u8]) -> String {
     out
 }
 
-/// Decodes standard base64 `text` back to bytes, failing closed on any invalid
-/// character, length, or padding.
+/// Decodes standard base64 `text` back to bytes under the default decode
+/// limits, failing closed on any invalid character, length, or padding.
+///
+/// Convenience wrapper over [`decode_base64_with_limits`] using
+/// [`DecodeLimits::default`]; prefer the limits-bearing form on the untrusted
+/// decode path so the configured input ceiling is honored.
 ///
 /// Shared with `sim-codec-bitwise-base64` (see [`encode_base64`]).
 pub fn decode_base64(codec: CodecId, text: &str) -> Result<Vec<u8>> {
+    decode_base64_with_limits(codec, text, DecodeLimits::default())
+}
+
+/// Decodes standard base64 `text` back to bytes, enforcing `limits` on the raw,
+/// whitespace-stripped, and decoded lengths BEFORE any bulk allocation.
+///
+/// The raw input length is checked against [`DecodeLimits::max_input_bytes`]
+/// first, so a gigabyte of base64 (or whitespace-padded base64) is rejected
+/// before `strip_ascii_whitespace` reserves a buffer for it; the cleaned length
+/// and the projected decoded length are checked in turn. Otherwise identical to
+/// [`decode_base64`]: fails closed on any invalid character, length, or padding.
+///
+/// Shared with `sim-codec-bitwise-base64` (see [`encode_base64`]).
+pub fn decode_base64_with_limits(
+    codec: CodecId,
+    text: &str,
+    limits: DecodeLimits,
+) -> Result<Vec<u8>> {
+    let budget = DecodeBudget::new(limits);
+    budget.check_input_bytes(codec, text.len())?;
     let clean = strip_ascii_whitespace(codec, text)?;
+    budget.check_input_bytes(codec, clean.len())?;
     if !clean.len().is_multiple_of(4) {
         return codec_err(codec, "invalid base64 length");
     }
+    budget.check_input_bytes(codec, clean.len() / 4 * 3)?;
+    decode_clean_base64(codec, &clean)
+}
 
+fn decode_clean_base64(codec: CodecId, clean: &[u8]) -> Result<Vec<u8>> {
     let mut out = Vec::with_capacity(clean.len() / 4 * 3);
     let chunk_count = clean.len() / 4;
     for (index, chunk) in clean.chunks_exact(4).enumerate() {

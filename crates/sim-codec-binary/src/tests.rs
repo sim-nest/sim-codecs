@@ -391,3 +391,34 @@ fn decode_bounds_deeply_nested_count_bomb() {
         other => panic!("unexpected error {other:?}"),
     }
 }
+
+#[test]
+fn decode_header_table_count_does_not_allocate_above_clamp() {
+    // A ~9-byte frame whose symbol-table header declares 65535 entries but
+    // supplies none. The count is within the table-entry limit, so before the
+    // ALLOC_RESERVE_CAP clamp the header eagerly reserved a 65535-slot `Vec`
+    // (multiple MiB) for a truncated frame; now the reservation is capped and
+    // the decode fails closed on the missing records without ballooning memory.
+    let mut bytes = Vec::new();
+    bytes.extend_from_slice(b"SLB8"); // MAGIC
+    bytes.push(0x01); // version
+    bytes.push(0x00); // flags (no origin)
+    bytes.push(0x00); // lib table length
+    bytes.extend_from_slice(&[0xff, 0xff, 0x03]); // symbol table length = varuint(65_535)
+    // no symbol records follow: the frame is truncated here.
+    let err = decode_located_tree_frame_with_limits(
+        sim_kernel::CodecId(1),
+        &bytes,
+        DecodeLimits::default(),
+    )
+    .unwrap_err();
+    match err {
+        sim_kernel::Error::CodecError { message, .. } => {
+            assert!(
+                message.contains("unexpected end of binary frame"),
+                "expected truncation error, got: {message}"
+            );
+        }
+        other => panic!("unexpected error {other:?}"),
+    }
+}

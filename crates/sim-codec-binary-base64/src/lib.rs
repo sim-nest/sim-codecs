@@ -73,5 +73,5 @@ mod codec;
 #[cfg(test)]
 mod tests;
 
-pub use base64::{decode_base64, encode_base64};
+pub use base64::{decode_base64, decode_base64_with_limits, encode_base64};
 pub use codec::{BinaryBase64Codec, BinaryBase64CodecLib};

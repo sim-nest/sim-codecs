@@ -10,7 +10,7 @@ use sim_codec::{
     CodecDefaultDecode, CodecRuntime, Decoder, Encoder, Input, LocatedDecoder, LocatedEncoder,
     Output, ReadCx, TreeDecoder, TreeEncoder, codec_value, validate_expr_tree,
 };
-use sim_codec_binary_base64::{decode_base64, encode_base64};
+use sim_codec_binary_base64::{decode_base64_with_limits, encode_base64};
 use sim_kernel::{
     AbiVersion, CodecId, DefaultFactory, Dependency, Error, Export, Expr, Lib, LibManifest,
     LibTarget, Linker, LocatedExpr, LocatedExprTree, Result, Symbol, Version, WriteCx,
@@ -78,7 +78,7 @@ impl TreeEncoder for BitwiseBase64Codec {
 
 fn decode_tree(cx: &mut ReadCx<'_>, input: Input) -> Result<LocatedExprTree> {
     let text = input_text(cx.codec, input)?;
-    let bytes = decode_base64(cx.codec, &text)?;
+    let bytes = decode_base64_with_limits(cx.codec, &text, cx.limits)?;
     sim_codec_bitwise::decode_located_tree_frame_with_limits(
         cx.codec,
         &bytes,

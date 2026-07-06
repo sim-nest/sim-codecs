@@ -14,7 +14,7 @@ use sim_kernel::{
     LibTarget, Linker, LocatedExpr, LocatedExprTree, Result, Symbol, Version, WriteCx,
 };
 
-use crate::base64::{decode_base64, encode_base64};
+use crate::base64::{decode_base64_with_limits, encode_base64};
 
 /// Codec runtime object that carries `sim-codec-binary` frames as base64 text.
 ///
@@ -78,7 +78,7 @@ impl TreeEncoder for BinaryBase64Codec {
 
 fn decode_tree(cx: &mut ReadCx<'_>, input: Input) -> Result<LocatedExprTree> {
     let text = input_text(cx.codec, input)?;
-    let bytes = decode_base64(cx.codec, &text)?;
+    let bytes = decode_base64_with_limits(cx.codec, &text, cx.limits)?;
     sim_codec_binary::decode_located_tree_frame_with_limits(
         cx.codec,
         &bytes,
