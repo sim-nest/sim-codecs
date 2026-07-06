@@ -7,9 +7,9 @@ SIM workspace package for sim codec algol.
 ## Package Metadata
 
 - Manifest: `crates/sim-codec-algol/Cargo.toml`
-- Publish: `false`
+- Publish: `true`
 - Targets: `lib`
 
 ## Crate Documentation
 
-SIM workspace package for sim codec algol.
+General-purpose Algol codec for the SIM runtime: the infix, Pratt-parsed surface that round-trips every expression through the shared Expr graph.

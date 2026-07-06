@@ -7,9 +7,9 @@ SIM workspace package for sim codec lisp.
 ## Package Metadata
 
 - Manifest: `crates/sim-codec-lisp/Cargo.toml`
-- Publish: `false`
-- Targets: `custom-build, lib`
+- Publish: `true`
+- Targets: `cdylib, custom-build, rlib`
 
 ## Crate Documentation
 
-SIM workspace package for sim codec lisp.
+General-purpose Lisp codec for the SIM runtime: the s-expression surface that round-trips every expression through the shared Expr graph.

@@ -7,7 +7,7 @@ Shared test harness for SIM crates.
 ## Package Metadata
 
 - Manifest: `crates/sim-test-support/Cargo.toml`
-- Publish: `false`
+- Publish: `true`
 - Targets: `lib`
 
 ## Crate Documentation

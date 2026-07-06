@@ -7,9 +7,9 @@ SIM workspace package for sim codec.
 ## Package Metadata
 
 - Manifest: `crates/sim-codec/Cargo.toml`
-- Publish: `false`
+- Publish: `true`
 - Targets: `lib`
 
 ## Crate Documentation
 
-SIM workspace package for sim codec.
+Core decoder/encoder and output-position contracts for the SIM codec layer.

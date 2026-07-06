@@ -7,9 +7,9 @@ SIM workspace package for sim codec bitwise.
 ## Package Metadata
 
 - Manifest: `crates/sim-codec-bitwise/Cargo.toml`
-- Publish: `false`
+- Publish: `true`
 - Targets: `lib`
 
 ## Crate Documentation
 
-SIM workspace package for sim codec bitwise.
+Canonical minimal bit-packed wire codec for the SIM runtime.

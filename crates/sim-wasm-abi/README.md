@@ -7,9 +7,9 @@ SIM workspace package for sim wasm abi.
 ## Package Metadata
 
 - Manifest: `crates/sim-wasm-abi/Cargo.toml`
-- Publish: `false`
+- Publish: `true`
 - Targets: `lib`
 
 ## Crate Documentation
 
-SIM workspace package for sim wasm abi.
+Wasm ABI transport for SIM.

@@ -7,9 +7,9 @@ SIM workspace package for sim codec binary.
 ## Package Metadata
 
 - Manifest: `crates/sim-codec-binary/Cargo.toml`
-- Publish: `false`
+- Publish: `true`
 - Targets: `lib`
 
 ## Crate Documentation
 
-SIM workspace package for sim codec binary.
+Binary wire codec for the SIM runtime.

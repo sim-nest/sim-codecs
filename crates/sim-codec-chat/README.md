@@ -7,7 +7,7 @@ Canonical chat transcript codec for SIM.
 ## Package Metadata
 
 - Manifest: `crates/sim-codec-chat/Cargo.toml`
-- Publish: `false`
+- Publish: `true`
 - Targets: `lib`
 
 ## Crate Documentation

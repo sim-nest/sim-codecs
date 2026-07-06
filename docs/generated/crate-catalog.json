@@ -1,0 +1,191 @@
+{
+  "generator": "xtask crate-catalog v1",
+  "package_count": 15,
+  "packages": [
+    {
+      "description": "SIM workspace package for sim codec algol.",
+      "generated_readme": true,
+      "manifest": "crates/sim-codec-algol/Cargo.toml",
+      "name": "sim-codec-algol",
+      "publish": "true",
+      "readme": "crates/sim-codec-algol/README.md",
+      "root": "crates/sim-codec-algol",
+      "target_kinds": [
+        "lib"
+      ]
+    },
+    {
+      "description": "SIM workspace package for sim codec binary base64.",
+      "generated_readme": true,
+      "manifest": "crates/sim-codec-binary-base64/Cargo.toml",
+      "name": "sim-codec-binary-base64",
+      "publish": "true",
+      "readme": "crates/sim-codec-binary-base64/README.md",
+      "root": "crates/sim-codec-binary-base64",
+      "target_kinds": [
+        "lib"
+      ]
+    },
+    {
+      "description": "SIM workspace package for sim codec binary.",
+      "generated_readme": true,
+      "manifest": "crates/sim-codec-binary/Cargo.toml",
+      "name": "sim-codec-binary",
+      "publish": "true",
+      "readme": "crates/sim-codec-binary/README.md",
+      "root": "crates/sim-codec-binary",
+      "target_kinds": [
+        "lib"
+      ]
+    },
+    {
+      "description": "SIM workspace package for sim codec bitwise base64.",
+      "generated_readme": true,
+      "manifest": "crates/sim-codec-bitwise-base64/Cargo.toml",
+      "name": "sim-codec-bitwise-base64",
+      "publish": "true",
+      "readme": "crates/sim-codec-bitwise-base64/README.md",
+      "root": "crates/sim-codec-bitwise-base64",
+      "target_kinds": [
+        "lib"
+      ]
+    },
+    {
+      "description": "SIM workspace package for sim codec bitwise.",
+      "generated_readme": true,
+      "manifest": "crates/sim-codec-bitwise/Cargo.toml",
+      "name": "sim-codec-bitwise",
+      "publish": "true",
+      "readme": "crates/sim-codec-bitwise/README.md",
+      "root": "crates/sim-codec-bitwise",
+      "target_kinds": [
+        "lib"
+      ]
+    },
+    {
+      "description": "Canonical chat transcript codec for SIM.",
+      "generated_readme": true,
+      "manifest": "crates/sim-codec-chat/Cargo.toml",
+      "name": "sim-codec-chat",
+      "publish": "true",
+      "readme": "crates/sim-codec-chat/README.md",
+      "root": "crates/sim-codec-chat",
+      "target_kinds": [
+        "lib"
+      ]
+    },
+    {
+      "description": "Developer harness comparing sim-codec-bitwise vs sim-codec-binary on size and speed.",
+      "generated_readme": false,
+      "manifest": "crates/sim-codec-compare/Cargo.toml",
+      "name": "sim-codec-compare",
+      "publish": "false",
+      "readme": "crates/sim-codec-compare/README.md",
+      "root": "crates/sim-codec-compare",
+      "target_kinds": [
+        "bin",
+        "lib"
+      ]
+    },
+    {
+      "description": "SIM workspace package for sim codec doc.",
+      "generated_readme": true,
+      "manifest": "crates/sim-codec-doc/Cargo.toml",
+      "name": "sim-codec-doc",
+      "publish": "true",
+      "readme": "crates/sim-codec-doc/README.md",
+      "root": "crates/sim-codec-doc",
+      "target_kinds": [
+        "custom-build",
+        "lib"
+      ]
+    },
+    {
+      "description": "SIM workspace package for sim codec json.",
+      "generated_readme": true,
+      "manifest": "crates/sim-codec-json/Cargo.toml",
+      "name": "sim-codec-json",
+      "publish": "true",
+      "readme": "crates/sim-codec-json/README.md",
+      "root": "crates/sim-codec-json",
+      "target_kinds": [
+        "custom-build",
+        "lib"
+      ]
+    },
+    {
+      "description": "SIM workspace package for sim codec lisp.",
+      "generated_readme": true,
+      "manifest": "crates/sim-codec-lisp/Cargo.toml",
+      "name": "sim-codec-lisp",
+      "publish": "true",
+      "readme": "crates/sim-codec-lisp/README.md",
+      "root": "crates/sim-codec-lisp",
+      "target_kinds": [
+        "cdylib",
+        "custom-build",
+        "rlib"
+      ]
+    },
+    {
+      "description": "MCP JSON-RPC envelope codec for SIM.",
+      "generated_readme": true,
+      "manifest": "crates/sim-codec-mcp/Cargo.toml",
+      "name": "sim-codec-mcp",
+      "publish": "true",
+      "readme": "crates/sim-codec-mcp/README.md",
+      "root": "crates/sim-codec-mcp",
+      "target_kinds": [
+        "lib"
+      ]
+    },
+    {
+      "description": "SIM workspace package for sim codec.",
+      "generated_readme": true,
+      "manifest": "crates/sim-codec/Cargo.toml",
+      "name": "sim-codec",
+      "publish": "true",
+      "readme": "crates/sim-codec/README.md",
+      "root": "crates/sim-codec",
+      "target_kinds": [
+        "lib"
+      ]
+    },
+    {
+      "description": "Shared test harness for SIM crates.",
+      "generated_readme": true,
+      "manifest": "crates/sim-test-support/Cargo.toml",
+      "name": "sim-test-support",
+      "publish": "true",
+      "readme": "crates/sim-test-support/README.md",
+      "root": "crates/sim-test-support",
+      "target_kinds": [
+        "lib"
+      ]
+    },
+    {
+      "description": "SIM workspace package for sim wasm abi.",
+      "generated_readme": true,
+      "manifest": "crates/sim-wasm-abi/Cargo.toml",
+      "name": "sim-wasm-abi",
+      "publish": "true",
+      "readme": "crates/sim-wasm-abi/README.md",
+      "root": "crates/sim-wasm-abi",
+      "target_kinds": [
+        "lib"
+      ]
+    },
+    {
+      "description": "SIM workspace package for xtask.",
+      "generated_readme": true,
+      "manifest": "xtask/Cargo.toml",
+      "name": "xtask",
+      "publish": "false",
+      "readme": "xtask/README.md",
+      "root": "xtask",
+      "target_kinds": [
+        "bin"
+      ]
+    }
+  ]
+}
