@@ -118,7 +118,7 @@ impl Default for McpErrorEnvelope {
 impl Default for McpError {
     fn default() -> Self {
         Self {
-            code: -32603,
+            code: crate::INTERNAL_ERROR,
             message: "fixture error".to_owned(),
             data: Expr::Nil,
         }

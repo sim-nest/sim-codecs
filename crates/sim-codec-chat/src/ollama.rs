@@ -6,6 +6,7 @@ use serde_json::{Map, Value, json};
 use sim_codec::{DecodeBudget, DecodeLimits};
 use sim_codec_json::{JsonProjectionMode, json_number_to_u64, project_json_to_expr_budgeted};
 use sim_kernel::{CodecId, Error, Expr, Result, Symbol};
+use sim_value::access;
 
 use crate::{
     is_model_request_expr, model_response_expr, text_part, usage_record, validate_chat_transcript,
@@ -226,8 +227,7 @@ fn transcript_messages(expr: &Expr) -> Result<Vec<Value>> {
             "ollama codec expects request transcript as a map".to_owned(),
         ));
     };
-    let mut messages = map_field(entries, "messages")
-        .and_then(list_field)?
+    let mut messages = access::entry_required_list_any(entries, "messages", "ollama messages")?
         .iter()
         .map(message_to_json)
         .collect::<Result<Vec<_>>>()?;
@@ -242,13 +242,15 @@ fn message_to_json(expr: &Expr) -> Result<Value> {
     let Expr::Map(entries) = expr else {
         return Err(Error::Eval("ollama codec message must be a map".to_owned()));
     };
+    let role = access::entry_required_sym_any(entries, "role", "ollama message role")?;
+    let content = access::entry_required_list_any(entries, "content", "ollama message content")?
+        .iter()
+        .map(content_part_to_text)
+        .collect::<Result<Vec<_>>>()?
+        .join(" ");
     Ok(json!({
-        "role": symbol_field(entries, "role")?,
-        "content": list_field(map_field(entries, "content")?)?
-            .iter()
-            .map(content_part_to_text)
-            .collect::<Result<Vec<_>>>()?
-            .join(" "),
+        "role": role.name.as_ref(),
+        "content": content,
     }))
 }
 
@@ -258,8 +260,13 @@ fn content_part_to_text(expr: &Expr) -> Result<String> {
             "ollama codec content part must be a map".to_owned(),
         ));
     };
-    match symbol_field(entries, "type")?.as_str() {
-        "text" => string_field(entries, "text"),
+    match access::entry_required_sym_any(entries, "type", "ollama content part type")?
+        .name
+        .as_ref()
+    {
+        "text" => Ok(
+            access::entry_required_str_any(entries, "text", "ollama content part text")?.to_owned(),
+        ),
         other => Err(Error::Eval(format!(
             "ollama codec does not support content part type {other}"
         ))),
@@ -326,31 +333,6 @@ fn map_field<'a>(entries: &'a [(Expr, Expr)], key: &str) -> Result<&'a Expr> {
             _ => None,
         })
         .ok_or_else(|| Error::Eval(format!("ollama codec missing {key} field")))
-}
-
-fn symbol_field(entries: &[(Expr, Expr)], key: &str) -> Result<String> {
-    match map_field(entries, key)? {
-        Expr::Symbol(symbol) => Ok(symbol.name.as_ref().to_owned()),
-        _ => Err(Error::Eval(format!(
-            "ollama codec field {key} must be a symbol"
-        ))),
-    }
-}
-
-fn string_field(entries: &[(Expr, Expr)], key: &str) -> Result<String> {
-    match map_field(entries, key)? {
-        Expr::String(text) => Ok(text.clone()),
-        _ => Err(Error::Eval(format!(
-            "ollama codec field {key} must be a string"
-        ))),
-    }
-}
-
-fn list_field(expr: &Expr) -> Result<&[Expr]> {
-    match expr {
-        Expr::List(items) => Ok(items),
-        _ => Err(Error::Eval("ollama codec field must be a list".to_owned())),
-    }
 }
 
 fn flatten_expr(expr: &Expr) -> String {

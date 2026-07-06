@@ -11,6 +11,7 @@ publish = false
 
 [dependencies]
 sim-kernel = { version = "0.1.0" }
+sim-value = { version = "0.1.0" }
 sim-codec-binary = { version = "0.1.0", path = "../sim-codec-binary" }
 sim-codec-bitwise = { version = "0.1.0", path = "../sim-codec-bitwise" }
 

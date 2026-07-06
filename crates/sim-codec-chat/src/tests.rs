@@ -211,6 +211,54 @@ fn ollama_request_encoder_matches_fixture_shape() {
 }
 
 #[test]
+fn ollama_request_reads_namespace_agnostic_provider_fields() {
+    // The ollama request readers are the namespace-agnostic `_any` family: a
+    // provider content part may spell its `text` field with a string key rather
+    // than a bare symbol, and the encoder must still read it. This pins the
+    // intended key-agnostic behavior (a bare-symbol OR string provider key) that
+    // motivates the `entry_required_*_any` substrate variants over the strict
+    // bare-symbol readers.
+    let request = Expr::Map(vec![
+        (Expr::Symbol(Symbol::new("model-request")), Expr::Bool(true)),
+        (
+            Expr::Symbol(Symbol::new("task")),
+            Expr::String("summarize".to_owned()),
+        ),
+        (
+            Expr::Symbol(Symbol::new("messages")),
+            Expr::List(vec![Expr::Map(vec![
+                (
+                    Expr::Symbol(Symbol::new("role")),
+                    Expr::Symbol(Symbol::new("user")),
+                ),
+                (
+                    Expr::Symbol(Symbol::new("content")),
+                    Expr::List(vec![Expr::Map(vec![
+                        (
+                            Expr::Symbol(Symbol::new("type")),
+                            Expr::Symbol(Symbol::new("text")),
+                        ),
+                        // The `text` field carries a string key, not a bare
+                        // symbol; the agnostic reader still resolves it.
+                        (
+                            Expr::String("text".to_owned()),
+                            Expr::String("string keyed body".to_owned()),
+                        ),
+                    ])]),
+                ),
+            ])]),
+        ),
+    ]);
+    let body = encode_ollama_request(
+        &request,
+        &OllamaRequestOptions::new("qwen3.5:4b", false, false),
+    )
+    .unwrap();
+    let text = String::from_utf8(body).unwrap();
+    assert!(text.contains("string keyed body"), "{text}");
+}
+
+#[test]
 fn ollama_response_decoder_matches_chat_and_generate_shapes() {
     let chat = decode_ollama_response(
         Symbol::new("local"),

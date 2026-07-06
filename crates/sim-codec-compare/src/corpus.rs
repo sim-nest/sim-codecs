@@ -79,7 +79,7 @@ fn int(n: i64) -> Expr {
 }
 
 fn sym(s: &str) -> Expr {
-    Expr::Symbol(Symbol::new(s))
+    sim_value::build::sym(s)
 }
 
 fn deep(depth: usize) -> Expr {
