@@ -20,4 +20,5 @@ sim-kernel = { version = "0.1.0" }
 wasmi = "0.51.5"
 
 [dev-dependencies]
+sim-kernel = { version = "0.1.0", features = ["test-support"] }
 wat = "1.245.1"
