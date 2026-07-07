@@ -1,8 +1,58 @@
 # sim-codecs
 
-`sim-codecs` is the codec surface of the SIM constellation. SIM is an
-expandable Rust runtime built around a small protocol kernel plus a large set
-of loadable libraries: the kernel defines contracts, libraries provide
+sim-codecs gives you SIM's read/write layer: a set of codec libraries that
+decode text or bytes -- Lisp, JSON, binary, Algol, and more -- into one shared
+expression graph, and encode that graph back out again.
+
+## Example
+
+Add one concrete codec crate:
+
+```bash
+cargo add sim-codec-lisp
+```
+
+Register the codec, decode s-expression text into an `Expr`, then encode the
+`Expr` back to Lisp text -- a semantic round-trip:
+
+```rust
+use std::sync::Arc;
+use sim_codec::{Input, decode_with_codec, encode_with_codec};
+use sim_codec_lisp::LispCodecLib;
+use sim_kernel::{Cx, DefaultFactory, EagerPolicy, Expr, ReadPolicy, Symbol};
+
+let mut cx = Cx::new(Arc::new(EagerPolicy), Arc::new(DefaultFactory));
+sim_test_support::register_core_classes(&mut cx);
+sim_test_support::register_f64_number_domain(&mut cx);
+
+let lib = LispCodecLib::new(cx.registry_mut().fresh_codec_id())?;
+cx.load_lib(&lib)?;
+let lisp = Symbol::qualified("codec", "lisp");
+
+// Decode text into a checked `Expr` form.
+let expr = decode_with_codec(
+    &mut cx,
+    &lisp,
+    Input::Text("(quote [1 2])".to_owned()),
+    ReadPolicy::default(),
+)?;
+assert!(matches!(expr, Expr::Quote { .. }));
+
+// Encode the `Expr` back to Lisp text.
+let text = encode_with_codec(&mut cx, &lisp, &expr, Default::default())?
+    .into_text()
+    .unwrap();
+assert_eq!(text, "(quote [1 2])");
+# Ok::<(), sim_kernel::Error>(())
+```
+
+This is the crate-root doctest of `sim-codec-lisp`
+(`crates/sim-codec-lisp/src/lib.rs:27`); it compiles and passes as written.
+
+## How it works
+
+SIM is an expandable Rust runtime built around a small protocol kernel plus a
+large set of loadable libraries: the kernel defines contracts, libraries provide
 behavior. This repository provides the libraries that move data across the
 runtime boundary.
 
