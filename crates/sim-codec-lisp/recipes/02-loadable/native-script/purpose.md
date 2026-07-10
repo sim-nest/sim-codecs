@@ -1,5 +1,5 @@
-# Decode a native-loaded script
+# Load a native codec script
 
-The setup form is ordinary Lisp source. The native loader test builds the
-codec as a dynamic library, loads `codec/lisp`, and decodes this same form
-through the loaded codec export.
+Loading a native codec plugin needs a filesystem .so, which the sandbox has no capability for. This recipe is a **descriptor** (tagged `sandbox-descriptor`): it shows the real
+surface shape rather than a live result, because that result cannot be reproduced in
+the cookbook's read-eval sandbox.
