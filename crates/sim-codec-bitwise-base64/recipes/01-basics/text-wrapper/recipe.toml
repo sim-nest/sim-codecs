@@ -4,5 +4,5 @@ codec = "lisp"
 setup = "setup.siml"
 purpose = "purpose.md"
 order = 10
-tags = ["codec", "bitwise-base64", "ascii"]
+tags = ["codec", "bitwise-base64", "ascii", "sandbox-descriptor"]
 requires = ["core", "codec/lisp"]

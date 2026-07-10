@@ -1,4 +1,5 @@
-# Envelope descriptor
+# MCP envelope codec (descriptor)
 
-This recipe records the MCP codec envelope family: JSON-RPC requests,
-responses, notifications, and structured errors.
+The MCP codec shapes Model Context Protocol envelopes: request, response, notification, and
+error frames. This recipe documents that envelope structure; the codec frames a transport
+envelope, not an evaluable surface expression, so it is documented rather than run.

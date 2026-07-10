@@ -1,5 +1,5 @@
-# Run the comparison report
+# Codec comparison report (descriptor)
 
-This recipe records how to measure the two wire codecs against each other: run
-`cargo run --release -p sim-codec-compare --bin report` to print the per-category
-size and speed tables that decide when bitwise is worth its cost.
+This records a comparison run between the bitwise and binary codecs over a corpus -- size and
+speed per codec. Producing the report runs the codecs over a corpus and measures them, work
+outside the sandbox eval stack, so the report shape is documented rather than generated live.

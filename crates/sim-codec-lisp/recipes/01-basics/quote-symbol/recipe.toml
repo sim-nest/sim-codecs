@@ -4,7 +4,7 @@ codec = "lisp"
 setup = "setup.siml"
 purpose = "purpose.md"
 order = 10
-tags = ["codec", "lisp", "roundtrip"]
+tags = ["codec", "lisp", "roundtrip", "sandbox-descriptor"]
 requires = ["codec/lisp"]
 [[expect]]
 form = 0
