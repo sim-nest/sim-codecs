@@ -147,7 +147,9 @@ fn unsupported_payload_args_fail_closed() {
         .call_function(&cli_main_symbol(), Args::new(vec![envelope]))
         .unwrap_err();
 
-    assert!(err.to_string().contains("does not support payload args"));
+    let message = err.to_string();
+    assert!(message.contains("unknown command 'server'"), "{message}");
+    assert!(message.contains("not subcommands"), "{message}");
 }
 
 fn cx_with_lisp_cli() -> Cx {

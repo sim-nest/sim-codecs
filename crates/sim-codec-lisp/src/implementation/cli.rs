@@ -51,9 +51,15 @@ fn run_lisp_cli(cx: &mut Cx, envelope: &Value) -> Result<Value> {
     let stdin = optional_string_field(cx, envelope, "stdin")?;
 
     if !args.is_empty() {
+        // Reached when `sim <verb>` finds no library that handles <verb> and falls
+        // through to the default Lisp entrypoint, which evaluates source rather than
+        // dispatching subcommands. Name the real problem instead of blaming the args.
         return Err(Error::Eval(format!(
-            "lisp cli entrypoint does not support payload args: {}",
-            args.join(" ")
+            "unknown command '{}': no loaded library provides it. The Lisp entrypoint \
+             evaluates source (--eval, --script, or piped stdin), not subcommands. \
+             Verbs like 'repl', 'serve', and 'mcp' ship in the batteries build: \
+             cargo install sim-nest --features serve-cli",
+            args[0]
         )));
     }
 
