@@ -1,1 +1,1 @@
-{"$expr":"string","value":"codec-json-ok"}
+{"$expr":"call","operator":{"$expr":"symbol","namespace":"math","name":"add"},"args":[{"$expr":"number","domain":"numbers/f64","value":"2"},{"$expr":"number","domain":"numbers/f64","value":"3"}]}

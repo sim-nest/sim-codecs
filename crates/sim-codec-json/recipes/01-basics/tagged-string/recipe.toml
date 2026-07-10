@@ -1,8 +1,8 @@
 id = "tagged-string"
-title = "Tagged string"
+title = "Evaluate a call through the JSON codec"
 codec = "json"
 setup = "setup.simj"
 purpose = "purpose.md"
 order = 10
-tags = ["codec", "json", "tagged"]
-requires = ["codec/json"]
+tags = ["codec", "json", "eval"]
+requires = ["numbers/arith", "codec/json"]
