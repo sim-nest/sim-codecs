@@ -110,6 +110,43 @@ pub fn decode_term_with_codec_and_limits(
     term_from_expr(default_decode, expr)
 }
 
+/// Decode `input` to an evaluable [`Expr`], applying the codec's eval-surface
+/// lowering (a lisp `(f x)` becomes a [`Expr::Call`]) but WITHOUT the
+/// [`Term`]/[`Datum`] round-trip that [`decode_term_with_codec`] performs.
+///
+/// The Term lowering forces every `Expr::List` to a pure [`Datum`], which fails
+/// (`expected datum expression, found call expression`) when a list legitimately
+/// contains a non-datum sub-form -- e.g. a `let` binding container `((x 5))`
+/// whose clause `(x 5)` eval-lowers to a call, or a `match` clause. Evaluating
+/// the eval-lowered `Expr` directly preserves that structure so a special form
+/// receives its raw structural argument and interprets it (call- or list-shaped
+/// clauses are both accepted by the organ forms). For plain function calls this
+/// is behaviour-identical to `decode_term_with_codec` followed by `Expr::from`.
+pub fn decode_eval_expr_with_codec(
+    cx: &mut Cx,
+    symbol: &Symbol,
+    input: Input,
+    read_policy: ReadPolicy,
+) -> Result<sim_kernel::Expr> {
+    decode_eval_expr_with_codec_and_limits(cx, symbol, input, read_policy, DecodeLimits::default())
+}
+
+/// [`decode_eval_expr_with_codec`] under explicit [`DecodeLimits`].
+pub fn decode_eval_expr_with_codec_and_limits(
+    cx: &mut Cx,
+    symbol: &Symbol,
+    input: Input,
+    read_policy: ReadPolicy,
+    limits: DecodeLimits,
+) -> Result<sim_kernel::Expr> {
+    let (expr, default_decode) =
+        decode_expr_with_codec_and_limits(cx, symbol, input, read_policy, limits)?;
+    Ok(match default_decode {
+        CodecDefaultDecode::Datum => expr,
+        CodecDefaultDecode::TermInEvalDatumOtherwise => lower_eval_surface(expr),
+    })
+}
+
 /// Decode `input` and resolve it to data or a term per the codec's policy and
 /// the requested `position`, using default [`DecodeLimits`].
 ///
