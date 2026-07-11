@@ -6,18 +6,18 @@ Generated from Cargo metadata by `xtask crate-catalog v1`.
 
 | Package | Publish | Targets | Description |
 | --- | --- | --- | --- |
-| `sim-codec-algol` | `true` | `lib` | SIM workspace package for sim codec algol. |
-| `sim-codec-binary-base64` | `true` | `lib` | SIM workspace package for sim codec binary base64. |
-| `sim-codec-binary` | `true` | `lib` | SIM workspace package for sim codec binary. |
-| `sim-codec-bitwise-base64` | `true` | `lib` | SIM workspace package for sim codec bitwise base64. |
-| `sim-codec-bitwise` | `true` | `lib` | SIM workspace package for sim codec bitwise. |
-| `sim-codec-chat` | `true` | `lib` | Canonical chat transcript codec for SIM. |
-| `sim-codec-compare` | `false` | `bin, lib` | Developer harness comparing sim-codec-bitwise vs sim-codec-binary on size and speed. |
+| `sim-codec-algol` | `true` | `custom-build, lib` | SIM workspace package for sim codec algol. |
+| `sim-codec-binary-base64` | `true` | `custom-build, lib` | SIM workspace package for sim codec binary base64. |
+| `sim-codec-binary` | `true` | `custom-build, lib` | SIM workspace package for sim codec binary. |
+| `sim-codec-bitwise-base64` | `true` | `custom-build, lib` | SIM workspace package for sim codec bitwise base64. |
+| `sim-codec-bitwise` | `true` | `custom-build, lib` | SIM workspace package for sim codec bitwise. |
+| `sim-codec-chat` | `true` | `custom-build, lib` | Canonical chat transcript codec for SIM. |
+| `sim-codec-compare` | `false` | `bin, custom-build, lib` | Developer harness comparing sim-codec-bitwise vs sim-codec-binary on size and speed. |
 | `sim-codec-doc` | `true` | `custom-build, lib` | SIM workspace package for sim codec doc. |
 | `sim-codec-json` | `true` | `custom-build, lib` | SIM workspace package for sim codec json. |
 | `sim-codec-lisp` | `true` | `cdylib, custom-build, rlib` | SIM workspace package for sim codec lisp. |
-| `sim-codec-mcp` | `true` | `lib` | MCP JSON-RPC envelope codec for SIM. |
-| `sim-codec` | `true` | `lib` | SIM workspace package for sim codec. |
+| `sim-codec-mcp` | `true` | `custom-build, lib` | MCP JSON-RPC envelope codec for SIM. |
+| `sim-codec` | `true` | `custom-build, lib` | SIM workspace package for sim codec. |
 | `sim-test-support` | `true` | `lib` | Shared test harness for SIM crates. |
 | `sim-wasm-abi` | `true` | `lib` | SIM workspace package for sim wasm abi. |
 | `xtask` | `false` | `bin` | SIM workspace package for xtask. |

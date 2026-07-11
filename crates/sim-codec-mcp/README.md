@@ -8,7 +8,7 @@ MCP JSON-RPC envelope codec for SIM.
 
 - Manifest: `crates/sim-codec-mcp/Cargo.toml`
 - Publish: `true`
-- Targets: `lib`
+- Targets: `custom-build, lib`
 
 ## Crate Documentation
 

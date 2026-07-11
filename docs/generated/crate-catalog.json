@@ -11,6 +11,7 @@
       "readme": "crates/sim-codec-algol/README.md",
       "root": "crates/sim-codec-algol",
       "target_kinds": [
+        "custom-build",
         "lib"
       ]
     },
@@ -23,6 +24,7 @@
       "readme": "crates/sim-codec-binary-base64/README.md",
       "root": "crates/sim-codec-binary-base64",
       "target_kinds": [
+        "custom-build",
         "lib"
       ]
     },
@@ -35,6 +37,7 @@
       "readme": "crates/sim-codec-binary/README.md",
       "root": "crates/sim-codec-binary",
       "target_kinds": [
+        "custom-build",
         "lib"
       ]
     },
@@ -47,6 +50,7 @@
       "readme": "crates/sim-codec-bitwise-base64/README.md",
       "root": "crates/sim-codec-bitwise-base64",
       "target_kinds": [
+        "custom-build",
         "lib"
       ]
     },
@@ -59,6 +63,7 @@
       "readme": "crates/sim-codec-bitwise/README.md",
       "root": "crates/sim-codec-bitwise",
       "target_kinds": [
+        "custom-build",
         "lib"
       ]
     },
@@ -71,6 +76,7 @@
       "readme": "crates/sim-codec-chat/README.md",
       "root": "crates/sim-codec-chat",
       "target_kinds": [
+        "custom-build",
         "lib"
       ]
     },
@@ -84,6 +90,7 @@
       "root": "crates/sim-codec-compare",
       "target_kinds": [
         "bin",
+        "custom-build",
         "lib"
       ]
     },
@@ -136,6 +143,7 @@
       "readme": "crates/sim-codec-mcp/README.md",
       "root": "crates/sim-codec-mcp",
       "target_kinds": [
+        "custom-build",
         "lib"
       ]
     },
@@ -148,6 +156,7 @@
       "readme": "crates/sim-codec/README.md",
       "root": "crates/sim-codec",
       "target_kinds": [
+        "custom-build",
         "lib"
       ]
     },

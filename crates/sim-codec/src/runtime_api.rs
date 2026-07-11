@@ -110,8 +110,9 @@ pub fn decode_term_with_codec_and_limits(
     term_from_expr(default_decode, expr)
 }
 
-/// Decode `input` to an evaluable [`Expr`], applying the codec's eval-surface
-/// lowering (a lisp `(f x)` becomes a [`Expr::Call`]) but WITHOUT the
+/// Decode `input` to an evaluable [`sim_kernel::Expr`], applying the codec's
+/// eval-surface lowering (a lisp `(f x)` becomes a [`sim_kernel::Expr::Call`])
+/// but WITHOUT the
 /// [`Term`]/[`Datum`] round-trip that [`decode_term_with_codec`] performs.
 ///
 /// The Term lowering forces every `Expr::List` to a pure [`Datum`], which fails
