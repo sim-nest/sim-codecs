@@ -75,3 +75,7 @@ mod tests;
 
 pub use base64::{decode_base64, decode_base64_with_limits, encode_base64};
 pub use codec::{BinaryBase64Codec, BinaryBase64CodecLib};
+
+/// Cookbook recipes for this codec, embedded at build time.
+pub static RECIPES: sim_cookbook::EmbeddedDir =
+    include!(concat!(env!("OUT_DIR"), "/cookbook_recipes.rs"));

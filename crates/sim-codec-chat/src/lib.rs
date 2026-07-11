@@ -26,3 +26,7 @@ pub use ollama::{
     OllamaRequestOptions, decode_ollama_response, decode_ollama_stream, encode_ollama_request,
 };
 pub use parts::{number_field, text_part, usage_record};
+
+/// Cookbook recipes for this codec, embedded at build time.
+pub static RECIPES: sim_cookbook::EmbeddedDir =
+    include!(concat!(env!("OUT_DIR"), "/cookbook_recipes.rs"));

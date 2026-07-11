@@ -36,3 +36,7 @@ pub use runtime::{AlgolCodec, AlgolCodecLib};
 
 #[cfg(test)]
 mod tests;
+
+/// Cookbook recipes for this codec, embedded at build time.
+pub static RECIPES: sim_cookbook::EmbeddedDir =
+    include!(concat!(env!("OUT_DIR"), "/cookbook_recipes.rs"));

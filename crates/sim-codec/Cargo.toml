@@ -10,5 +10,9 @@ repository = "https://github.com/sim-nest/sim-codecs"
 homepage = "https://github.com/sim-nest/sim-codecs"
 
 [dependencies]
+sim-cookbook = { version = "0.1.0" }
 sim-citizen-derive = { version = "0.1.0" }
 sim-kernel = { version = "0.1.0" }
+
+[build-dependencies]
+sim-cookbook = { version = "0.1.0" }

@@ -90,3 +90,7 @@ pub use codec::{
     encode_located_tree_frame,
 };
 pub use types::{BinaryFrame, BinaryTag, DecodeLimits, FrameTables};
+
+/// Cookbook recipes for this codec, embedded at build time.
+pub static RECIPES: sim_cookbook::EmbeddedDir =
+    include!(concat!(env!("OUT_DIR"), "/cookbook_recipes.rs"));

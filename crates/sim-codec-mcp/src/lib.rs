@@ -38,3 +38,7 @@ pub use error::{
     METHOD_NOT_FOUND, NOT_FOUND, PARSE_ERROR, RATE_LIMITED,
 };
 pub use expr::{envelope_to_expr, expr_to_envelope};
+
+/// Cookbook recipes for this codec, embedded at build time.
+pub static RECIPES: sim_cookbook::EmbeddedDir =
+    include!(concat!(env!("OUT_DIR"), "/cookbook_recipes.rs"));

@@ -138,3 +138,7 @@ pub use types::{BitwiseFrame, DecodeLimits, FrameTables};
 pub fn canonical_bytes(expr: &Expr) -> Result<Vec<u8>> {
     Ok(encode_frame(expr)?.0)
 }
+
+/// Cookbook recipes for this codec, embedded at build time.
+pub static RECIPES: sim_cookbook::EmbeddedDir =
+    include!(concat!(env!("OUT_DIR"), "/cookbook_recipes.rs"));

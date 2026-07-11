@@ -1,6 +1,6 @@
 [package]
 name = "sim-codec-mcp"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2024"
 license = "MPL-2.0"
 description = "MCP JSON-RPC envelope codec for SIM."
@@ -13,6 +13,7 @@ homepage = "https://github.com/sim-nest/sim-codecs"
 path = "src/lib.rs"
 
 [dependencies]
+sim-cookbook = { version = "0.1.0" }
 serde_json = "1"
 sim-citizen = { version = "0.1.0" }
 sim-citizen-derive = { version = "0.1.0" }
@@ -26,3 +27,6 @@ sim-test-support = { version = "0.1.0", path = "../sim-test-support" }
 
 [lints]
 workspace = true
+
+[build-dependencies]
+sim-cookbook = { version = "0.1.0" }

@@ -1,6 +1,6 @@
 [package]
 name = "sim-codec-compare"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2024"
 license = "MPL-2.0"
 readme = "README.md"
@@ -10,6 +10,7 @@ homepage = "https://github.com/sim-nest/sim-codecs"
 publish = false
 
 [dependencies]
+sim-cookbook = { version = "0.1.0" }
 sim-kernel = { version = "0.1.0" }
 sim-value = { version = "0.1.0" }
 sim-codec-binary = { version = "0.1.0", path = "../sim-codec-binary" }
@@ -18,3 +19,6 @@ sim-codec-bitwise = { version = "0.1.0", path = "../sim-codec-bitwise" }
 [[bin]]
 name = "report"
 path = "src/bin/report.rs"
+
+[build-dependencies]
+sim-cookbook = { version = "0.1.0" }
