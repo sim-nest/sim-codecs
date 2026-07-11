@@ -8,7 +8,7 @@ SIM workspace package for sim codec algol.
 
 - Manifest: `crates/sim-codec-algol/Cargo.toml`
 - Publish: `true`
-- Targets: `lib`
+- Targets: `custom-build, lib`
 
 ## Crate Documentation
 

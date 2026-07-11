@@ -8,7 +8,7 @@ SIM workspace package for sim codec binary base64.
 
 - Manifest: `crates/sim-codec-binary-base64/Cargo.toml`
 - Publish: `true`
-- Targets: `lib`
+- Targets: `custom-build, lib`
 
 ## Crate Documentation
 

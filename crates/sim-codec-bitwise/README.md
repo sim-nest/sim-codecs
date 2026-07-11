@@ -8,7 +8,7 @@ SIM workspace package for sim codec bitwise.
 
 - Manifest: `crates/sim-codec-bitwise/Cargo.toml`
 - Publish: `true`
-- Targets: `lib`
+- Targets: `custom-build, lib`
 
 ## Crate Documentation
 
