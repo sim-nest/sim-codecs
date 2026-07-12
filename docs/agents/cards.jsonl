@@ -1,7 +1,7 @@
+{"kind":"recipe","path":"crates/sim-codec-algol/recipes/01-basics/algol-arithmetic/purpose.md"}
+{"kind":"recipe","path":"crates/sim-codec-algol/recipes/01-basics/algol-arithmetic/recipe.toml"}
+{"kind":"recipe","path":"crates/sim-codec-algol/recipes/01-basics/algol-arithmetic/setup.siml"}
 {"kind":"recipe","path":"crates/sim-codec-algol/recipes/01-basics/chapter.toml"}
-{"kind":"recipe","path":"crates/sim-codec-algol/recipes/01-basics/pratt-surface/purpose.md"}
-{"kind":"recipe","path":"crates/sim-codec-algol/recipes/01-basics/pratt-surface/recipe.toml"}
-{"kind":"recipe","path":"crates/sim-codec-algol/recipes/01-basics/pratt-surface/setup.siml"}
 {"kind":"recipe","path":"crates/sim-codec-algol/recipes/book.toml"}
 {"kind":"recipe","path":"crates/sim-codec-binary-base64/recipes/01-basics/chapter.toml"}
 {"kind":"recipe","path":"crates/sim-codec-binary-base64/recipes/01-basics/text-wrapper/purpose.md"}

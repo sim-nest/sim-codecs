@@ -1,0 +1,11 @@
+id = "algol-arithmetic"
+title = "Compute an arithmetic expression"
+codec = "algol"
+setup = "setup.siml"
+purpose = "purpose.md"
+order = 10
+tags = ["codec", "algol", "pratt", "compute"]
+requires = ["codec/algol", "numbers/arith", "numbers/i64"]
+[[expect]]
+form = 0
+result = "7"
