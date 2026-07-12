@@ -1,10 +1,10 @@
 {
   "schema": "sim.card-index.v1",
   "cards": [
+    "crates/sim-codec-algol/recipes/01-basics/algol-arithmetic/purpose.md",
+    "crates/sim-codec-algol/recipes/01-basics/algol-arithmetic/recipe.toml",
+    "crates/sim-codec-algol/recipes/01-basics/algol-arithmetic/setup.siml",
     "crates/sim-codec-algol/recipes/01-basics/chapter.toml",
-    "crates/sim-codec-algol/recipes/01-basics/pratt-surface/purpose.md",
-    "crates/sim-codec-algol/recipes/01-basics/pratt-surface/recipe.toml",
-    "crates/sim-codec-algol/recipes/01-basics/pratt-surface/setup.siml",
     "crates/sim-codec-algol/recipes/book.toml",
     "crates/sim-codec-binary-base64/recipes/01-basics/chapter.toml",
     "crates/sim-codec-binary-base64/recipes/01-basics/text-wrapper/purpose.md",
