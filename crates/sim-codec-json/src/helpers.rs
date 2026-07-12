@@ -4,12 +4,37 @@
 //! string, bool, array, and base64 bytes) used by the canonical and tree
 //! projections.
 
+use std::fmt::Write as _;
+
 use serde_json::{Map, Value as JsonValue};
 use sim_kernel::{Error, Expr, QuoteMode, Result, Symbol};
 
 pub(crate) use sim_codec_binary_base64::{
     decode_base64 as base64_decode, encode_base64 as base64_encode,
 };
+
+/// Escapes a string for use inside a JSON string literal.
+///
+/// The returned text does not include the surrounding quote characters.
+pub fn json_escape(input: &str) -> String {
+    let mut out = String::with_capacity(input.len());
+    for ch in input.chars() {
+        match ch {
+            '"' => out.push_str("\\\""),
+            '\\' => out.push_str("\\\\"),
+            '\n' => out.push_str("\\n"),
+            '\r' => out.push_str("\\r"),
+            '\t' => out.push_str("\\t"),
+            '\u{08}' => out.push_str("\\b"),
+            '\u{0c}' => out.push_str("\\f"),
+            '\u{00}'..='\u{1f}' => {
+                write!(&mut out, "\\u{:04x}", ch as u32).expect("string writes do not fail");
+            }
+            other => out.push(other),
+        }
+    }
+    out
+}
 
 pub(crate) fn symbol_to_json(symbol: &Symbol) -> JsonValue {
     let mut object = Map::new();

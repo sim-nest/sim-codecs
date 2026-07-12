@@ -12,7 +12,10 @@ use sim_kernel::{
 };
 
 use crate::helpers::base64_encode;
-use crate::{JsonCodecLib, expr_to_json, json_to_expr, json_to_located_expr, located_expr_to_json};
+use crate::{
+    JsonCodecLib, expr_to_json, json_escape, json_to_expr, json_to_located_expr,
+    located_expr_to_json,
+};
 
 fn cx() -> sim_kernel::Cx {
     let mut cx = sim_kernel::Cx::new(Arc::new(EagerPolicy), Arc::new(DefaultFactory));
@@ -30,6 +33,15 @@ fn codec_registers() {
             .codec_by_symbol(&Symbol::qualified("codec", "json"))
             .is_some()
     );
+}
+
+#[test]
+fn json_escape_returns_a_json_string_fragment() {
+    assert_eq!(
+        json_escape("quote\" slash\\ lf\n cr\r tab\t back\u{08} form\u{0c} nul\u{0}"),
+        "quote\\\" slash\\\\ lf\\n cr\\r tab\\t back\\b form\\f nul\\u0000"
+    );
+    assert_eq!(json_escape("plain utf8 cafe"), "plain utf8 cafe");
 }
 
 #[test]
