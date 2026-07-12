@@ -2,6 +2,8 @@
 //! `origin`, and `rewrite` submodules and exposing the `decode_algol_located`
 //! decode entry points built on top of the Pratt parser.
 
+use std::sync::Arc;
+
 mod origin;
 mod rewrite;
 mod state;
@@ -10,6 +12,7 @@ mod tokenize;
 use crate::pratt::{PrattParser, default_pratt_table};
 use sim_codec::{DecodeBudget, DecodeLimits};
 use sim_kernel::{Expr, LocatedExpr, PrattTable, Result};
+use sim_shape::{PrattShape, Shape, ShapeExprParser};
 
 pub(crate) use origin::{extend_tree_trivia, tree_origin, with_origin_span};
 pub use state::ParseCx;
@@ -109,4 +112,45 @@ pub fn parse_algol_expr_with_table_and_budget(
     )?;
     rewrite::rewrite_number_domains_tree_lossy(cx, &mut tree)?;
     Ok(tree.expr)
+}
+
+/// [`ShapeExprParser`] adapter that parses string input with an Algol
+/// [`PrattTable`].
+///
+/// This lets callers build a [`PrattShape`] over the real Algol parser instead
+/// of carrying a local test-only adapter. The parser returns the raw Pratt
+/// expression tree; number-domain lowering belongs to codec decode paths that
+/// have a runtime context.
+pub struct AlgolShapeParser {
+    table: PrattTable,
+}
+
+impl AlgolShapeParser {
+    /// Build an adapter backed by `table`.
+    pub fn new(table: PrattTable) -> Self {
+        Self { table }
+    }
+
+    /// Return the Pratt table used by this adapter.
+    pub fn table(&self) -> &PrattTable {
+        &self.table
+    }
+}
+
+impl ShapeExprParser for AlgolShapeParser {
+    fn label(&self) -> &str {
+        "algol-pratt"
+    }
+
+    fn parse_expr(&self, source: &str) -> Result<Expr> {
+        Ok(PrattParser::new(self.table.clone())
+            .parse_text_tree(sim_kernel::CodecId(0), "<shape>", source)?
+            .expr)
+    }
+}
+
+/// Build a [`PrattShape`] that parses string expressions through the Algol
+/// Pratt parser before matching `inner`.
+pub fn algol_pratt_shape(table: PrattTable, inner: Arc<dyn Shape>) -> PrattShape {
+    PrattShape::new(Arc::new(AlgolShapeParser::new(table)), inner)
 }

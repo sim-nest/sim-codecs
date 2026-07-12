@@ -8,7 +8,7 @@ use sim_kernel::{
     Datum, DefaultFactory, EagerPolicy, Expr, NumberLiteral, QuoteMode, Ref, SourceId, Symbol,
     Term, Trivia,
 };
-use sim_shape::{ExprKind, ExprKindShape, PrattShape, Shape, ShapeExprParser};
+use sim_shape::{ExprKind, ExprKindShape, Shape};
 
 use crate::*;
 
@@ -242,25 +242,11 @@ fn arithmetic_pratt_table_is_exported_as_value() {
     );
 }
 
-struct AlgolShapeParser(sim_kernel::PrattTable);
-
-impl ShapeExprParser for AlgolShapeParser {
-    fn label(&self) -> &str {
-        "algol-pratt"
-    }
-
-    fn parse_expr(&self, source: &str) -> sim_kernel::Result<Expr> {
-        Ok(PrattParser::new(self.0.clone())
-            .parse_text_tree(sim_kernel::CodecId(0), "<shape>", source)?
-            .expr)
-    }
-}
-
 #[test]
 fn algol_pratt_shape_adapter_parses_before_matching() {
     let mut cx = cx();
-    let shape = PrattShape::new(
-        Arc::new(AlgolShapeParser(default_pratt_table())),
+    let shape = algol_pratt_shape(
+        default_pratt_table(),
         Arc::new(ExprKindShape::new(ExprKind::Infix)),
     );
 
