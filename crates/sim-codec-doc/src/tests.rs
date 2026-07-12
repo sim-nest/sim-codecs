@@ -1,7 +1,10 @@
 use sim_codec::{Input, decode_with_codec, encode_with_codec};
 use sim_kernel::{EncodeOptions, Expr, NumberLiteral, ReadPolicy, Symbol};
 
-use crate::{ChunkOp, DocValue, chunk, decode_document, install_doc_codec};
+use crate::{
+    BackendId, ChunkOp, DocValue, Inline, MarkupBlock, MarkupDoc, MathSource, SourceDoc, Span,
+    chunk, decode_document, install_doc_codec,
+};
 
 fn cx() -> sim_kernel::Cx {
     let mut cx = sim_test_support::core_cx();
@@ -40,7 +43,7 @@ fn doc_codec_registers_codec_and_chunk_functions() {
 }
 
 #[test]
-fn decode_markdown_records_offsets_and_heading_paths() {
+fn decode_document_still_chunks_headings() {
     let doc = decode_document("# Guide\n\nAlpha beta.\n\n## Detail\n\nGamma.\n");
     assert_eq!(doc.blocks.len(), 4);
     assert_eq!(doc.blocks[0].text, "Guide");
@@ -54,7 +57,57 @@ fn decode_markdown_records_offsets_and_heading_paths() {
 }
 
 #[test]
-fn codec_decodes_text_to_document_expr_and_encodes_source_text() {
+fn markup_doc_roundtrips_as_expr() {
+    let mut attrs = std::collections::BTreeMap::new();
+    attrs.insert("audience".to_owned(), Expr::String("builder".to_owned()));
+    let doc = MarkupDoc {
+        title: Some("Guide".to_owned()),
+        attrs,
+        source: Some(SourceDoc {
+            backend: BackendId("markdown".to_owned()),
+            text: "# Guide\n\nAlpha beta.\n".to_owned(),
+        }),
+        blocks: vec![
+            MarkupBlock::Heading {
+                level: 1,
+                text: vec![Inline::Text("Guide".to_owned())],
+                id: Some("guide".to_owned()),
+                span: Some(Span { start: 0, end: 7 }),
+            },
+            MarkupBlock::Paragraph {
+                content: vec![
+                    Inline::Text("Alpha ".to_owned()),
+                    Inline::Strong(vec![Inline::Text("beta".to_owned())]),
+                    Inline::Text(".".to_owned()),
+                ],
+                span: Some(Span { start: 9, end: 20 }),
+            },
+            MarkupBlock::CodeBlock {
+                lang: Some("rust".to_owned()),
+                code: "fn main() {}".to_owned(),
+                span: None,
+            },
+            MarkupBlock::Table {
+                header: vec![vec![Inline::Text("Name".to_owned())]],
+                rows: vec![vec![vec![Inline::Text("SIM".to_owned())]]],
+                span: None,
+            },
+            MarkupBlock::MathBlock {
+                source: MathSource {
+                    notation: "tex".to_owned(),
+                    text: "x^2".to_owned(),
+                },
+                span: None,
+            },
+        ],
+    };
+
+    let decoded = MarkupDoc::from_expr(&doc.as_expr()).unwrap();
+    assert_eq!(decoded, doc);
+}
+
+#[test]
+fn codec_decodes_text_to_markup_doc_expr_and_encodes_source_text() {
     let mut cx = cx();
     let source = "# Guide\n\nAlpha beta.\n";
     let expr = decode_with_codec(
@@ -64,8 +117,12 @@ fn codec_decodes_text_to_document_expr_and_encodes_source_text() {
         ReadPolicy::default(),
     )
     .unwrap();
-    assert_eq!(map_symbol(&expr, "kind"), Some(Symbol::new("doc")));
-    assert_eq!(map_string(&expr, "text"), Some(source));
+    assert_eq!(map_symbol(&expr, "kind"), Some(Symbol::new("markup-doc")));
+    assert_eq!(map_string(&expr, "title"), Some("Guide"));
+    assert_eq!(
+        map_string(map_field(&expr, "source").unwrap(), "text"),
+        Some(source)
+    );
     let output = encode_with_codec(
         &mut cx,
         &Symbol::qualified("codec", "doc"),
@@ -116,14 +173,14 @@ fn heading_chunks_attach_current_heading_path() {
 #[test]
 fn chunk_functions_return_chunk_maps() {
     let mut cx = cx();
-    let doc = cx
-        .factory()
-        .expr(
-            DocValue::from_expr(&Expr::String("abcdef".to_owned()))
-                .unwrap()
-                .as_expr(),
-        )
-        .unwrap();
+    let decoded = decode_with_codec(
+        &mut cx,
+        &Symbol::qualified("codec", "doc"),
+        Input::Text("abcdef".to_owned()),
+        ReadPolicy::default(),
+    )
+    .unwrap();
+    let doc = cx.factory().expr(decoded).unwrap();
     let size = cx
         .factory()
         .number_literal(Symbol::qualified("numbers", "f64"), "3".to_owned())

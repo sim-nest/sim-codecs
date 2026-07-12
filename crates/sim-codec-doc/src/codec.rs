@@ -1,6 +1,7 @@
 //! The `codec:doc` decoder/encoder and its host-registered lib. Decodes
-//! document text into a document `Expr` and encodes document values or strings
-//! back to text, installing the `doc/chunk-*` chunking functions alongside.
+//! document text into a markup document `Expr` and encodes markup documents,
+//! compatibility document values, or strings back to text, installing the
+//! `doc/chunk-*` chunking functions alongside.
 
 use std::sync::Arc;
 
@@ -13,14 +14,15 @@ use sim_kernel::{
     Result, Symbol, Version, WriteCx,
 };
 
-use crate::document::{DocValue, decode_document};
+use crate::document::DocValue;
 use crate::functions::{CHUNK_FUNCTIONS, DocChunkFunction};
+use crate::markup::{MarkupDoc, decode_markup_doc};
 
 /// The `codec:doc` decoder/encoder.
 ///
-/// As a [`Decoder`] it turns document text into a document `Expr`; as an
-/// [`Encoder`] it writes a document value or a raw string back to text and
-/// fails closed on any other expression.
+/// As a [`Decoder`] it turns document text into a markup document `Expr`; as an
+/// [`Encoder`] it writes a markup document, compatibility document value, or raw
+/// string back to text and fails closed on any other expression.
 pub struct DocCodec;
 
 impl Decoder for DocCodec {
@@ -28,7 +30,7 @@ impl Decoder for DocCodec {
         let source = input.into_string()?;
         let budget = DecodeBudget::new(cx.limits);
         budget.check_input_bytes(cx.codec, source.len())?;
-        Ok(decode_document(&source).as_expr())
+        Ok(decode_markup_doc(&source).as_expr())
     }
 }
 
@@ -36,18 +38,27 @@ impl Encoder for DocCodec {
     fn encode(&self, cx: &mut WriteCx<'_>, expr: &sim_kernel::Expr) -> Result<Output> {
         match expr {
             sim_kernel::Expr::String(text) => Ok(Output::Text(text.clone())),
-            sim_kernel::Expr::Map(_) => {
-                let doc = DocValue::from_expr(expr).map_err(|err| Error::CodecError {
+            sim_kernel::Expr::Map(_) => Ok(Output::Text(encode_doc_expr(expr).map_err(|err| {
+                Error::CodecError {
                     codec: cx.codec,
                     message: err.to_string(),
-                })?;
-                Ok(Output::Text(doc.text))
-            }
+                }
+            })?)),
             _ => Err(Error::CodecError {
                 codec: cx.codec,
                 message: "codec:doc encodes document values or strings".to_owned(),
             }),
         }
+    }
+}
+
+fn encode_doc_expr(expr: &sim_kernel::Expr) -> Result<String> {
+    match MarkupDoc::from_expr(expr) {
+        Ok(doc) => Ok(doc.to_source_text()),
+        Err(markup_error) => match DocValue::from_expr(expr) {
+            Ok(doc) => Ok(doc.text),
+            Err(_) => Err(markup_error),
+        },
     }
 }
 
