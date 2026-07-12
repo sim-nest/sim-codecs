@@ -8,6 +8,8 @@
 
 mod domain;
 mod domain_form;
+#[cfg(test)]
+mod domain_form_tests;
 mod limits;
 mod list_encode;
 mod lowering;

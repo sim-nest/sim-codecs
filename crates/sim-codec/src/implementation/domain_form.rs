@@ -15,6 +15,8 @@
 //! [`list`](DomainForm::list), and (optionally) renders with
 //! [`format_domain_form`].
 
+use sim_kernel::{Expr, Symbol};
+
 /// A parsed domain-form value.
 #[derive(Clone, Debug, PartialEq)]
 pub enum DomainValue {
@@ -109,6 +111,33 @@ impl DomainForm {
             None => Err(DomainFormError::MissingField(name.to_owned())),
         }
     }
+
+    /// Project this parsed form to an [`Expr::Map`] for shape validation.
+    ///
+    /// The map always contains `form` with the form name. Positional values are
+    /// carried as `args` only when present. Keyed fields keep their field names
+    /// as symbol keys, and values are projected with [`DomainValue::to_expr`].
+    pub fn to_expr_map(&self) -> Expr {
+        let mut entries = vec![(
+            Expr::Symbol(Symbol::new("form")),
+            Expr::String(self.name.clone()),
+        )];
+
+        if !self.positional.is_empty() {
+            entries.push((
+                Expr::Symbol(Symbol::new("args")),
+                Expr::List(self.positional.iter().map(DomainValue::to_expr).collect()),
+            ));
+        }
+
+        entries.extend(
+            self.fields
+                .iter()
+                .map(|(key, value)| (Expr::Symbol(Symbol::new(key.clone())), value.to_expr())),
+        );
+
+        Expr::Map(entries)
+    }
 }
 
 impl DomainValue {
@@ -154,6 +183,20 @@ impl DomainValue {
                 format!("\"{}\"", value.replace('\\', "\\\\").replace('"', "\\\""))
             }
             DomainValue::Atom(value) => value.clone(),
+        }
+    }
+
+    /// Project this domain-form value to an expression map/list/string tree.
+    ///
+    /// Atoms become strings so their original text is preserved rather than
+    /// interpreted as a symbol or number.
+    pub fn to_expr(&self) -> Expr {
+        match self {
+            DomainValue::Form(form) => form.to_expr_map(),
+            DomainValue::List(items) => {
+                Expr::List(items.iter().map(DomainValue::to_expr).collect())
+            }
+            DomainValue::String(value) | DomainValue::Atom(value) => Expr::String(value.clone()),
         }
     }
 }
