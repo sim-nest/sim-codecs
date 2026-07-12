@@ -29,6 +29,7 @@
 //!   - limits: decode resource ceilings (`DecodeLimits`), running budgets
 //!     (`DecodeBudget`), and the `ReadCx` decode context.
 //!   - list_encode: the shared list/`Expr` value-to-expr encode machinery.
+//!   - lowering: structure-preserving operator-node lowering.
 //!   - portable: codec-neutral, lossless portable encode/decode for the data
 //!     subset of `Expr`.
 //!   - strings: string-literal encode/decode helpers.
