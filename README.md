@@ -1,8 +1,8 @@
 # sim-codecs
 
 sim-codecs gives you SIM's read/write layer: a set of codec libraries that
-decode text or bytes -- Lisp, JSON, binary, Algol, and more -- into one shared
-expression graph, and encode that graph back out again.
+decode text or bytes -- Lisp, JSON, binary, Algol, configuration text, and more
+-- into one shared expression graph, and encode that graph back out again.
 
 ## Example
 
@@ -86,6 +86,7 @@ self-contained, but those protocol types are the kernel's, not this repo's.
 | `sim-codec-bitwise-base64` | `codec:bitwise-base64`, a general-purpose expression codec that wraps the bitwise frame in ASCII Base64 text -- the text-transport analog of `codec:bitwise`, sharing one base64 implementation with `sim-codec-binary-base64`. |
 | `sim-codec-algol` | `codec:algol`, a general-purpose expression codec over an Algol-style infix surface with registered Pratt operators. |
 | `sim-codec-chat` | `codec:chat`, a domain codec for provider-neutral model transcripts, with OpenAI-compatible and Ollama projection helpers. |
+| `sim-codec-config` | `codec:config`, a config codec that decodes per-library settings as one table map and shared launcher files as a directory of library id to table map. |
 | `sim-codec-doc` | `codec:doc`, a document codec that decodes text or Markdown into provenance-bearing document values and exposes fixed, recursive, and heading-aware chunk operations. |
 | `sim-codec-mcp` | `codec:mcp`, a domain codec for one MCP JSON-RPC 2.0 envelope per frame. |
 | `sim-wasm-abi` | The wasm guest ABI: byte-frame value/manifest/exports transport and a wasm-backed `Lib`. This is the plugin ABI surface, not an expression codec. |
@@ -146,6 +147,12 @@ Lisp's `expr:map` / `expr:set` / `expr:call` / `expr:infix` forms, or JSON's
 They still pass through the shared `Expr` model, but they validate and **fail
 closed** on any expression outside their accepted shape, instead of claiming
 total coverage.
+
+**Configuration codecs** (`codec:config`) decode settings into `Expr::Map`
+values. A per-library config file decodes as one table; a shared launcher file
+decodes as a directory whose keys are library ids and whose values are tables.
+Callers that accept configuration maps can also use `codec:lisp` or
+`codec:json` when those inputs decode to a map.
 
 ### The shared `Expr` model and canonical equality
 

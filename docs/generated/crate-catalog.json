@@ -1,6 +1,6 @@
 {
   "generator": "xtask crate-catalog v1",
-  "package_count": 15,
+  "package_count": 16,
   "packages": [
     {
       "description": "SIM workspace package for sim codec algol.",
@@ -90,6 +90,19 @@
       "root": "crates/sim-codec-compare",
       "target_kinds": [
         "bin",
+        "custom-build",
+        "lib"
+      ]
+    },
+    {
+      "description": "SIM config codec for per-library and single-file config maps.",
+      "generated_readme": true,
+      "manifest": "crates/sim-codec-config/Cargo.toml",
+      "name": "sim-codec-config",
+      "publish": "true",
+      "readme": "crates/sim-codec-config/README.md",
+      "root": "crates/sim-codec-config",
+      "target_kinds": [
         "custom-build",
         "lib"
       ]

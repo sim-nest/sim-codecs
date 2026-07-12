@@ -1,0 +1,5 @@
+book = "codec/config"
+title = "Config Codec"
+summary = "Configuration tables for library defaults and shared launcher files."
+order = 255
+chapters = ["01-basics"]

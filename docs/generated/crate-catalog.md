@@ -13,6 +13,7 @@ Generated from Cargo metadata by `xtask crate-catalog v1`.
 | `sim-codec-bitwise` | `true` | `custom-build, lib` | SIM workspace package for sim codec bitwise. |
 | `sim-codec-chat` | `true` | `custom-build, lib` | Canonical chat transcript codec for SIM. |
 | `sim-codec-compare` | `false` | `bin, custom-build, lib` | Developer harness comparing sim-codec-bitwise vs sim-codec-binary on size and speed. |
+| `sim-codec-config` | `true` | `custom-build, lib` | SIM config codec for per-library and single-file config maps. |
 | `sim-codec-doc` | `true` | `custom-build, lib` | SIM workspace package for sim codec doc. |
 | `sim-codec-json` | `true` | `custom-build, lib` | SIM workspace package for sim codec json. |
 | `sim-codec-lisp` | `true` | `cdylib, custom-build, rlib` | SIM workspace package for sim codec lisp. |

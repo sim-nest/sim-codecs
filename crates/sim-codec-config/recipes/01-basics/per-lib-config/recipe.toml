@@ -1,0 +1,8 @@
+id = "per-lib-config"
+title = "Per-library config descriptor"
+codec = "lisp"
+setup = "setup.siml"
+purpose = "purpose.md"
+order = 10
+tags = ["codec", "config", "table", "descriptor"]
+requires = ["core", "codec/lisp"]

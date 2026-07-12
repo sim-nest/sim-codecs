@@ -33,6 +33,11 @@
 {"kind":"recipe","path":"crates/sim-codec-compare/recipes/01-basics/run-report/recipe.toml"}
 {"kind":"recipe","path":"crates/sim-codec-compare/recipes/01-basics/run-report/setup.siml"}
 {"kind":"recipe","path":"crates/sim-codec-compare/recipes/book.toml"}
+{"kind":"recipe","path":"crates/sim-codec-config/recipes/01-basics/chapter.toml"}
+{"kind":"recipe","path":"crates/sim-codec-config/recipes/01-basics/per-lib-config/purpose.md"}
+{"kind":"recipe","path":"crates/sim-codec-config/recipes/01-basics/per-lib-config/recipe.toml"}
+{"kind":"recipe","path":"crates/sim-codec-config/recipes/01-basics/per-lib-config/setup.siml"}
+{"kind":"recipe","path":"crates/sim-codec-config/recipes/book.toml"}
 {"kind":"recipe","path":"crates/sim-codec-doc/recipes/01-basics/chapter.toml"}
 {"kind":"recipe","path":"crates/sim-codec-doc/recipes/01-basics/document-chunks/purpose.md"}
 {"kind":"recipe","path":"crates/sim-codec-doc/recipes/01-basics/document-chunks/recipe.toml"}
