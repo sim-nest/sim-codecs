@@ -18,12 +18,16 @@
 //! - markup: the shared semantic markup IR (`MarkupDoc`, `MarkupBlock`,
 //!   `Inline`) and its ordinary-data projection.
 //! - functions: the `doc/chunk-*` chunking functions registered as callables.
+//! - asciidoc: the `asciidork-parser` AsciiDoc backend.
 //! - markdown: the `pulldown-cmark` Markdown backend.
 //! - typst_backend: the `typst-syntax` Typst backend.
 
 #![forbid(unsafe_code)]
 #![deny(missing_docs)]
 
+mod asciidoc;
+#[cfg(test)]
+mod asciidoc_tests;
 mod backend;
 mod codec;
 mod document;
@@ -42,6 +46,7 @@ mod typst_backend;
 pub static RECIPES: sim_cookbook::EmbeddedDir =
     include!(concat!(env!("OUT_DIR"), "/cookbook_recipes.rs"));
 
+pub use asciidoc::AsciiDocBackend;
 pub use backend::{
     BackendRegistry, BasicMarkdownBackend, MarkupBackend, MarkupDecodeOptions, MarkupEncodeOptions,
     MarkupError, MarkupFidelity, MarkupLoss, default_backend_registry,

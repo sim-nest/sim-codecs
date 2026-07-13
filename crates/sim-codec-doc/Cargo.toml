@@ -15,6 +15,8 @@ sim-cookbook = { version = "0.1.0" }
 sim-kernel = { version = "0.1.0" }
 sim-value = { version = "0.1.0" }
 pulldown-cmark = "0.13.4"
+asciidork-ast = "0.38.0"
+asciidork-parser = "0.38.1"
 typst-syntax = "0.15.0"
 
 [dev-dependencies]

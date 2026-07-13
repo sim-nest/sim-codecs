@@ -39,6 +39,11 @@ fn doc_codec_registers_codec_and_chunk_functions() {
     );
     assert!(
         cx.registry()
+            .codec_by_symbol(&markup_codec_symbol(&BackendId::new("asciidoc")))
+            .is_some()
+    );
+    assert!(
+        cx.registry()
             .codec_by_symbol(&markup_codec_symbol(&BackendId::new("typst")))
             .is_some()
     );
