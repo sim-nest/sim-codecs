@@ -117,7 +117,8 @@
       "root": "crates/sim-codec-doc",
       "target_kinds": [
         "custom-build",
-        "lib"
+        "lib",
+        "test"
       ]
     },
     {
