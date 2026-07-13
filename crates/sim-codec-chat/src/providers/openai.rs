@@ -9,7 +9,9 @@ mod decode;
 mod encode;
 mod runtime;
 
+pub(in crate::providers) use decode::decode_openai_request_for_codec;
 pub use decode::{decode_openai_request, decode_openai_response, decode_openai_stream};
+pub(in crate::providers) use encode::encode_openai_response_for_codec;
 pub use encode::{encode_openai_request, encode_openai_response};
 pub use runtime::{OpenAiCodec, OpenAiCodecLib};
 

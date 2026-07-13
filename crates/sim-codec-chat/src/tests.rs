@@ -4,14 +4,15 @@ use sim_codec::{Input, decode_with_codec, encode_with_codec};
 use sim_kernel::{DefaultFactory, EagerPolicy, EncodeOptions, Error, Expr, ReadPolicy, Symbol};
 
 use crate::{
-    AnthropicCodecLib, ChatCodecLib, OllamaCodecLib, OpenAiCodecLib, OpenAiRequestOptions,
-    RequestWire, StreamWire, decode_openai_response, decode_openai_stream, encode_openai_request,
-    is_model_request_expr, model_card_expr, model_error_expr, model_request_messages_expr,
-    model_response_expr,
+    AnthropicCodecLib, ChatCodecLib, LemonadeCodecLib, LmStudioCodecLib, OllamaCodecLib,
+    OpenAiCodecLib, OpenAiRequestOptions, RequestWire, StreamWire, decode_openai_response,
+    decode_openai_stream, encode_openai_request, is_model_request_expr, model_card_expr,
+    model_error_expr, model_request_messages_expr, model_response_expr,
 };
 
 mod anthropic;
 mod ollama;
+mod openai_compat;
 
 fn cx() -> sim_kernel::Cx {
     let mut cx = sim_kernel::Cx::new(Arc::new(EagerPolicy), Arc::new(DefaultFactory));
@@ -22,6 +23,10 @@ fn cx() -> sim_kernel::Cx {
     cx.load_lib(&openai).unwrap();
     let anthropic = AnthropicCodecLib::new(cx.registry_mut().fresh_codec_id());
     cx.load_lib(&anthropic).unwrap();
+    let lm_studio = LmStudioCodecLib::new(cx.registry_mut().fresh_codec_id());
+    cx.load_lib(&lm_studio).unwrap();
+    let lemonade = LemonadeCodecLib::new(cx.registry_mut().fresh_codec_id());
+    cx.load_lib(&lemonade).unwrap();
     let ollama = OllamaCodecLib::new(cx.registry_mut().fresh_codec_id());
     cx.load_lib(&ollama).unwrap();
     let lisp = sim_codec_lisp::LispCodecLib::new(cx.registry_mut().fresh_codec_id()).unwrap();
@@ -225,6 +230,18 @@ fn provider_profiles_are_open_data_records() {
     assert_eq!(anthropic.provider, Symbol::new("anthropic"));
     assert_eq!(anthropic.request_wire, RequestWire::AnthropicMessages);
     assert_eq!(anthropic.stream_wire, StreamWire::Sse);
+
+    let lm_studio = crate::lm_studio_profile();
+    assert_eq!(lm_studio.codec, Symbol::qualified("codec", "lm-studio"));
+    assert_eq!(lm_studio.provider, Symbol::new("lm-studio"));
+    assert_eq!(lm_studio.request_wire, RequestWire::OpenAiChat);
+    assert_eq!(lm_studio.stream_wire, StreamWire::Sse);
+
+    let lemonade = crate::lemonade_profile();
+    assert_eq!(lemonade.codec, Symbol::qualified("codec", "lemonade"));
+    assert_eq!(lemonade.provider, Symbol::new("lemonade"));
+    assert_eq!(lemonade.request_wire, RequestWire::OpenAiChat);
+    assert_eq!(lemonade.stream_wire, StreamWire::Sse);
 }
 
 #[test]
@@ -236,6 +253,14 @@ fn provider_runtime_codecs_install() {
     );
     assert!(
         cx.resolve_codec(&Symbol::qualified("codec", "anthropic"))
+            .is_ok()
+    );
+    assert!(
+        cx.resolve_codec(&Symbol::qualified("codec", "lm-studio"))
+            .is_ok()
+    );
+    assert!(
+        cx.resolve_codec(&Symbol::qualified("codec", "lemonade"))
             .is_ok()
     );
     assert!(
@@ -270,6 +295,34 @@ fn provider_runtime_codecs_install() {
             .into_text()
             .unwrap()
             .contains("\"type\":\"message\"")
+    );
+
+    let lm_studio_output = encode_with_codec(
+        &mut cx,
+        &Symbol::qualified("codec", "lm-studio"),
+        &response,
+        EncodeOptions::default(),
+    )
+    .unwrap();
+    assert!(
+        lm_studio_output
+            .into_text()
+            .unwrap()
+            .contains("chat.completion")
+    );
+
+    let lemonade_output = encode_with_codec(
+        &mut cx,
+        &Symbol::qualified("codec", "lemonade"),
+        &response,
+        EncodeOptions::default(),
+    )
+    .unwrap();
+    assert!(
+        lemonade_output
+            .into_text()
+            .unwrap()
+            .contains("chat.completion")
     );
 
     let ollama_output = encode_with_codec(

@@ -39,7 +39,10 @@ pub fn encode_openai_response(expr: &Expr) -> Result<Vec<u8>> {
         .map_err(|err| Error::Eval(format!("openai codec failed to encode response: {err}")))
 }
 
-pub(super) fn encode_openai_response_for_codec(codec: CodecId, expr: &Expr) -> Result<String> {
+pub(in crate::providers) fn encode_openai_response_for_codec(
+    codec: CodecId,
+    expr: &Expr,
+) -> Result<String> {
     if !marker_is_true(expr, "model-response") {
         return Err(codec_error(
             codec,

@@ -6,8 +6,14 @@
 
 /// Anthropic Messages provider wire codec.
 pub mod anthropic;
+/// Lemonade OpenAI-compatible provider wire codec.
+pub mod lemonade;
+/// LM Studio OpenAI-compatible provider wire codec.
+pub mod lm_studio;
 /// OpenAI-compatible chat-completion provider wire codec.
 pub mod openai;
+/// Shared helpers for OpenAI-compatible provider wire codecs.
+pub(in crate::providers) mod openai_compat;
 /// Open provider profile records used by runners and browse surfaces.
 pub mod profile;
 

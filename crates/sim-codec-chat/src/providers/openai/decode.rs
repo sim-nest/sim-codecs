@@ -15,7 +15,10 @@ pub fn decode_openai_request(input: Input) -> Result<Expr> {
     decode_openai_request_for_codec(OPENAI_CODEC_ID, input)
 }
 
-pub(super) fn decode_openai_request_for_codec(codec: CodecId, input: Input) -> Result<Expr> {
+pub(in crate::providers) fn decode_openai_request_for_codec(
+    codec: CodecId,
+    input: Input,
+) -> Result<Expr> {
     let source = domain_input_text(codec, input)?;
     let mut budget = DecodeBudget::new(DecodeLimits::default());
     budget.check_input_bytes(codec, source.len())?;

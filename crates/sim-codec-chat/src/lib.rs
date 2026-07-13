@@ -34,6 +34,16 @@ pub use providers::anthropic::{
     decode_anthropic_stream, decode_anthropic_stream_events, encode_anthropic_request,
     encode_anthropic_response,
 };
+pub use providers::lemonade::{
+    LemonadeCodec, LemonadeCodecLib, LemonadeCodecOptions, LemonadeRequestOptions,
+    decode_lemonade_request, decode_lemonade_response, decode_lemonade_stream,
+    encode_lemonade_request, encode_lemonade_response, lemonade_codec_symbol,
+};
+pub use providers::lm_studio::{
+    LmStudioCodec, LmStudioCodecLib, LmStudioCodecOptions, LmStudioRequestOptions,
+    decode_lm_studio_request, decode_lm_studio_response, decode_lm_studio_stream,
+    encode_lm_studio_request, encode_lm_studio_response, lm_studio_codec_symbol,
+};
 pub use providers::openai::{
     OpenAiCodec, OpenAiCodecLib, OpenAiCodecOptions, OpenAiRequestOptions, decode_openai_request,
     decode_openai_response, decode_openai_stream, encode_openai_request, encode_openai_response,
