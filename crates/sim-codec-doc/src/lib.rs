@@ -8,8 +8,10 @@
 //!
 //! Module map (all modules are private; the public surface is re-exported from
 //! this crate root):
+//! - backend: the `MarkupBackend` trait, deterministic `BackendRegistry`, and
+//!   fidelity/error contracts for backend implementations.
 //! - codec: the `DocCodec` decoder/encoder, the `DocCodecLib` host lib, and
-//!   `install_doc_codec`.
+//!   `install_doc_codec` plus `codec:markup/<id>` installation.
 //! - document: compatibility chunking wrappers (`DocValue`, `DocFormat`,
 //!   `DocBlock`, `DocChunk`, `ChunkOp`), `decode_document`, and `chunk`.
 //! - markup: the shared semantic markup IR (`MarkupDoc`, `MarkupBlock`,
@@ -19,6 +21,7 @@
 #![forbid(unsafe_code)]
 #![deny(missing_docs)]
 
+mod backend;
 mod codec;
 mod document;
 mod functions;
@@ -30,7 +33,14 @@ mod tests;
 pub static RECIPES: sim_cookbook::EmbeddedDir =
     include!(concat!(env!("OUT_DIR"), "/cookbook_recipes.rs"));
 
-pub use codec::{DocCodec, DocCodecLib, install_doc_codec};
+pub use backend::{
+    BackendRegistry, BasicMarkdownBackend, MarkupBackend, MarkupDecodeOptions, MarkupEncodeOptions,
+    MarkupError, MarkupFidelity, MarkupLoss, default_backend_registry,
+};
+pub use codec::{
+    DocCodec, DocCodecLib, MARKUP_CODEC_PREFIX, MarkupCodec, install_doc_codec,
+    install_markup_codecs, markup_codec_symbol,
+};
 pub use document::{
     ChunkOp, DocBlock, DocBlockKind, DocChunk, DocFormat, DocValue, chunk, decode_document,
 };

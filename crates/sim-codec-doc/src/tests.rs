@@ -2,8 +2,10 @@ use sim_codec::{Input, decode_with_codec, encode_with_codec};
 use sim_kernel::{EncodeOptions, Expr, NumberLiteral, ReadPolicy, Symbol};
 
 use crate::{
-    BackendId, ChunkOp, DocValue, Inline, MarkupBlock, MarkupDoc, MathSource, SourceDoc, Span,
-    chunk, decode_document, install_doc_codec,
+    BackendId, BackendRegistry, ChunkOp, DocValue, Inline, MarkupBackend, MarkupBlock,
+    MarkupDecodeOptions, MarkupDoc, MarkupEncodeOptions, MarkupError, MarkupFidelity, MathSource,
+    SourceDoc, Span, chunk, decode_document, decode_markup_doc, install_doc_codec,
+    install_markup_codecs, markup_codec_symbol,
 };
 
 fn cx() -> sim_kernel::Cx {
@@ -30,6 +32,11 @@ fn doc_codec_registers_codec_and_chunk_functions() {
             .codec_by_symbol(&Symbol::qualified("codec", "doc"))
             .is_some()
     );
+    assert!(
+        cx.registry()
+            .codec_by_symbol(&markup_codec_symbol(&BackendId::new("markdown")))
+            .is_some()
+    );
     for symbol in [
         Symbol::qualified("doc", "chunk-fixed"),
         Symbol::qualified("doc", "chunk-recursive"),
@@ -40,6 +47,90 @@ fn doc_codec_registers_codec_and_chunk_functions() {
             "missing {symbol}"
         );
     }
+}
+
+#[test]
+fn backend_registry_is_deterministic() {
+    let mut registry = BackendRegistry::new();
+    registry.register(TestBackend::new("zeta"));
+    registry.register(TestBackend::new("alpha"));
+    registry.register(TestBackend::new("markdown"));
+    assert_eq!(
+        registry.ids(),
+        vec![
+            BackendId::new("alpha"),
+            BackendId::new("markdown"),
+            BackendId::new("zeta"),
+        ]
+    );
+}
+
+#[test]
+fn unknown_backend_fails_closed() {
+    let registry = BackendRegistry::new();
+    match registry.backend(&BackendId::new("missing")) {
+        Err(MarkupError::UnknownBackend(id)) => assert_eq!(id, BackendId::new("missing")),
+        _ => panic!("expected unknown backend"),
+    }
+
+    let mut cx = sim_test_support::core_cx();
+    let err = decode_with_codec(
+        &mut cx,
+        &markup_codec_symbol(&BackendId::new("missing")),
+        Input::Text("# Guide".to_owned()),
+        ReadPolicy::default(),
+    )
+    .unwrap_err();
+    assert!(err.to_string().contains("codec/markup/missing"));
+}
+
+#[test]
+fn markup_codecs_get_distinct_symbols() {
+    let mut cx = sim_test_support::core_cx();
+    let mut registry = BackendRegistry::new();
+    registry.register(TestBackend::new("alpha"));
+    registry.register(TestBackend::new("beta"));
+    install_markup_codecs(&mut cx, registry).unwrap();
+
+    let alpha = markup_codec_symbol(&BackendId::new("alpha"));
+    let beta = markup_codec_symbol(&BackendId::new("beta"));
+    assert_ne!(alpha, beta);
+    assert!(cx.registry().codec_by_symbol(&alpha).is_some());
+    assert!(cx.registry().codec_by_symbol(&beta).is_some());
+    assert!(
+        cx.registry()
+            .codec_by_symbol(&Symbol::qualified("codec", "doc"))
+            .is_none()
+    );
+}
+
+#[test]
+fn markup_codec_roundtrips_markup_and_rejects_non_markup() {
+    let mut cx = sim_test_support::core_cx();
+    let mut registry = BackendRegistry::new();
+    registry.register(TestBackend::new("alpha"));
+    install_markup_codecs(&mut cx, registry).unwrap();
+    let codec = markup_codec_symbol(&BackendId::new("alpha"));
+
+    let expr = decode_with_codec(
+        &mut cx,
+        &codec,
+        Input::Text("# Guide\n\nAlpha beta.\n".to_owned()),
+        ReadPolicy::default(),
+    )
+    .unwrap();
+    assert_eq!(map_symbol(&expr, "kind"), Some(Symbol::new("markup-doc")));
+    let output = encode_with_codec(&mut cx, &codec, &expr, EncodeOptions::default()).unwrap();
+    assert_eq!(output.into_text().unwrap(), "# Guide\n\nAlpha beta.\n");
+
+    let err = encode_with_codec(
+        &mut cx,
+        &codec,
+        &Expr::String("not a markup value".to_owned()),
+        EncodeOptions::default(),
+    )
+    .unwrap_err();
+    assert!(err.to_string().contains("invalid markup document"));
 }
 
 #[test]
@@ -275,4 +366,39 @@ fn _number(value: usize) -> Expr {
         domain: Symbol::qualified("numbers", "f64"),
         canonical: value.to_string(),
     })
+}
+
+#[derive(Clone)]
+struct TestBackend {
+    id: BackendId,
+}
+
+impl TestBackend {
+    fn new(id: &str) -> Self {
+        Self {
+            id: BackendId::new(id),
+        }
+    }
+}
+
+impl MarkupBackend for TestBackend {
+    fn id(&self) -> BackendId {
+        self.id.clone()
+    }
+
+    fn decode(
+        &self,
+        input: &str,
+        _opts: &MarkupDecodeOptions,
+    ) -> Result<(MarkupDoc, MarkupFidelity), MarkupError> {
+        Ok((decode_markup_doc(input), MarkupFidelity::exact(self.id())))
+    }
+
+    fn encode(
+        &self,
+        doc: &MarkupDoc,
+        _opts: &MarkupEncodeOptions,
+    ) -> Result<(String, MarkupFidelity), MarkupError> {
+        Ok((doc.to_source_text(), MarkupFidelity::exact(self.id())))
+    }
 }

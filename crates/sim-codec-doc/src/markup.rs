@@ -1,6 +1,7 @@
 //! Shared semantic markup document IR and `Expr` projection.
 
 use std::collections::BTreeMap;
+use std::fmt;
 
 use sim_kernel::{Error, Expr, Result};
 use sim_value::build::{entry, list, map, sym, text, uint};
@@ -39,6 +40,24 @@ pub struct BackendId(
     /// Backend id text.
     pub String,
 );
+
+impl BackendId {
+    /// Create a backend id from stable id text.
+    pub fn new(id: impl Into<String>) -> Self {
+        Self(id.into())
+    }
+
+    /// Borrow the backend id text.
+    pub fn as_str(&self) -> &str {
+        &self.0
+    }
+}
+
+impl fmt::Display for BackendId {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(&self.0)
+    }
+}
 
 /// A source span in byte offsets.
 #[derive(Clone, Debug, PartialEq, Eq)]
