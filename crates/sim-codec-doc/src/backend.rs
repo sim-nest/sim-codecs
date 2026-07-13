@@ -7,13 +7,25 @@ use std::sync::Arc;
 
 use sim_kernel::CodecId;
 
-use crate::markup::{BackendId, MarkupDoc, decode_markup_doc};
+use crate::markdown::MarkdownBackend;
+use crate::markup::{BackendId, MarkupDoc};
 
 /// Decode options shared by markup backends.
-#[derive(Clone, Debug, Default, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct MarkupDecodeOptions {
     /// Preserve backend source text when the backend can do so.
     pub preserve_source: bool,
+    /// Preserve backend-specific raw fragments when possible.
+    pub preserve_raw: bool,
+}
+
+impl Default for MarkupDecodeOptions {
+    fn default() -> Self {
+        Self {
+            preserve_source: true,
+            preserve_raw: true,
+        }
+    }
 }
 
 /// Encode options shared by markup backends.
@@ -178,8 +190,7 @@ impl BackendRegistry {
     }
 }
 
-/// The lightweight Markdown-compatible backend used by the compatibility doc
-/// codec and as the first markup registry entry.
+/// Compatibility name for the default Markdown backend.
 #[derive(Clone, Debug, Default)]
 pub struct BasicMarkdownBackend;
 
@@ -191,23 +202,23 @@ impl MarkupBackend for BasicMarkdownBackend {
     fn decode(
         &self,
         input: &str,
-        _opts: &MarkupDecodeOptions,
+        opts: &MarkupDecodeOptions,
     ) -> Result<(MarkupDoc, MarkupFidelity), MarkupError> {
-        Ok((decode_markup_doc(input), MarkupFidelity::exact(self.id())))
+        MarkdownBackend.decode(input, opts)
     }
 
     fn encode(
         &self,
         doc: &MarkupDoc,
-        _opts: &MarkupEncodeOptions,
+        opts: &MarkupEncodeOptions,
     ) -> Result<(String, MarkupFidelity), MarkupError> {
-        Ok((doc.to_source_text(), MarkupFidelity::exact(self.id())))
+        MarkdownBackend.encode(doc, opts)
     }
 }
 
 /// Build the default registry installed by [`install_doc_codec`](crate::install_doc_codec).
 pub fn default_backend_registry() -> BackendRegistry {
     let mut registry = BackendRegistry::new();
-    registry.register(BasicMarkdownBackend);
+    registry.register(MarkdownBackend);
     registry
 }

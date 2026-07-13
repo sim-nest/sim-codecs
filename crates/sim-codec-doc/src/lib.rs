@@ -17,6 +17,7 @@
 //! - markup: the shared semantic markup IR (`MarkupDoc`, `MarkupBlock`,
 //!   `Inline`) and its ordinary-data projection.
 //! - functions: the `doc/chunk-*` chunking functions registered as callables.
+//! - markdown: the `pulldown-cmark` Markdown backend.
 
 #![forbid(unsafe_code)]
 #![deny(missing_docs)]
@@ -25,6 +26,8 @@ mod backend;
 mod codec;
 mod document;
 mod functions;
+mod markdown;
+mod markdown_writer;
 mod markup;
 #[cfg(test)]
 mod tests;
@@ -44,6 +47,7 @@ pub use codec::{
 pub use document::{
     ChunkOp, DocBlock, DocBlockKind, DocChunk, DocFormat, DocValue, chunk, decode_document,
 };
+pub use markdown::MarkdownBackend;
 pub use markup::{
     BackendId, Inline, MarkupBlock, MarkupDoc, MathSource, SourceDoc, Span, decode_markup_doc,
 };

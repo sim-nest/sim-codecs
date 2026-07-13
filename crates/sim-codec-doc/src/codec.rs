@@ -16,11 +16,12 @@ use sim_kernel::{
 };
 
 use crate::backend::{
-    BackendRegistry, BasicMarkdownBackend, MarkupBackend, MarkupDecodeOptions, MarkupEncodeOptions,
-    MarkupError, default_backend_registry,
+    BackendRegistry, MarkupBackend, MarkupDecodeOptions, MarkupEncodeOptions, MarkupError,
+    default_backend_registry,
 };
 use crate::document::DocValue;
 use crate::functions::{CHUNK_FUNCTIONS, DocChunkFunction};
+use crate::markdown::MarkdownBackend;
 use crate::markup::MarkupDoc;
 
 /// Textual prefix for rendered markup codec symbols.
@@ -94,7 +95,7 @@ impl Decoder for DocCodec {
         let source = input.into_string()?;
         let budget = DecodeBudget::new(cx.limits);
         budget.check_input_bytes(cx.codec, source.len())?;
-        let (doc, _fidelity) = BasicMarkdownBackend
+        let (doc, _fidelity) = MarkdownBackend
             .decode(&source, &MarkupDecodeOptions::default())
             .map_err(|err| err.into_kernel_error(cx.codec))?;
         Ok(doc.as_expr())
@@ -121,10 +122,7 @@ impl Encoder for DocCodec {
 
 fn encode_doc_expr(expr: &sim_kernel::Expr) -> Result<String> {
     match MarkupDoc::from_expr(expr) {
-        Ok(doc) => Ok(BasicMarkdownBackend
-            .encode(&doc, &MarkupEncodeOptions::default())
-            .map(|(source, _fidelity)| source)
-            .map_err(|err| err.into_kernel_error(sim_kernel::CodecId(0)))?),
+        Ok(doc) => Ok(doc.to_source_text()),
         Err(markup_error) => match DocValue::from_expr(expr) {
             Ok(doc) => Ok(doc.text),
             Err(_) => Err(markup_error),

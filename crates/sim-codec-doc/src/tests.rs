@@ -2,9 +2,9 @@ use sim_codec::{Input, decode_with_codec, encode_with_codec};
 use sim_kernel::{EncodeOptions, Expr, NumberLiteral, ReadPolicy, Symbol};
 
 use crate::{
-    BackendId, BackendRegistry, ChunkOp, DocValue, Inline, MarkupBackend, MarkupBlock,
-    MarkupDecodeOptions, MarkupDoc, MarkupEncodeOptions, MarkupError, MarkupFidelity, MathSource,
-    SourceDoc, Span, chunk, decode_document, decode_markup_doc, install_doc_codec,
+    BackendId, BackendRegistry, ChunkOp, DocValue, Inline, MarkdownBackend, MarkupBackend,
+    MarkupBlock, MarkupDecodeOptions, MarkupDoc, MarkupEncodeOptions, MarkupError, MarkupFidelity,
+    MathSource, SourceDoc, Span, chunk, decode_document, decode_markup_doc, install_doc_codec,
     install_markup_codecs, markup_codec_symbol,
 };
 
@@ -131,6 +131,105 @@ fn markup_codec_roundtrips_markup_and_rejects_non_markup() {
     )
     .unwrap_err();
     assert!(err.to_string().contains("invalid markup document"));
+}
+
+#[test]
+fn markdown_roundtrips_semantically() {
+    let source = "# Guide\n\nA *small* **sample** with `code`, [SIM](https://example.test), and $x^2$.\n\n> Quoted\n\n```rust\nfn main() {}\n```\n\n$$\ny = x^2\n$$\n";
+    let backend = MarkdownBackend;
+    let opts = MarkupDecodeOptions {
+        preserve_source: false,
+        preserve_raw: true,
+    };
+    let (doc, fidelity) = backend.decode(source, &opts).unwrap();
+    assert!(fidelity.dropped.is_empty());
+    assert_eq!(doc.title.as_deref(), Some("Guide"));
+    assert!(
+        doc.blocks
+            .iter()
+            .any(|block| matches!(block, MarkupBlock::Quote { .. }))
+    );
+    assert!(doc.blocks.iter().any(
+        |block| matches!(block, MarkupBlock::MathBlock { source, .. } if source.notation == "tex")
+    ));
+
+    let (encoded, encode_fidelity) = backend
+        .encode(&doc, &MarkupEncodeOptions::default())
+        .unwrap();
+    assert!(encode_fidelity.dropped.is_empty());
+    let (decoded, _) = backend.decode(&encoded, &opts).unwrap();
+    assert_eq!(
+        blocks_without_spans(&decoded.blocks),
+        blocks_without_spans(&doc.blocks)
+    );
+}
+
+#[test]
+fn raw_html_is_preserved_or_reported() {
+    let backend = MarkdownBackend;
+    let source = "Text with <span data-x=\"1\">raw</span>.\n";
+    let preserve = MarkupDecodeOptions {
+        preserve_source: false,
+        preserve_raw: true,
+    };
+    let (doc, fidelity) = backend.decode(source, &preserve).unwrap();
+    assert!(fidelity.dropped.is_empty());
+    assert!(
+        fidelity
+            .preserved_raw
+            .iter()
+            .any(|raw| raw.contains("<span"))
+    );
+    assert!(
+        matches!(&doc.blocks[0], MarkupBlock::Paragraph { content, .. } if content.iter().any(|inline| matches!(inline, Inline::Raw { text, .. } if text.contains("<span"))))
+    );
+
+    let report = MarkupDecodeOptions {
+        preserve_source: false,
+        preserve_raw: false,
+    };
+    let (reported, fidelity) = backend.decode(source, &report).unwrap();
+    assert!(fidelity.preserved_raw.is_empty());
+    assert!(fidelity.dropped.iter().any(|loss| loss.path == "html"));
+    assert!(
+        matches!(&reported.blocks[0], MarkupBlock::Paragraph { content, .. } if content.iter().all(|inline| !matches!(inline, Inline::Raw { .. })))
+    );
+}
+
+#[test]
+fn markdown_tables_and_task_markers_survive() {
+    let backend = MarkdownBackend;
+    let source = "| Task | Done |\n| --- | --- |\n| Ship | yes |\n\n- [x] parser\n- [ ] writer\n";
+    let (doc, _) = backend
+        .decode(
+            source,
+            &MarkupDecodeOptions {
+                preserve_source: false,
+                preserve_raw: true,
+            },
+        )
+        .unwrap();
+    let MarkupBlock::Table { header, rows, .. } = &doc.blocks[0] else {
+        panic!("expected table");
+    };
+    assert_eq!(header.len(), 2);
+    assert_eq!(rows.len(), 1);
+    let MarkupBlock::List { items, .. } = &doc.blocks[1] else {
+        panic!("expected task list");
+    };
+    assert!(
+        matches!(&items[0][0], MarkupBlock::Paragraph { content, .. } if matches!(&content[0], Inline::Raw { text, .. } if text == "[x] "))
+    );
+    assert!(
+        matches!(&items[1][0], MarkupBlock::Paragraph { content, .. } if matches!(&content[0], Inline::Raw { text, .. } if text == "[ ] "))
+    );
+
+    let (encoded, _) = backend
+        .encode(&doc, &MarkupEncodeOptions::default())
+        .unwrap();
+    assert!(encoded.contains("| Task | Done |"));
+    assert!(encoded.contains("- [x] parser"));
+    assert!(encoded.contains("- [ ] writer"));
 }
 
 #[test]
@@ -359,6 +458,60 @@ fn map_field<'a>(expr: &'a Expr, field: &str) -> Option<&'a Expr> {
     entries.iter().find_map(|(key, value)| {
         matches!(key, Expr::Symbol(symbol) if symbol.name.as_ref() == field).then_some(value)
     })
+}
+
+fn blocks_without_spans(blocks: &[MarkupBlock]) -> Vec<MarkupBlock> {
+    blocks.iter().cloned().map(block_without_span).collect()
+}
+
+fn block_without_span(block: MarkupBlock) -> MarkupBlock {
+    match block {
+        MarkupBlock::Heading {
+            level, text, id, ..
+        } => MarkupBlock::Heading {
+            level,
+            text,
+            id,
+            span: None,
+        },
+        MarkupBlock::Paragraph { content, .. } => MarkupBlock::Paragraph {
+            content,
+            span: None,
+        },
+        MarkupBlock::CodeBlock { lang, code, .. } => MarkupBlock::CodeBlock {
+            lang,
+            code,
+            span: None,
+        },
+        MarkupBlock::MathBlock { source, .. } => MarkupBlock::MathBlock { source, span: None },
+        MarkupBlock::Quote { blocks, .. } => MarkupBlock::Quote {
+            blocks: blocks_without_spans(&blocks),
+            span: None,
+        },
+        MarkupBlock::List { ordered, items, .. } => MarkupBlock::List {
+            ordered,
+            items: items
+                .into_iter()
+                .map(|item| blocks_without_spans(&item))
+                .collect(),
+            span: None,
+        },
+        MarkupBlock::Table { header, rows, .. } => MarkupBlock::Table {
+            header,
+            rows,
+            span: None,
+        },
+        MarkupBlock::Figure { src, caption, .. } => MarkupBlock::Figure {
+            src,
+            caption,
+            span: None,
+        },
+        MarkupBlock::Raw { backend, text, .. } => MarkupBlock::Raw {
+            backend,
+            text,
+            span: None,
+        },
+    }
 }
 
 fn _number(value: usize) -> Expr {
