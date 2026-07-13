@@ -433,6 +433,25 @@ fn encoder_can_escape_non_native_exprs() {
 }
 
 #[test]
+fn default_encoder_never_emits_read_eval_syntax() {
+    let mut cx = cx();
+    register_lisp_codec(&mut cx);
+    let encoded = encode_with_codec(
+        &mut cx,
+        &Symbol::qualified("codec", "lisp"),
+        &Expr::Symbol(Symbol::new("#eval")),
+        Default::default(),
+    )
+    .unwrap()
+    .into_text()
+    .unwrap();
+
+    assert_eq!(encoded, "(expr:symbol nil \"#eval\")");
+    assert!(!encoded.contains("#eval("));
+    assert!(!encoded.contains("#."));
+}
+
+#[test]
 fn constructor_values_encode_as_read_construct_in_quote_position() {
     let mut cx = cx();
     let point = cx

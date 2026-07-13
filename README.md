@@ -131,8 +131,8 @@ otherwise. Decode mirrors this with `DecodePosition`.
   `preserve-input` pass that never overrides codec grammar limits.
 - `lossless_origin`: request origin/trivia retention. This only binds for
   codecs with located/tree encoder support.
-- `read_construct` / `read_eval`: govern whether constructor and read-eval
-  forms may be emitted.
+- `read_construct` / `read_eval`: govern whether constructor forms and
+  explicitly declared read-eval forms may be emitted.
 
 ### Two codec classes
 
@@ -202,16 +202,18 @@ shared expression machinery.
 
 ### Capability gating is part of decode
 
-Read-construct and read-eval are decode-time behaviors, not optional
-post-processing.
+Read-construct is a decode-time behavior. Read-eval is explicit diminished eval:
+the ordinary decode path stays inert, and hosts that accept eval-shaped holes
+route those requests through the runtime read-eval broker.
 
 - `#(...)` read-construct decodes constructor arguments as data and builds a
   runtime object. It requires `read-construct` in the `ReadPolicy` **and** the
   matching capability at runtime (`Cx::read_construct`).
-- Broad read-eval forms (`#eval(...)`, `#.expr`) are decode-only, are
+- Explicit read-eval forms (`#eval(...)`, `#.expr`) are decode-only,
   capability-gated, and additionally require a trusted `ReadPolicy`: an
-  untrusted policy denies them even when the capability is present. The
-  canonical Lisp encoder never emits them.
+  untrusted policy denies them even when the capability is present. Surfaces
+  that admit them use a declared result shape and diminished allowed
+  capabilities. The canonical Lisp encoder never emits them by default.
 
 Capability checks use the same `CapabilityName` model across `ReadPolicy`,
 `Cx::require`, loader manifests, and eval requests; capability names are
@@ -257,8 +259,8 @@ expression.
   `#(core/AnyShape)`, `#(core/ClassShape core/String)`, and
   `#(core/ListShape (...))`; decoded shapes rebuild equivalent values that
   expose `as_shape()` and `as_callable()` (pointer identity is not preserved).
-- `#eval(...)` and `#.expr` are decode-only and never emitted by the canonical
-  encoder.
+- `#eval(...)` and `#.expr` are explicit read-eval forms. They are never emitted
+  by the canonical encoder under default options.
 
 ### JSON (`codec:json`)
 
