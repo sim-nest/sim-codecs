@@ -13,6 +13,7 @@ mod expr;
 mod helpers;
 mod ollama;
 mod parts;
+pub mod providers;
 
 #[cfg(test)]
 mod tests;
@@ -23,9 +24,19 @@ pub use helpers::{
     model_response_expr, validate_chat_transcript,
 };
 pub use ollama::{
-    OllamaRequestOptions, decode_ollama_response, decode_ollama_stream, encode_ollama_request,
+    OllamaCodec, OllamaCodecLib, OllamaRequestOptions, decode_ollama_response,
+    decode_ollama_stream, encode_ollama_request,
 };
 pub use parts::{number_field, text_part, usage_record};
+pub use providers::openai::{
+    OpenAiCodec, OpenAiCodecLib, OpenAiCodecOptions, OpenAiRequestOptions, decode_openai_request,
+    decode_openai_response, decode_openai_stream, encode_openai_request, encode_openai_response,
+    openai_codec_symbol,
+};
+pub use providers::profile::{
+    CodecProfile, RequestWire, StreamWire, anthropic_profile, lemonade_profile, lm_studio_profile,
+    ollama_profile, openai_profile,
+};
 
 /// Cookbook recipes for this codec, embedded at build time.
 pub static RECIPES: sim_cookbook::EmbeddedDir =

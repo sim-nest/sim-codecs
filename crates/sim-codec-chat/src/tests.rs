@@ -4,9 +4,10 @@ use sim_codec::{Input, decode_with_codec, encode_with_codec};
 use sim_kernel::{DefaultFactory, EagerPolicy, EncodeOptions, Error, Expr, ReadPolicy, Symbol};
 
 use crate::{
-    ChatCodecLib, OllamaRequestOptions, decode_ollama_response, decode_ollama_stream,
-    encode_ollama_request, is_model_request_expr, model_card_expr, model_error_expr,
-    model_request_messages_expr, model_response_expr,
+    ChatCodecLib, OllamaCodecLib, OllamaRequestOptions, OpenAiCodecLib, OpenAiRequestOptions,
+    RequestWire, StreamWire, decode_ollama_response, decode_ollama_stream, decode_openai_response,
+    decode_openai_stream, encode_ollama_request, encode_openai_request, is_model_request_expr,
+    model_card_expr, model_error_expr, model_request_messages_expr, model_response_expr,
 };
 
 fn cx() -> sim_kernel::Cx {
@@ -14,6 +15,10 @@ fn cx() -> sim_kernel::Cx {
     sim_test_support::register_core_classes(&mut cx);
     let chat = ChatCodecLib::new(cx.registry_mut().fresh_codec_id());
     cx.load_lib(&chat).unwrap();
+    let openai = OpenAiCodecLib::new(cx.registry_mut().fresh_codec_id());
+    cx.load_lib(&openai).unwrap();
+    let ollama = OllamaCodecLib::new(cx.registry_mut().fresh_codec_id());
+    cx.load_lib(&ollama).unwrap();
     let lisp = sim_codec_lisp::LispCodecLib::new(cx.registry_mut().fresh_codec_id()).unwrap();
     cx.load_lib(&lisp).unwrap();
     let json = sim_codec_json::JsonCodecLib::new(cx.registry_mut().fresh_codec_id());
@@ -194,6 +199,170 @@ fn helper_functions_build_valid_transcripts() {
         Symbol::new("local"),
     );
     crate::validate_chat_transcript(&card).unwrap();
+}
+
+#[test]
+fn provider_profiles_are_open_data_records() {
+    let openai = crate::openai_profile();
+    assert_eq!(openai.codec, Symbol::qualified("codec", "openai"));
+    assert_eq!(openai.provider, Symbol::new("openai"));
+    assert_eq!(openai.request_wire, RequestWire::OpenAiChat);
+    assert_eq!(openai.stream_wire, StreamWire::Sse);
+
+    let ollama = crate::ollama_profile();
+    assert_eq!(ollama.codec, Symbol::qualified("codec", "ollama"));
+    assert_eq!(ollama.provider, Symbol::new("ollama"));
+    assert_eq!(ollama.request_wire, RequestWire::OllamaChat);
+    assert_eq!(ollama.stream_wire, StreamWire::Ndjson);
+}
+
+#[test]
+fn provider_runtime_codecs_install() {
+    let mut cx = cx();
+    assert!(
+        cx.resolve_codec(&Symbol::qualified("codec", "openai"))
+            .is_ok()
+    );
+    assert!(
+        cx.resolve_codec(&Symbol::qualified("codec", "ollama"))
+            .is_ok()
+    );
+
+    let response = response_expr();
+    let openai_output = encode_with_codec(
+        &mut cx,
+        &Symbol::qualified("codec", "openai"),
+        &response,
+        EncodeOptions::default(),
+    )
+    .unwrap();
+    assert!(
+        openai_output
+            .into_text()
+            .unwrap()
+            .contains("chat.completion")
+    );
+
+    let ollama_output = encode_with_codec(
+        &mut cx,
+        &Symbol::qualified("codec", "ollama"),
+        &request_expr(),
+        EncodeOptions::default(),
+    )
+    .unwrap();
+    assert!(
+        ollama_output
+            .into_text()
+            .unwrap()
+            .contains("\"model\":\"ollama\"")
+    );
+}
+
+#[test]
+fn openai_runtime_codec_decodes_chat_request() {
+    let mut cx = cx();
+    let decoded = decode_with_codec(
+        &mut cx,
+        &Symbol::qualified("codec", "openai"),
+        Input::Text(
+            r#"{"model":"gpt-5-mini","messages":[{"role":"user","content":"hello"}]}"#.to_owned(),
+        ),
+        ReadPolicy::default(),
+    )
+    .unwrap();
+
+    crate::validate_chat_transcript(&decoded).unwrap();
+    assert!(format!("{decoded:?}").contains("model-request"));
+    assert!(format!("{decoded:?}").contains("hello"));
+}
+
+#[test]
+fn openai_request_encoder_matches_fixture_shape() {
+    let body = encode_openai_request(
+        &request_expr(),
+        &OpenAiRequestOptions::new("gpt-5-mini", true, true),
+    )
+    .unwrap();
+    let text = String::from_utf8(body).unwrap();
+    assert!(text.contains("\"model\":\"gpt-5-mini\""));
+    assert!(text.contains("\"stream\":true"));
+    assert!(text.contains("\"stream_options\":{\"include_usage\":true}"));
+    assert!(text.contains("\"role\":\"system\""));
+    assert!(text.contains("\"summarize this file\""));
+}
+
+#[test]
+fn openai_response_decoder_matches_fixture_shape() {
+    let expr = decode_openai_response(
+        Symbol::new("remote"),
+        "gpt-5-mini",
+        br#"{"id":"chatcmpl-1","choices":[{"index":0,"finish_reason":"stop","message":{"role":"assistant","content":"compiled"}}],"usage":{"prompt_tokens":12,"completion_tokens":3,"total_tokens":15}}"#,
+        true,
+    )
+    .unwrap();
+
+    crate::validate_chat_transcript(&expr).unwrap();
+    assert!(format!("{expr:?}").contains("compiled"));
+    assert!(format!("{expr:?}").contains("raw-provider-response"));
+    assert!(format!("{expr:?}").contains("input-tokens"));
+}
+
+#[test]
+fn openai_stream_decoder_combines_sse_chunks() {
+    let expr = decode_openai_stream(
+        Symbol::new("remote"),
+        "gpt-5-mini",
+        br#"data: {"id":"chunk-1","choices":[{"delta":{"role":"assistant"},"finish_reason":null}]}
+
+data: {"id":"chunk-1","choices":[{"delta":{"content":"hello "},"finish_reason":null}]}
+
+data: {"id":"chunk-1","choices":[{"delta":{"content":"world"},"finish_reason":"stop"}]}
+
+data: {"id":"chunk-1","choices":[],"usage":{"prompt_tokens":4,"completion_tokens":2,"total_tokens":6}}
+
+data: [DONE]
+"#,
+        true,
+    )
+    .unwrap();
+
+    crate::validate_chat_transcript(&expr).unwrap();
+    assert!(format!("{expr:?}").contains("hello world"));
+    assert!(format!("{expr:?}").contains("raw-provider-response"));
+    assert!(format!("{expr:?}").contains("output-tokens"));
+}
+
+#[test]
+fn openai_error_envelope_decodes_to_model_error() {
+    let expr = decode_openai_response(
+        Symbol::new("remote"),
+        "gpt-5-mini",
+        br#"{"error":{"message":"bad key","type":"invalid_request_error"}}"#,
+        false,
+    )
+    .unwrap();
+
+    crate::validate_chat_transcript(&expr).unwrap();
+    assert!(format!("{expr:?}").contains("bad key"));
+    assert!(format!("{expr:?}").contains("shape-ok"));
+}
+
+#[test]
+fn openai_response_decoder_bounds_oversized_raw_projection() {
+    let mut body = String::from(
+        r#"{"choices":[{"message":{"role":"assistant","content":"ok"},"finish_reason":"stop"}],"huge":["#,
+    );
+    for _ in 0..70_000 {
+        body.push_str("0,");
+    }
+    body.push_str("0]}");
+
+    let err = decode_openai_response(Symbol::new("remote"), "gpt-5-mini", body.as_bytes(), true)
+        .unwrap_err();
+    assert!(
+        matches!(err, Error::CodecError { ref message, .. } if message.contains("collection length")),
+        "expected collection-length budget error, got {err:?}"
+    );
 }
 
 #[test]

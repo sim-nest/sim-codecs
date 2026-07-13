@@ -3,9 +3,14 @@
 //! back into canonical chat transcript `Expr` values.
 
 use serde_json::{Map, Value, json};
-use sim_codec::{DecodeBudget, DecodeLimits};
+use std::sync::Arc;
+
+use sim_codec::{
+    DecodeBudget, DecodeLimits, Decoder, DomainCodecLib, Encoder, Input, Output, ReadCx,
+    domain_input_text,
+};
 use sim_codec_json::{JsonProjectionMode, json_number_to_u64, project_json_to_expr_budgeted};
-use sim_kernel::{CodecId, Error, Expr, Result, Symbol};
+use sim_kernel::{CodecId, Error, Expr, Lib, LibManifest, Linker, LoadCx, Result, Symbol, WriteCx};
 use sim_value::access;
 
 use crate::{
@@ -28,6 +33,73 @@ pub struct OllamaRequestOptions {
     pub stream: bool,
     /// Whether to include a (currently empty) `tools` array in the request.
     pub tools: bool,
+}
+
+/// Runtime codec for Ollama chat JSON and NDJSON response bodies.
+pub struct OllamaCodec;
+
+impl Decoder for OllamaCodec {
+    fn decode(&self, cx: &mut ReadCx<'_>, input: Input) -> Result<Expr> {
+        let source = domain_input_text(cx.codec, input)?;
+        let model = first_model_name(&source).unwrap_or_else(|| "ollama".to_owned());
+        let body = source.as_bytes();
+        if source
+            .lines()
+            .filter(|line| !line.trim().is_empty())
+            .count()
+            > 1
+        {
+            decode_ollama_stream(Symbol::qualified("runner", "ollama"), &model, body, false)
+        } else {
+            decode_ollama_response(Symbol::qualified("runner", "ollama"), &model, body, false)
+        }
+    }
+}
+
+impl Encoder for OllamaCodec {
+    fn encode(&self, _cx: &mut WriteCx<'_>, expr: &Expr) -> Result<Output> {
+        let options = OllamaRequestOptions::new(request_model(expr), false, false);
+        let bytes = encode_ollama_request(expr, &options)?;
+        String::from_utf8(bytes)
+            .map(Output::Text)
+            .map_err(|err| Error::Eval(format!("ollama codec encoded invalid utf-8: {err}")))
+    }
+}
+
+/// Host-registered lib for `codec:ollama`.
+pub struct OllamaCodecLib {
+    symbol: Symbol,
+    codec_id: CodecId,
+}
+
+impl OllamaCodecLib {
+    /// Creates the lib bound to the given runtime-assigned codec id.
+    pub fn new(id: CodecId) -> Self {
+        Self {
+            symbol: Symbol::qualified("codec", "ollama"),
+            codec_id: id,
+        }
+    }
+
+    fn domain_lib(&self) -> DomainCodecLib {
+        DomainCodecLib::new(
+            self.symbol.clone(),
+            self.codec_id,
+            Arc::new(OllamaCodec),
+            Arc::new(OllamaCodec),
+            Symbol::qualified("codec", "OllamaTranscript"),
+        )
+    }
+}
+
+impl Lib for OllamaCodecLib {
+    fn manifest(&self) -> LibManifest {
+        self.domain_lib().manifest()
+    }
+
+    fn load(&self, cx: &mut LoadCx, linker: &mut Linker<'_>) -> Result<()> {
+        self.domain_lib().load(cx, linker)
+    }
 }
 
 impl OllamaRequestOptions {
@@ -333,6 +405,35 @@ fn map_field<'a>(entries: &'a [(Expr, Expr)], key: &str) -> Result<&'a Expr> {
             _ => None,
         })
         .ok_or_else(|| Error::Eval(format!("ollama codec missing {key} field")))
+}
+
+fn request_model(expr: &Expr) -> String {
+    let Expr::Map(entries) = expr else {
+        return "ollama".to_owned();
+    };
+    entries
+        .iter()
+        .find_map(|(field, value)| match (field, value) {
+            (Expr::Symbol(symbol), Expr::String(model)) if symbol.name.as_ref() == "model" => {
+                Some(model.clone())
+            }
+            _ => None,
+        })
+        .unwrap_or_else(|| "ollama".to_owned())
+}
+
+fn first_model_name(source: &str) -> Option<String> {
+    source
+        .lines()
+        .map(str::trim)
+        .find(|line| !line.is_empty())
+        .and_then(|line| serde_json::from_str::<Value>(line).ok())
+        .and_then(|value| {
+            value
+                .get("model")
+                .and_then(Value::as_str)
+                .map(str::to_owned)
+        })
 }
 
 fn flatten_expr(expr: &Expr) -> String {
