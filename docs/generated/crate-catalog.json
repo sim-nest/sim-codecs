@@ -108,7 +108,7 @@
       ]
     },
     {
-      "description": "SIM workspace package for sim codec doc.",
+      "description": "Markup document codec backends for SIM.",
       "generated_readme": true,
       "manifest": "crates/sim-codec-doc/Cargo.toml",
       "name": "sim-codec-doc",

@@ -1,8 +1,9 @@
-//! Document domain codec for SIM.
+//! Markup document domain codec for SIM.
 //!
-//! Provides `codec:doc`, a domain decoder/encoder pair that turns document
-//! text (plain or Markdown) into a semantic markup document `Expr` and back,
-//! plus provenance-preserving chunk operations exposed as callable functions.
+//! Provides `codec:doc`, a domain decoder/encoder pair that turns document text
+//! into a semantic markup document `Expr` and back, strict
+//! `codec:markup/<id>` backends for Markdown, Typst, AsciiDoc, and LaTeX, and
+//! provenance-preserving chunk operations exposed as callable functions.
 //! As a domain codec it round-trips only documents and chunks and fails closed
 //! outside that domain.
 //!
