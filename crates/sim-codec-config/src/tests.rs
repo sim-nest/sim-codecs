@@ -187,6 +187,23 @@ fn runtime_auto_decodes_table_and_dir() {
 }
 
 #[test]
+fn runtime_default_decode_keeps_config_eval_text_inert() {
+    let mut cx = cx();
+    let codec = Symbol::qualified("codec", "config");
+    let eval_text = "#(config/eval v1 :codec codec/lisp :source nil)";
+
+    let decoded = decode_with_codec(
+        &mut cx,
+        &codec,
+        Input::Text(format!("eval_node = \"{eval_text}\"\n")),
+        ReadPolicy::default(),
+    )
+    .unwrap();
+
+    assert_eq!(field(&decoded, "eval_node"), &text(eval_text));
+}
+
+#[test]
 fn runtime_encodes_maps() {
     let mut cx = cx();
     let codec = Symbol::qualified("codec", "config");

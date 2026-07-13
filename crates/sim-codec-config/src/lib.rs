@@ -3,7 +3,10 @@
 //! The crate reads small ASCII configuration files into [`Expr::Map`] values and
 //! writes map values back to canonical config text. A per-library file decodes
 //! as one table; a shared `sim.toml`-style file decodes as a directory mapping
-//! library ids to tables. The runtime codec symbol is `codec/config`.
+//! library ids to tables. Decode is inert: config text becomes data, including
+//! strings that look like explicit eval nodes. Hosts that opt in to config eval
+//! realize those data nodes through the runtime read-eval broker after decode.
+//! The runtime codec symbol is `codec/config`.
 
 #![forbid(unsafe_code)]
 #![deny(missing_docs)]
