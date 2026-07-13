@@ -239,7 +239,7 @@ fn response_expr_from_json(
     let mut entries = match model_response_expr(
         runner,
         model,
-        message_content(message)?,
+        message_content(message, budget)?,
         Symbol::new(stop_reason),
     ) {
         Expr::Map(entries) => entries,
@@ -407,8 +407,8 @@ fn request_part_from_json(codec: CodecId, value: &Value) -> Result<Expr> {
     }
 }
 
-fn message_content(message: &Map<String, Value>) -> Result<Vec<Expr>> {
-    match message.get("content") {
+fn message_content(message: &Map<String, Value>, budget: &mut DecodeBudget) -> Result<Vec<Expr>> {
+    let mut parts = match message.get("content") {
         Some(Value::String(text)) => Ok(vec![text_part(text)]),
         Some(Value::Array(parts)) => parts
             .iter()
@@ -418,7 +418,16 @@ fn message_content(message: &Map<String, Value>) -> Result<Vec<Expr>> {
         _ => Err(Error::Eval(
             "openai response message content must be string, array, or null".to_owned(),
         )),
+    }?;
+    if let Some(tool_calls) = message.get("tool_calls").and_then(Value::as_array) {
+        parts.extend(
+            tool_calls
+                .iter()
+                .map(|call| response_tool_call_part(call, budget))
+                .collect::<Result<Vec<_>>>()?,
+        );
     }
+    Ok(parts)
 }
 
 fn response_part_from_json(value: &Value) -> Result<Expr> {
@@ -437,6 +446,64 @@ fn response_part_from_json(value: &Value) -> Result<Expr> {
             "openai response content part type {other} is not supported"
         ))),
     }
+}
+
+fn response_tool_call_part(value: &Value, budget: &mut DecodeBudget) -> Result<Expr> {
+    let object = value
+        .as_object()
+        .ok_or_else(|| Error::Eval("openai tool call must be an object".to_owned()))?;
+    let id = object
+        .get("id")
+        .and_then(Value::as_str)
+        .ok_or_else(|| Error::Eval("openai tool call missing id".to_owned()))?;
+    let function = object
+        .get("function")
+        .and_then(Value::as_object)
+        .ok_or_else(|| Error::Eval("openai tool call missing function".to_owned()))?;
+    let name = function
+        .get("name")
+        .and_then(Value::as_str)
+        .ok_or_else(|| Error::Eval("openai tool call function missing name".to_owned()))?;
+    Ok(Expr::Map(vec![
+        (
+            Expr::Symbol(Symbol::new("type")),
+            Expr::Symbol(Symbol::new("tool-call")),
+        ),
+        (Expr::Symbol(Symbol::new("id")), Expr::String(id.to_owned())),
+        (
+            Expr::Symbol(Symbol::new("name")),
+            Expr::String(name.to_owned()),
+        ),
+        (
+            Expr::Symbol(Symbol::new("arguments")),
+            openai_tool_arguments_expr(function.get("arguments"), budget)?,
+        ),
+    ]))
+}
+
+fn openai_tool_arguments_expr(
+    arguments: Option<&Value>,
+    budget: &mut DecodeBudget,
+) -> Result<Expr> {
+    let parsed;
+    let empty = Value::Object(Map::new());
+    let value = match arguments {
+        Some(Value::String(text)) if !text.trim().is_empty() => {
+            parsed = serde_json::from_str::<Value>(text).map_err(|err| {
+                Error::Eval(format!("openai tool call arguments must be json: {err}"))
+            })?;
+            &parsed
+        }
+        Some(Value::String(_)) | Some(Value::Null) | None => &empty,
+        Some(value) => value,
+    };
+    project_json_to_expr_budgeted(
+        value,
+        JsonProjectionMode::UntaggedInterop,
+        OPENAI_CODEC_ID,
+        budget,
+        0,
+    )
 }
 
 fn usage_expr(response: &Map<String, Value>) -> Result<Option<Expr>> {

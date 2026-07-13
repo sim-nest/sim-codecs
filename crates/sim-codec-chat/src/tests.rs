@@ -390,6 +390,25 @@ fn openai_response_decoder_matches_fixture_shape() {
 }
 
 #[test]
+fn openai_response_decoder_decodes_tool_calls() {
+    let expr = decode_openai_response(
+        Symbol::new("remote"),
+        "gpt-5-mini",
+        br#"{"id":"chatcmpl-tool","choices":[{"index":0,"finish_reason":"tool_calls","message":{"role":"assistant","content":null,"tool_calls":[{"id":"call_1","type":"function","function":{"name":"get_weather","arguments":"{\"location\":\"Stockholm\",\"unit\":\"celsius\"}"}}]}}],"usage":{"prompt_tokens":21,"completion_tokens":6,"total_tokens":27}}"#,
+        false,
+    )
+    .unwrap();
+
+    crate::validate_chat_transcript(&expr).unwrap();
+    let rendered = format!("{expr:?}");
+    assert!(rendered.contains("tool-call"));
+    assert!(rendered.contains("call_1"));
+    assert!(rendered.contains("get_weather"));
+    assert!(rendered.contains("Stockholm"));
+    assert!(rendered.contains("tool_calls"));
+}
+
+#[test]
 fn openai_stream_decoder_combines_sse_chunks() {
     let expr = decode_openai_stream(
         Symbol::new("remote"),
