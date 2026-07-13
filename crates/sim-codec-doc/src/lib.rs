@@ -19,6 +19,7 @@
 //!   `Inline`) and its ordinary-data projection.
 //! - functions: the `doc/chunk-*` chunking functions registered as callables.
 //! - asciidoc: the `asciidork-parser` AsciiDoc backend.
+//! - latex: the `codebook-tree-sitter-latex` LaTeX backend.
 //! - markdown: the `pulldown-cmark` Markdown backend.
 //! - typst_backend: the `typst-syntax` Typst backend.
 
@@ -35,6 +36,9 @@ mod edit;
 #[cfg(test)]
 mod edit_tests;
 mod functions;
+mod latex;
+#[cfg(test)]
+mod latex_tests;
 mod markdown;
 mod markdown_writer;
 mod markup;
@@ -59,6 +63,7 @@ pub use document::{
     ChunkOp, DocBlock, DocBlockKind, DocChunk, DocFormat, DocValue, chunk, decode_document,
 };
 pub use edit::{MarkupEdit, apply_edit, invert_edit};
+pub use latex::LatexBackend;
 pub use markdown::MarkdownBackend;
 pub use markup::{
     BackendId, Inline, MarkupBlock, MarkupDoc, MathSource, SourceDoc, Span, SpanState,

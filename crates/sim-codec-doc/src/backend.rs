@@ -8,6 +8,7 @@ use std::sync::Arc;
 use sim_kernel::CodecId;
 
 use crate::asciidoc::AsciiDocBackend;
+use crate::latex::LatexBackend;
 use crate::markdown::MarkdownBackend;
 use crate::markup::{BackendId, MarkupDoc};
 use crate::typst_backend::TypstBackend;
@@ -222,6 +223,7 @@ impl MarkupBackend for BasicMarkdownBackend {
 pub fn default_backend_registry() -> BackendRegistry {
     let mut registry = BackendRegistry::new();
     registry.register(AsciiDocBackend);
+    registry.register(LatexBackend);
     registry.register(MarkdownBackend);
     registry.register(TypstBackend);
     registry
