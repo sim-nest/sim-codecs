@@ -4,6 +4,8 @@
 //! the same `codec:chat` transcript maps instead of making each runner invent
 //! its own request and response records.
 
+/// Anthropic Messages provider wire codec.
+pub mod anthropic;
 /// OpenAI-compatible chat-completion provider wire codec.
 pub mod openai;
 /// Open provider profile records used by runners and browse surfaces.

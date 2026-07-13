@@ -28,6 +28,12 @@ pub use ollama::{
     decode_ollama_stream, encode_ollama_request,
 };
 pub use parts::{number_field, text_part, usage_record};
+pub use providers::anthropic::{
+    AnthropicCodec, AnthropicCodecLib, AnthropicCodecOptions, AnthropicRequestOptions,
+    anthropic_codec_symbol, decode_anthropic_request, decode_anthropic_response,
+    decode_anthropic_stream, decode_anthropic_stream_events, encode_anthropic_request,
+    encode_anthropic_response,
+};
 pub use providers::openai::{
     OpenAiCodec, OpenAiCodecLib, OpenAiCodecOptions, OpenAiRequestOptions, decode_openai_request,
     decode_openai_response, decode_openai_stream, encode_openai_request, encode_openai_response,
