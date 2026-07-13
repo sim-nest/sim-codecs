@@ -1,0 +1,15 @@
+= Measurements
+
+The table carries values.
+
+[stem]
+++++
+E = mc^2
+++++
+
+[options="header"]
+|===
+| Name | Value
+| SIM | Runtime
+| Math | Energy
+|===

@@ -1,9 +1,11 @@
-//! The document model and chunking. Defines `DocValue`/`DocBlock`/`DocChunk`
-//! and their `Expr` projection, parses document text into blocks
-//! (`decode_document`), and splits documents into provenance-preserving chunks
-//! (`chunk`, `ChunkOp`).
+//! Compatibility document chunking over the shared markup IR. Defines
+//! `DocValue`/`DocBlock`/`DocChunk` and their `Expr` projection, parses document
+//! text into blocks (`decode_document`), and splits documents into
+//! provenance-preserving chunks (`chunk`, `ChunkOp`).
 
 use sim_kernel::{Error, Expr, NumberLiteral, Result, Symbol};
+
+use crate::markup::MarkupDoc;
 
 /// A decoded document: its full source text, detected format, and the ordered
 /// [`DocBlock`]s parsed from it.
@@ -196,9 +198,9 @@ impl DocValue {
         ])
     }
 
-    /// Reconstruct a [`DocValue`] from an `Expr`, accepting either a raw string
-    /// (decoded as document text) or a `kind: doc` map (decoded from its `text`
-    /// field). Fails closed on any other expression shape.
+    /// Reconstruct a [`DocValue`] from an `Expr`, accepting a raw string, a
+    /// compatibility `kind: doc` map, or the shared `kind: markup-doc` map. Fails
+    /// closed on any other expression shape.
     pub fn from_expr(expr: &Expr) -> Result<Self> {
         match expr {
             Expr::String(text) => Ok(decode_document(text)),
@@ -208,6 +210,10 @@ impl DocValue {
                 let Expr::Symbol(symbol) = kind else {
                     return Err(Error::Eval("document kind must be a symbol".to_owned()));
                 };
+                if symbol.name.as_ref() == "markup-doc" {
+                    let markup = MarkupDoc::from_expr(expr)?;
+                    return Ok(decode_document(&markup.to_source_text()));
+                }
                 if symbol.name.as_ref() != "doc" {
                     return Err(Error::Eval("document kind must be doc".to_owned()));
                 }

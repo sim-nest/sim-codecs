@@ -71,9 +71,9 @@ impl ObjectCompat for TestF64NumberDomain {
 
 /// Register a tiny `numbers/f64` domain fixture for codec tests.
 ///
-/// This intentionally lives in the same future split group as the codec crates
-/// so codec tests can parse and encode basic f64 literals without depending on
-/// the higher-level `sim-lib-numbers-f64` implementation crate.
+/// This fixture lives beside the codec crates so codec tests can parse and
+/// encode basic f64 literals without depending on the higher-level
+/// `sim-lib-numbers-f64` implementation crate.
 pub fn register_f64_number_domain(cx: &mut Cx) {
     let symbol = Symbol::qualified("numbers", "f64");
     let value = cx

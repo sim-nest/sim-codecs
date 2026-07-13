@@ -1,0 +1,6 @@
+= Simple Fixture
+
+Intro with _emphasis_, *strong text*, and `code`.
+
+- first
+- second

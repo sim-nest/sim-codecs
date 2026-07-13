@@ -10,6 +10,7 @@ members = [
   "crates/sim-codec-bitwise-base64",
   "crates/sim-codec-compare",
   "crates/sim-codec-chat",
+  "crates/sim-codec-config",
   "crates/sim-codec-doc",
   "crates/sim-codec-json",
   "crates/sim-codec-lisp",

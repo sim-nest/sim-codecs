@@ -15,6 +15,7 @@
 //! `"` with `\\ \" \n \r \t` escapes.
 
 use sim_kernel::{CodecId, Error, Expr, NumberLiteral, Result, Symbol};
+use sim_lib_net_core::hex_encode;
 
 /// Serialize a data-subset `Expr` into the codec-neutral portable text form.
 ///
@@ -157,16 +158,6 @@ fn write_qstr(text: &str, out: &mut String) {
         }
     }
     out.push('"');
-}
-
-fn hex_encode(bytes: &[u8]) -> String {
-    const HEX: &[u8; 16] = b"0123456789abcdef";
-    let mut out = String::with_capacity(bytes.len() * 2);
-    for byte in bytes {
-        out.push(HEX[(byte >> 4) as usize] as char);
-        out.push(HEX[(byte & 0x0f) as usize] as char);
-    }
-    out
 }
 
 struct Parser<'a> {

@@ -1,0 +1,8 @@
+id = "backend-catalog"
+title = "Backend catalog"
+codec = "lisp"
+setup = "setup.siml"
+purpose = "purpose.md"
+order = 20
+tags = ["codec", "doc", "markup", "backend", "catalog", "sandbox-descriptor"]
+requires = ["core", "codec/lisp", "codec/doc"]
