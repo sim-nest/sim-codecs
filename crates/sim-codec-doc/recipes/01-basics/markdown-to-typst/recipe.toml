@@ -1,0 +1,8 @@
+id = "markdown-to-typst"
+title = "Markdown to Typst"
+codec = "lisp"
+setup = "setup.siml"
+purpose = "purpose.md"
+order = 30
+tags = ["codec", "doc", "markup", "markdown", "typst", "sandbox-descriptor"]
+requires = ["core", "codec/lisp", "codec/doc"]
