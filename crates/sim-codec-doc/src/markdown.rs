@@ -540,7 +540,11 @@ fn tex_math(text: pulldown_cmark::CowStr<'static>) -> MathSource {
 }
 
 fn span(start: usize, end: usize) -> Span {
-    Span { start, end }
+    Span {
+        start,
+        end,
+        state: crate::SpanState::Preserved,
+    }
 }
 
 fn inline_plain_text(items: &[Inline]) -> String {

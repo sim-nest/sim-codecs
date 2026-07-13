@@ -262,7 +262,11 @@ fn markup_doc_roundtrips_as_expr() {
                 level: 1,
                 text: vec![Inline::Text("Guide".to_owned())],
                 id: Some("guide".to_owned()),
-                span: Some(Span { start: 0, end: 7 }),
+                span: Some(Span {
+                    start: 0,
+                    end: 7,
+                    state: crate::SpanState::Preserved,
+                }),
             },
             MarkupBlock::Paragraph {
                 content: vec![
@@ -270,7 +274,11 @@ fn markup_doc_roundtrips_as_expr() {
                     Inline::Strong(vec![Inline::Text("beta".to_owned())]),
                     Inline::Text(".".to_owned()),
                 ],
-                span: Some(Span { start: 9, end: 20 }),
+                span: Some(Span {
+                    start: 9,
+                    end: 20,
+                    state: crate::SpanState::Preserved,
+                }),
             },
             MarkupBlock::CodeBlock {
                 lang: Some("rust".to_owned()),

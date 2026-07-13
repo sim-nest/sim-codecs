@@ -66,6 +66,17 @@ pub struct Span {
     pub start: usize,
     /// Exclusive end byte offset.
     pub end: usize,
+    /// Whether the semantic node still matches the original source span.
+    pub state: SpanState,
+}
+
+/// Source-span freshness after reversible document edits.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum SpanState {
+    /// The span still points at untouched source bytes.
+    Preserved,
+    /// The span's source bytes must be regenerated.
+    Dirty,
 }
 
 /// Markup math source with a notation label.
@@ -271,6 +282,7 @@ impl MarkupDoc {
                 let span = Some(Span {
                     start: block.start,
                     end: block.end,
+                    state: SpanState::Preserved,
                 });
                 match block.kind {
                     DocBlockKind::Heading => MarkupBlock::Heading {
@@ -320,6 +332,7 @@ impl Span {
         map(vec![
             ("start", uint(self.start as u64)),
             ("end", uint(self.end as u64)),
+            ("state", sym(self.state.as_str())),
         ])
     }
 
@@ -328,7 +341,36 @@ impl Span {
         Ok(Self {
             start: required_usize(entries, "start", "span")?,
             end: required_usize(entries, "end", "span")?,
+            state: match field(entries, "state") {
+                Some(value) => SpanState::from_expr(value)?,
+                None => SpanState::Preserved,
+            },
         })
+    }
+}
+
+impl SpanState {
+    fn as_str(&self) -> &'static str {
+        match self {
+            Self::Preserved => "preserved",
+            Self::Dirty => "dirty",
+        }
+    }
+
+    fn from_expr(expr: &Expr) -> Result<Self> {
+        match expr {
+            Expr::Symbol(symbol) if symbol.namespace.is_none() => match symbol.name.as_ref() {
+                "preserved" => Ok(Self::Preserved),
+                "dirty" => Ok(Self::Dirty),
+                other => Err(Error::Eval(format!("unknown span state {other}"))),
+            },
+            Expr::String(value) => match value.as_str() {
+                "preserved" => Ok(Self::Preserved),
+                "dirty" => Ok(Self::Dirty),
+                other => Err(Error::Eval(format!("unknown span state {other}"))),
+            },
+            _ => Err(Error::Eval("span state must be a symbol".to_owned())),
+        }
     }
 }
 
@@ -350,7 +392,7 @@ impl MathSource {
 }
 
 impl MarkupBlock {
-    fn as_expr(&self) -> Expr {
+    pub(crate) fn as_expr(&self) -> Expr {
         match self {
             Self::Heading {
                 level,
@@ -457,7 +499,7 @@ impl MarkupBlock {
         }
     }
 
-    fn from_expr(expr: &Expr) -> Result<Self> {
+    pub(crate) fn from_expr(expr: &Expr) -> Result<Self> {
         let entries = map_entries(expr, "markup block")?;
         match required_kind(entries, "markup block")?.as_str() {
             "heading" => Ok(Self::Heading {

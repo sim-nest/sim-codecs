@@ -14,6 +14,7 @@
 //!   `install_doc_codec` plus `codec:markup/<id>` installation.
 //! - document: compatibility chunking wrappers (`DocValue`, `DocFormat`,
 //!   `DocBlock`, `DocChunk`, `ChunkOp`), `decode_document`, and `chunk`.
+//! - edit: reversible document-domain edits over `MarkupDoc`.
 //! - markup: the shared semantic markup IR (`MarkupDoc`, `MarkupBlock`,
 //!   `Inline`) and its ordinary-data projection.
 //! - functions: the `doc/chunk-*` chunking functions registered as callables.
@@ -25,6 +26,9 @@
 mod backend;
 mod codec;
 mod document;
+mod edit;
+#[cfg(test)]
+mod edit_tests;
 mod functions;
 mod markdown;
 mod markdown_writer;
@@ -47,7 +51,9 @@ pub use codec::{
 pub use document::{
     ChunkOp, DocBlock, DocBlockKind, DocChunk, DocFormat, DocValue, chunk, decode_document,
 };
+pub use edit::{MarkupEdit, apply_edit, invert_edit};
 pub use markdown::MarkdownBackend;
 pub use markup::{
-    BackendId, Inline, MarkupBlock, MarkupDoc, MathSource, SourceDoc, Span, decode_markup_doc,
+    BackendId, Inline, MarkupBlock, MarkupDoc, MathSource, SourceDoc, Span, SpanState,
+    decode_markup_doc,
 };
