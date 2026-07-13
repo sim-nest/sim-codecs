@@ -392,7 +392,8 @@ impl MathSource {
 }
 
 impl MarkupBlock {
-    pub(crate) fn as_expr(&self) -> Expr {
+    /// Project this block into ordinary SIM data.
+    pub fn as_expr(&self) -> Expr {
         match self {
             Self::Heading {
                 level,
@@ -499,7 +500,8 @@ impl MarkupBlock {
         }
     }
 
-    pub(crate) fn from_expr(expr: &Expr) -> Result<Self> {
+    /// Reconstruct a block from ordinary SIM data.
+    pub fn from_expr(expr: &Expr) -> Result<Self> {
         let entries = map_entries(expr, "markup block")?;
         match required_kind(entries, "markup block")?.as_str() {
             "heading" => Ok(Self::Heading {
