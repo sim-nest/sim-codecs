@@ -10,6 +10,7 @@
 //! this crate root):
 //! - backend: the `MarkupBackend` trait, deterministic `BackendRegistry`, and
 //!   fidelity/error contracts for backend implementations.
+//! - catalog: the implemented/tracked backend catalog for markup formats.
 //! - codec: the `DocCodec` decoder/encoder, the `DocCodecLib` host lib, and
 //!   `install_doc_codec` plus `codec:markup/<id>` installation.
 //! - document: compatibility chunking wrappers (`DocValue`, `DocFormat`,
@@ -30,6 +31,9 @@ mod asciidoc;
 #[cfg(test)]
 mod asciidoc_tests;
 mod backend;
+mod catalog;
+#[cfg(test)]
+mod catalog_tests;
 mod codec;
 mod document;
 mod edit;
@@ -55,6 +59,7 @@ pub use backend::{
     BackendRegistry, BasicMarkdownBackend, MarkupBackend, MarkupDecodeOptions, MarkupEncodeOptions,
     MarkupError, MarkupFidelity, MarkupLoss, default_backend_registry,
 };
+pub use catalog::{BackendInfo, BackendStatus, backend_catalog};
 pub use codec::{
     DocCodec, DocCodecLib, MARKUP_CODEC_PREFIX, MarkupCodec, install_doc_codec,
     install_markup_codecs, markup_codec_symbol,

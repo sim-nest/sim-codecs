@@ -87,7 +87,7 @@ self-contained, but those protocol types are the kernel's, not this repo's.
 | `sim-codec-algol` | `codec:algol`, a general-purpose expression codec over an Algol-style infix surface with registered Pratt operators. |
 | `sim-codec-chat` | `codec:chat`, a domain codec for provider-neutral model transcripts, with OpenAI-compatible and Ollama projection helpers. |
 | `sim-codec-config` | `codec:config`, a config codec that decodes per-library settings as one table map and shared launcher files as a directory of library id to table map. |
-| `sim-codec-doc` | `codec:doc`, a document codec that decodes text or Markdown into provenance-bearing document values and exposes fixed, recursive, and heading-aware chunk operations. |
+| `sim-codec-doc` | `codec:doc`, a document codec that decodes text or Markdown into provenance-bearing document values, exposes strict `codec:markup/<id>` backends for Markdown/Typst/AsciiDoc/LaTeX, catalogs tracked markup formats, and provides fixed, recursive, and heading-aware chunk operations. |
 | `sim-codec-mcp` | `codec:mcp`, a domain codec for one MCP JSON-RPC 2.0 envelope per frame. |
 | `sim-wasm-abi` | The wasm guest ABI: byte-frame value/manifest/exports transport and a wasm-backed `Lib`. This is the plugin ABI surface, not an expression codec. |
 | `sim-test-support` | Shared test harness (`install_core_runtime`-style `Cx`, `roundtrip` helper). Used only as a `dev-dependency`; depends only on `sim-kernel`, `sim-value`, and `sim-codec`, so it forms no dependency cycle. |

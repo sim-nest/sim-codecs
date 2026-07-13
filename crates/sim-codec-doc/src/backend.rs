@@ -220,6 +220,9 @@ impl MarkupBackend for BasicMarkdownBackend {
 }
 
 /// Build the default registry installed by [`install_doc_codec`](crate::install_doc_codec).
+///
+/// Only implemented backends are installed here. Tracked catalog entries remain
+/// absent from this registry so runtime decode fails closed for those formats.
 pub fn default_backend_registry() -> BackendRegistry {
     let mut registry = BackendRegistry::new();
     registry.register(AsciiDocBackend);
