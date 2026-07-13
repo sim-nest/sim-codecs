@@ -9,6 +9,7 @@ use sim_kernel::CodecId;
 
 use crate::markdown::MarkdownBackend;
 use crate::markup::{BackendId, MarkupDoc};
+use crate::typst_backend::TypstBackend;
 
 /// Decode options shared by markup backends.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -220,5 +221,6 @@ impl MarkupBackend for BasicMarkdownBackend {
 pub fn default_backend_registry() -> BackendRegistry {
     let mut registry = BackendRegistry::new();
     registry.register(MarkdownBackend);
+    registry.register(TypstBackend);
     registry
 }

@@ -4,8 +4,8 @@ use sim_kernel::{EncodeOptions, Expr, NumberLiteral, ReadPolicy, Symbol};
 use crate::{
     BackendId, BackendRegistry, ChunkOp, DocValue, Inline, MarkdownBackend, MarkupBackend,
     MarkupBlock, MarkupDecodeOptions, MarkupDoc, MarkupEncodeOptions, MarkupError, MarkupFidelity,
-    MathSource, SourceDoc, Span, chunk, decode_document, decode_markup_doc, install_doc_codec,
-    install_markup_codecs, markup_codec_symbol,
+    MathSource, SourceDoc, Span, TypstBackend, chunk, decode_document, decode_markup_doc,
+    install_doc_codec, install_markup_codecs, markup_codec_symbol,
 };
 
 fn cx() -> sim_kernel::Cx {
@@ -35,6 +35,11 @@ fn doc_codec_registers_codec_and_chunk_functions() {
     assert!(
         cx.registry()
             .codec_by_symbol(&markup_codec_symbol(&BackendId::new("markdown")))
+            .is_some()
+    );
+    assert!(
+        cx.registry()
+            .codec_by_symbol(&markup_codec_symbol(&BackendId::new("typst")))
             .is_some()
     );
     for symbol in [
@@ -230,6 +235,95 @@ fn markdown_tables_and_task_markers_survive() {
     assert!(encoded.contains("| Task | Done |"));
     assert!(encoded.contains("- [x] parser"));
     assert!(encoded.contains("- [ ] writer"));
+}
+
+#[test]
+fn typst_roundtrips_semantically() {
+    let source = concat!(
+        "= Guide\n\n",
+        "A _small_ *sample* with `code`, https://example.test, and $x^2$.\n\n",
+        "$ y = x^2 $\n\n",
+        "- first\n",
+        "- second\n\n",
+        "#table(columns: 2,\n",
+        "  [Name],\n",
+        "  [Value],\n",
+        "  [SIM],\n",
+        "  [Runtime]\n",
+        ")\n\n",
+        "#figure(image(\"plot.svg\"), caption: [Plot])\n"
+    );
+    let backend = TypstBackend;
+    let opts = MarkupDecodeOptions {
+        preserve_source: false,
+        preserve_raw: true,
+    };
+    let (doc, fidelity) = backend.decode(source, &opts).unwrap();
+    assert!(fidelity.dropped.is_empty());
+    assert_eq!(doc.title.as_deref(), Some("Guide"));
+    assert!(
+        doc.blocks
+            .iter()
+            .any(|block| matches!(block, MarkupBlock::Table { .. }))
+    );
+    assert!(
+        doc.blocks
+            .iter()
+            .any(|block| matches!(block, MarkupBlock::Figure { src, .. } if src == "plot.svg"))
+    );
+    assert!(doc.blocks.iter().any(
+        |block| matches!(block, MarkupBlock::MathBlock { source, .. } if source.notation == "typst")
+    ));
+
+    let (encoded, encode_fidelity) = backend
+        .encode(&doc, &MarkupEncodeOptions::default())
+        .unwrap();
+    assert!(encode_fidelity.dropped.is_empty());
+    let (decoded, _) = backend.decode(&encoded, &opts).unwrap();
+    assert_eq!(
+        blocks_without_spans(&decoded.blocks),
+        blocks_without_spans(&doc.blocks)
+    );
+}
+
+#[test]
+fn typst_functions_are_not_executed() {
+    let backend = TypstBackend;
+    let source = "#include \"secret.typ\"\n\n#external(data)\n";
+    let preserve = MarkupDecodeOptions {
+        preserve_source: false,
+        preserve_raw: true,
+    };
+    let (doc, fidelity) = backend.decode(source, &preserve).unwrap();
+    assert!(fidelity.dropped.is_empty());
+    assert!(
+        fidelity
+            .preserved_raw
+            .iter()
+            .any(|raw| raw.contains("include"))
+    );
+    assert!(
+        doc.blocks.iter().any(
+            |block| matches!(block, MarkupBlock::Raw { text, .. } if text.contains("include"))
+        )
+    );
+    assert!(doc.blocks.iter().any(
+        |block| matches!(block, MarkupBlock::Raw { text, span: Some(_), .. } if text.contains("external"))
+    ));
+
+    let report = MarkupDecodeOptions {
+        preserve_source: false,
+        preserve_raw: false,
+    };
+    let (_doc, fidelity) = backend.decode(source, &report).unwrap();
+    assert!(fidelity.preserved_raw.is_empty());
+    assert!(fidelity.dropped.iter().any(|loss| loss.path == "include"));
+    assert!(
+        fidelity
+            .dropped
+            .iter()
+            .any(|loss| loss.path == "inline" || loss.path == "external")
+    );
 }
 
 #[test]

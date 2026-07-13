@@ -19,6 +19,7 @@
 //!   `Inline`) and its ordinary-data projection.
 //! - functions: the `doc/chunk-*` chunking functions registered as callables.
 //! - markdown: the `pulldown-cmark` Markdown backend.
+//! - typst_backend: the `typst-syntax` Typst backend.
 
 #![forbid(unsafe_code)]
 #![deny(missing_docs)]
@@ -35,6 +36,7 @@ mod markdown_writer;
 mod markup;
 #[cfg(test)]
 mod tests;
+mod typst_backend;
 
 /// Cookbook recipes embedded from this crate's `recipes/` directory.
 pub static RECIPES: sim_cookbook::EmbeddedDir =
@@ -57,3 +59,4 @@ pub use markup::{
     BackendId, Inline, MarkupBlock, MarkupDoc, MathSource, SourceDoc, Span, SpanState,
     decode_markup_doc,
 };
+pub use typst_backend::TypstBackend;
