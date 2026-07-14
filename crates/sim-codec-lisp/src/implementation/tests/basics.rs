@@ -483,6 +483,37 @@ fn constructor_values_encode_as_read_construct_in_quote_position() {
 }
 
 #[test]
+fn constructor_values_encode_as_read_construct_in_data_position() {
+    let mut cx = cx();
+    let point = cx
+        .factory()
+        .opaque(Arc::new(PointValue {
+            args: vec![
+                Expr::Number(NumberLiteral {
+                    domain: Symbol::qualified("numbers", "f64"),
+                    canonical: "1".to_owned(),
+                }),
+                Expr::Number(NumberLiteral {
+                    domain: Symbol::qualified("numbers", "f64"),
+                    canonical: "2".to_owned(),
+                }),
+            ],
+            fields: Vec::new(),
+        }))
+        .unwrap();
+    let mut write = KernelWriteCx {
+        cx: &mut cx,
+        codec: sim_kernel::CodecId(1),
+        options: sim_kernel::EncodeOptions {
+            position: EncodePosition::Data,
+            ..Default::default()
+        },
+    };
+    let encoded = encode_object_lisp(&mut write, point).unwrap();
+    assert_eq!(encoded, "#(Point 1 2)");
+}
+
+#[test]
 fn constructor_encoding_round_trips_through_lisp_codec() {
     let mut cx = cx();
     register_lisp_codec(&mut cx);

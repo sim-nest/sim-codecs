@@ -472,7 +472,7 @@ fn encode_constructor_lisp(cx: &mut WriteCx<'_>, class: Symbol, args: Vec<Expr>)
         .join(" ");
     match cx.options.position {
         EncodePosition::Eval => Ok(format!("({inner})")),
-        EncodePosition::Quote
+        EncodePosition::Quote | EncodePosition::Data
             if matches!(cx.options.read_construct, ReadConstructEncodePolicy::Allow) =>
         {
             Ok(format!("#({inner})"))
