@@ -1,4 +1,5 @@
 use sim_kernel::{Args, Callable, Cx, Error, Expr, Object, ObjectCompat, Result, Symbol, Value};
+use sim_value::build::entry as field;
 
 use crate::{decode_frame, encode_dense, encode_frame};
 
@@ -69,8 +70,4 @@ fn sample_expr() -> Expr {
         Expr::String("canonical frame".to_owned()),
         Expr::Bool(true),
     ])
-}
-
-fn field(name: &str, value: Expr) -> (Expr, Expr) {
-    (Expr::Symbol(Symbol::new(name)), value)
 }

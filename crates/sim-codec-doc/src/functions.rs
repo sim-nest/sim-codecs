@@ -6,6 +6,7 @@ use sim_kernel::{
     Args, Callable, ClassRef, Cx, Error, Expr, NumberLiteral, Object, ObjectCompat, Result, Symbol,
     Value,
 };
+use sim_value::build::entry as field;
 
 use crate::backend::{MarkupBackend, MarkupDecodeOptions, MarkupEncodeOptions};
 use crate::catalog::{BackendStatus, backend_catalog};
@@ -266,10 +267,6 @@ fn status_name(status: BackendStatus) -> &'static str {
         BackendStatus::Tracked => "tracked",
         BackendStatus::ExternalSiteCandidate => "external-site-candidate",
     }
-}
-
-fn field(name: &str, value: Expr) -> (Expr, Expr) {
-    (Expr::Symbol(Symbol::new(name)), value)
 }
 
 fn size_arg(cx: &mut Cx, value: Option<&Value>, message: &'static str) -> Result<usize> {

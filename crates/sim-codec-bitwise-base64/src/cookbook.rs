@@ -1,5 +1,6 @@
 use sim_codec_binary_base64::{decode_base64_with_limits, encode_base64};
 use sim_kernel::{Args, Callable, Cx, Error, Expr, Object, ObjectCompat, Result, Symbol, Value};
+use sim_value::build::entry as field;
 
 pub(crate) fn roundtrip_report_symbol() -> Symbol {
     Symbol::qualified("bitwise-base64", "roundtrip-report")
@@ -68,8 +69,4 @@ fn sample_expr() -> Expr {
         Expr::String("text wrapper".to_owned()),
         Expr::Bool(true),
     ])
-}
-
-fn field(name: &str, value: Expr) -> (Expr, Expr) {
-    (Expr::Symbol(Symbol::new(name)), value)
 }

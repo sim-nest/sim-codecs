@@ -1,5 +1,6 @@
 use sim_codec::{DecodeBudget, DecodeLimits};
 use sim_kernel::{Args, Callable, Cx, Error, Expr, Object, ObjectCompat, Result, Symbol, Value};
+use sim_value::build::entry as field;
 
 use crate::expr::{decode_chat_text, encode_chat_text};
 use crate::{
@@ -148,8 +149,4 @@ fn stream_wire_name(wire: StreamWire) -> &'static str {
         StreamWire::Sse => "sse",
         StreamWire::Ndjson => "ndjson",
     }
-}
-
-fn field(name: &str, value: Expr) -> (Expr, Expr) {
-    (Expr::Symbol(Symbol::new(name)), value)
 }
