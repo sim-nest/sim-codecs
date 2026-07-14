@@ -1,5 +1,5 @@
 use sim_codec::{Input, decode_with_codec, encode_with_codec};
-use sim_kernel::{EncodeOptions, Expr, NumberLiteral, ReadPolicy, Symbol};
+use sim_kernel::{Args, EncodeOptions, Expr, NumberLiteral, ReadPolicy, Symbol};
 
 use crate::{
     BackendId, BackendRegistry, ChunkOp, DocValue, Inline, MarkdownBackend, MarkupBackend,
@@ -56,12 +56,27 @@ fn doc_codec_registers_codec_and_chunk_functions() {
         Symbol::qualified("doc", "chunk-fixed"),
         Symbol::qualified("doc", "chunk-recursive"),
         Symbol::qualified("doc", "chunk-heading"),
+        Symbol::qualified("doc", "backend-catalog"),
+        Symbol::qualified("doc", "markdown-to-typst"),
     ] {
         assert!(
             cx.registry().function_by_symbol(&symbol).is_some(),
             "missing {symbol}"
         );
     }
+}
+
+#[test]
+fn cookbook_catalog_and_transcode_functions_run() {
+    let mut cx = cx();
+    let catalog = call_report(&mut cx, Symbol::qualified("doc", "backend-catalog"));
+    assert_eq!(
+        map_symbol(&catalog, "kind"),
+        Some(Symbol::qualified("doc", "backend-catalog"))
+    );
+
+    let transcode = call_report(&mut cx, Symbol::qualified("doc", "markdown-to-typst"));
+    assert_eq!(map_string(&transcode, "to"), Some("typst"));
 }
 
 #[test]
@@ -78,6 +93,13 @@ fn backend_registry_is_deterministic() {
             BackendId::new("zeta"),
         ]
     );
+}
+
+fn call_report(cx: &mut sim_kernel::Cx, symbol: Symbol) -> Expr {
+    let value = cx.registry().function_by_symbol(&symbol).unwrap().clone();
+    let callable = value.object().as_callable().unwrap();
+    let value = callable.call(cx, Args::new(Vec::new())).unwrap();
+    value.object().as_expr(cx).unwrap()
 }
 
 #[test]

@@ -1,1 +1,6 @@
-(quote native-codec-loaded)
+(cli/main/codec-lisp
+  (expr:map
+    [args ()]
+    [eval "(quote native-codec-loaded)"]
+    [script nil]
+    [stdin nil]))

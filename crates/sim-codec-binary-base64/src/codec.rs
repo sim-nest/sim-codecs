@@ -15,6 +15,7 @@ use sim_kernel::{
 };
 
 use crate::base64::{decode_base64_with_limits, encode_base64};
+use crate::cookbook::{BinaryBase64RoundtripReport, roundtrip_report_symbol};
 
 /// Codec runtime object that carries `sim-codec-binary` frames as base64 text.
 ///
@@ -127,14 +128,20 @@ impl Lib for BinaryBase64CodecLib {
             target: LibTarget::HostRegistered,
             requires: Vec::<Dependency>::new(),
             capabilities: Vec::new(),
-            exports: vec![Export::Codec {
-                symbol: self.symbol.clone(),
-                codec_id: Some(self.codec_id),
-            }],
+            exports: vec![
+                Export::Codec {
+                    symbol: self.symbol.clone(),
+                    codec_id: Some(self.codec_id),
+                },
+                Export::Function {
+                    symbol: roundtrip_report_symbol(),
+                    function_id: None,
+                },
+            ],
         }
     }
 
-    fn load(&self, _cx: &mut sim_kernel::LoadCx, linker: &mut Linker) -> Result<()> {
+    fn load(&self, cx: &mut sim_kernel::LoadCx, linker: &mut Linker) -> Result<()> {
         let _factory = DefaultFactory;
         let expr_shape =
             sim_codec::resolve_expr_shape(linker, &Symbol::qualified("codec", "BinaryBase64Text"))?;
@@ -155,6 +162,10 @@ impl Lib for BinaryBase64CodecLib {
                 options_shape,
                 default_decode: CodecDefaultDecode::Datum,
             }),
+        )?;
+        linker.function_value(
+            roundtrip_report_symbol(),
+            cx.factory().opaque(Arc::new(BinaryBase64RoundtripReport))?,
         )?;
         Ok(())
     }

@@ -1,0 +1,1 @@
+{"jsonrpc":"2.0","id":"codec-demo","method":"tools/list","params":{"$expr":"nil"}}

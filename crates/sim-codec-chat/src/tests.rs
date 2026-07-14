@@ -1,7 +1,9 @@
 use std::sync::Arc;
 
 use sim_codec::{Input, decode_with_codec, encode_with_codec};
-use sim_kernel::{DefaultFactory, EagerPolicy, EncodeOptions, Error, Expr, ReadPolicy, Symbol};
+use sim_kernel::{
+    Args, DefaultFactory, EagerPolicy, EncodeOptions, Error, Expr, ReadPolicy, Symbol,
+};
 
 use crate::{
     AnthropicCodecLib, ChatCodecLib, LemonadeCodecLib, LmStudioCodecLib, OllamaCodecLib,
@@ -245,6 +247,17 @@ fn provider_profiles_are_open_data_records() {
 }
 
 #[test]
+fn cookbook_profile_and_transcript_functions_run() {
+    let mut cx = cx();
+    let transcript = call_report(&mut cx, Symbol::qualified("chat", "transcript-roundtrip"));
+    assert_eq!(field_bool(&transcript, "roundtrip"), Some(true));
+    assert_eq!(field_string(&transcript, "codec"), Some("codec/chat"));
+
+    let profiles = call_report(&mut cx, Symbol::qualified("chat", "provider-profiles"));
+    assert_eq!(field_string(&profiles, "count"), Some("5"));
+}
+
+#[test]
 fn provider_runtime_codecs_install() {
     let mut cx = cx();
     assert!(
@@ -338,6 +351,37 @@ fn provider_runtime_codecs_install() {
             .unwrap()
             .contains("\"model\":\"ollama\"")
     );
+}
+
+fn call_report(cx: &mut sim_kernel::Cx, symbol: Symbol) -> Expr {
+    let value = cx.registry().function_by_symbol(&symbol).unwrap().clone();
+    let callable = value.object().as_callable().unwrap();
+    let value = callable.call(cx, Args::new(Vec::new())).unwrap();
+    value.object().as_expr(cx).unwrap()
+}
+
+fn field_bool(expr: &Expr, name: &str) -> Option<bool> {
+    map_field(expr, name).and_then(|value| match value {
+        Expr::Bool(value) => Some(*value),
+        _ => None,
+    })
+}
+
+fn field_string<'a>(expr: &'a Expr, name: &str) -> Option<&'a str> {
+    map_field(expr, name).and_then(|value| match value {
+        Expr::String(value) => Some(value.as_str()),
+        _ => None,
+    })
+}
+
+fn map_field<'a>(expr: &'a Expr, name: &str) -> Option<&'a Expr> {
+    let Expr::Map(entries) = expr else {
+        return None;
+    };
+    entries.iter().find_map(|(key, value)| match key {
+        Expr::Symbol(symbol) if symbol.name.as_ref() == name => Some(value),
+        _ => None,
+    })
 }
 
 #[test]

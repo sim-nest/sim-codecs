@@ -16,6 +16,8 @@ use sim_kernel::{
     LibTarget, Linker, LocatedExpr, LocatedExprTree, Result, Symbol, Version, WriteCx,
 };
 
+use crate::cookbook::{BitwiseBase64RoundtripReport, roundtrip_report_symbol};
+
 /// Codec runtime object that carries `sim-codec-bitwise` frames as base64 text.
 ///
 /// This domain codec is a thin text wrapper: it implements every codec role --
@@ -127,14 +129,20 @@ impl Lib for BitwiseBase64CodecLib {
             target: LibTarget::HostRegistered,
             requires: Vec::<Dependency>::new(),
             capabilities: Vec::new(),
-            exports: vec![Export::Codec {
-                symbol: self.symbol.clone(),
-                codec_id: Some(self.codec_id),
-            }],
+            exports: vec![
+                Export::Codec {
+                    symbol: self.symbol.clone(),
+                    codec_id: Some(self.codec_id),
+                },
+                Export::Function {
+                    symbol: roundtrip_report_symbol(),
+                    function_id: None,
+                },
+            ],
         }
     }
 
-    fn load(&self, _cx: &mut sim_kernel::LoadCx, linker: &mut Linker) -> Result<()> {
+    fn load(&self, cx: &mut sim_kernel::LoadCx, linker: &mut Linker) -> Result<()> {
         let _factory = DefaultFactory;
         let expr_shape = sim_codec::resolve_expr_shape(
             linker,
@@ -157,6 +165,11 @@ impl Lib for BitwiseBase64CodecLib {
                 options_shape,
                 default_decode: CodecDefaultDecode::Datum,
             }),
+        )?;
+        linker.function_value(
+            roundtrip_report_symbol(),
+            cx.factory()
+                .opaque(Arc::new(BitwiseBase64RoundtripReport))?,
         )?;
         Ok(())
     }

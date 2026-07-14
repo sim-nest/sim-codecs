@@ -1,5 +1,6 @@
-# Document chunking codec (descriptor)
+# Document chunking codec
 
-The doc codec splits a source document into chunks by headings and offsets (fixed, recursive,
-and heading-aligned strategies). This recipe documents those chunking strategies; the codec
-segments text, not an evaluable expression, so it is documented rather than run.
+The document chunk operation decodes a Markdown source string and emits
+heading-aligned chunks with their source byte offsets and heading paths. The
+recipe runs the same chunker exposed by the `doc/chunk-heading` runtime
+function.

@@ -1,1 +1,7 @@
-(quote (compare bitwise binary size speed corpus report))
+(expr:map
+  [kind codec/compare-report]
+  [corpus [atoms collections strings numbers]]
+  [measures [binary-bytes bitwise-bytes dense-bytes encode-time decode-time]]
+  [baseline codec/binary]
+  [candidate codec/bitwise]
+  [mode modeled])

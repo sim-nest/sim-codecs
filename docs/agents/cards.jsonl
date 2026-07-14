@@ -39,7 +39,7 @@
 {"kind":"recipe","path":"crates/sim-codec-config/recipes/01-basics/chapter.toml"}
 {"kind":"recipe","path":"crates/sim-codec-config/recipes/01-basics/per-lib-config/purpose.md"}
 {"kind":"recipe","path":"crates/sim-codec-config/recipes/01-basics/per-lib-config/recipe.toml"}
-{"kind":"recipe","path":"crates/sim-codec-config/recipes/01-basics/per-lib-config/setup.siml"}
+{"kind":"recipe","path":"crates/sim-codec-config/recipes/01-basics/per-lib-config/setup.toml"}
 {"kind":"recipe","path":"crates/sim-codec-config/recipes/book.toml"}
 {"kind":"recipe","path":"crates/sim-codec-doc/recipes/01-basics/backend-catalog/purpose.md"}
 {"kind":"recipe","path":"crates/sim-codec-doc/recipes/01-basics/backend-catalog/recipe.toml"}
@@ -69,7 +69,7 @@
 {"kind":"recipe","path":"crates/sim-codec-mcp/recipes/01-basics/chapter.toml"}
 {"kind":"recipe","path":"crates/sim-codec-mcp/recipes/01-basics/envelope-descriptor/purpose.md"}
 {"kind":"recipe","path":"crates/sim-codec-mcp/recipes/01-basics/envelope-descriptor/recipe.toml"}
-{"kind":"recipe","path":"crates/sim-codec-mcp/recipes/01-basics/envelope-descriptor/setup.siml"}
+{"kind":"recipe","path":"crates/sim-codec-mcp/recipes/01-basics/envelope-descriptor/setup.json"}
 {"kind":"recipe","path":"crates/sim-codec-mcp/recipes/book.toml"}
 {"kind":"recipe","path":"crates/sim-codec/recipes/01-basics/chapter.toml"}
 {"kind":"recipe","path":"crates/sim-codec/recipes/01-basics/positions-and-limits/purpose.md"}

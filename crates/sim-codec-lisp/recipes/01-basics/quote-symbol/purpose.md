@@ -1,7 +1,5 @@
-# Lisp codec load-smoke (descriptor)
+# Lisp codec load-smoke
 
-This is the lisp codec's load-smoke: it proves the `codec/lisp` reader is registered and
-round-trips a symbol through the runtime, returning a fixed `codec-lisp-ok` sentinel. It is
-a smoke descriptor, not a computation -- the lisp codec's real expressiveness is demonstrated
-live by every runnable cookbook recipe (they all read `codec = "lisp"`) and by the
-`codec/json` tagged-string recipe, which round-trips a cross-codec call to a computed `5`.
+This is the Lisp codec's load smoke: the recipe calls the Lisp CLI entrypoint
+with an eval string, the entrypoint decodes that source through `codec/lisp`,
+and the recipe encodes the returned symbol through the same codec.

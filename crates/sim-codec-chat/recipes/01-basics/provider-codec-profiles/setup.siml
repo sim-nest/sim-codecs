@@ -1,7 +1,1 @@
-(quote
-  (codec-chat providers
-    (openai (codec codec/openai) (request openai-chat) (stream sse))
-    (anthropic (codec codec/anthropic) (request anthropic-messages) (stream sse))
-    (ollama (codec codec/ollama) (request ollama-chat) (stream ndjson))
-    (lm-studio (codec codec/lm-studio) (request openai-chat) (stream sse))
-    (lemonade (codec codec/lemonade) (request openai-chat) (stream sse))))
+(chat/provider-profiles)

@@ -5,7 +5,7 @@ use sim_codec::{
     encode_datum_with_codec,
 };
 use sim_kernel::{
-    Datum, DefaultFactory, EagerPolicy, EncodeOptions, Expr, LocatedExpr, LocatedExprTree,
+    Args, Datum, DefaultFactory, EagerPolicy, EncodeOptions, Expr, LocatedExpr, LocatedExprTree,
     NumberLiteral, Origin, QuoteMode, SourceId, Span, Symbol, Trivia,
 };
 
@@ -31,6 +31,19 @@ fn codec_registers() {
             .codec_by_symbol(&Symbol::qualified("codec", "binary"))
             .is_some()
     );
+    assert!(
+        cx.registry()
+            .function_by_symbol(&Symbol::qualified("binary", "roundtrip-report"))
+            .is_some()
+    );
+}
+
+#[test]
+fn roundtrip_report_function_runs() {
+    let mut cx = cx();
+    let report = call_report(&mut cx, Symbol::qualified("binary", "roundtrip-report"));
+    assert_eq!(field_bool(&report, "roundtrip"), Some(true));
+    assert_eq!(field_string(&report, "codec"), Some("codec/binary"));
 }
 
 #[test]
@@ -53,6 +66,37 @@ fn frame_header_carries_tables() {
         tables.number_domains,
         vec![Symbol::qualified("numbers", "f64")]
     );
+}
+
+fn call_report(cx: &mut sim_kernel::Cx, symbol: Symbol) -> Expr {
+    let value = cx.registry().function_by_symbol(&symbol).unwrap().clone();
+    let callable = value.object().as_callable().unwrap();
+    let value = callable.call(cx, Args::new(Vec::new())).unwrap();
+    value.object().as_expr(cx).unwrap()
+}
+
+fn field_bool(expr: &Expr, name: &str) -> Option<bool> {
+    map_field(expr, name).and_then(|value| match value {
+        Expr::Bool(value) => Some(*value),
+        _ => None,
+    })
+}
+
+fn field_string<'a>(expr: &'a Expr, name: &str) -> Option<&'a str> {
+    map_field(expr, name).and_then(|value| match value {
+        Expr::String(value) => Some(value.as_str()),
+        _ => None,
+    })
+}
+
+fn map_field<'a>(expr: &'a Expr, name: &str) -> Option<&'a Expr> {
+    let Expr::Map(entries) = expr else {
+        return None;
+    };
+    entries.iter().find_map(|(key, value)| match key {
+        Expr::Symbol(symbol) if symbol.name.as_ref() == name => Some(value),
+        _ => None,
+    })
 }
 
 #[test]

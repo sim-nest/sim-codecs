@@ -70,6 +70,7 @@
 
 mod base64;
 mod codec;
+mod cookbook;
 #[cfg(test)]
 mod tests;
 

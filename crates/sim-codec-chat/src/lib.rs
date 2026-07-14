@@ -9,6 +9,7 @@
 
 mod base64;
 mod canonical;
+mod cookbook;
 mod expr;
 mod helpers;
 mod ollama;

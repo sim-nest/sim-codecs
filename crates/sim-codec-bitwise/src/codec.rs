@@ -14,6 +14,7 @@ use sim_kernel::{
     LocatedExprTree, Result, Symbol, Version, WriteCx,
 };
 
+use crate::cookbook::{BitwiseRoundtripReport, roundtrip_report_symbol};
 use crate::reader::FrameReader;
 use crate::types::{FLAG_DENSE, FLAG_NONE, FLAG_ORIGIN, FLAG_TREE_ORIGIN};
 use crate::writer::FrameWriter;
@@ -264,14 +265,20 @@ impl Lib for BitwiseCodecLib {
             target: LibTarget::HostRegistered,
             requires: Vec::<Dependency>::new(),
             capabilities: Vec::new(),
-            exports: vec![Export::Codec {
-                symbol: self.symbol.clone(),
-                codec_id: Some(self.codec_id),
-            }],
+            exports: vec![
+                Export::Codec {
+                    symbol: self.symbol.clone(),
+                    codec_id: Some(self.codec_id),
+                },
+                Export::Function {
+                    symbol: roundtrip_report_symbol(),
+                    function_id: None,
+                },
+            ],
         }
     }
 
-    fn load(&self, _cx: &mut sim_kernel::LoadCx, linker: &mut Linker) -> Result<()> {
+    fn load(&self, cx: &mut sim_kernel::LoadCx, linker: &mut Linker) -> Result<()> {
         let expr_shape =
             sim_codec::resolve_expr_shape(linker, &Symbol::qualified("codec", "BitwiseFrame"))?;
         let options_shape = sim_codec::resolve_options_shape(linker)?;
@@ -291,6 +298,10 @@ impl Lib for BitwiseCodecLib {
                 options_shape,
                 default_decode: CodecDefaultDecode::Datum,
             }),
+        )?;
+        linker.function_value(
+            roundtrip_report_symbol(),
+            cx.factory().opaque(Arc::new(BitwiseRoundtripReport))?,
         )?;
         Ok(())
     }

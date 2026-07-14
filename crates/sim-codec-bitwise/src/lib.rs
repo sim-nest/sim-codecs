@@ -111,6 +111,7 @@
 
 mod bitio;
 mod codec;
+mod cookbook;
 mod number;
 mod reader;
 mod tables;
