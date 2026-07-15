@@ -1,6 +1,7 @@
 use std::collections::BTreeSet;
 
 use sim_kernel::{Error, Expr, Result, Symbol};
+use sim_value::build::entry as field;
 
 /// One BRIDGE packet, carrying a header, ordered typed parts, and optional warrant.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -382,10 +383,6 @@ fn field_name(expr: &Expr) -> Result<String> {
             found: "invalid field key",
         }),
     }
-}
-
-fn field(name: &str, value: Expr) -> (Expr, Expr) {
-    sim_value::build::entry(name, value)
 }
 
 use sim_value::access::map_entries as map_fields;
