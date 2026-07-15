@@ -10,18 +10,27 @@
 #![deny(missing_docs)]
 
 mod canonical;
+mod frame_book;
+mod frame_render;
 mod identity;
 mod line;
 mod move_book;
 mod ownership;
 mod packet;
 mod part_book;
+mod profile;
+mod render;
 mod shape;
 
 #[cfg(test)]
 mod tests;
 
 pub use canonical::{BridgeCodec, BridgeCodecLib};
+pub use frame_book::{
+    BridgeFrameBook, BridgeFramePayload, FrameHoleKind, FrameHoleSpec, FrameKind, FrameSpec,
+    standard_frame_book,
+};
+pub use frame_render::{render_frame, render_frame_with_prose};
 pub use identity::{
     canonical_packet_datum, content_id_string, packet_content_id, stamp_packet_cid,
     verify_packet_cid,
@@ -37,6 +46,11 @@ pub use part_book::{
     AuthorityClass, BridgeBook, BridgePartBook, BridgePartSpec, RenderClass, UnknownPolicy,
     standard_part_book,
 };
+pub use profile::{
+    BridgeProfileBook, BridgeProfileSpec, ProfilePartCount, ProfilePartRule,
+    bridge_profile_shape_expr, brief_profile_spec, brief_profile_symbol, standard_profile_book,
+};
+pub use render::{render_frame_part, render_frame_part_with_prose};
 pub use shape::bridge_packet_shape_symbol;
 
 /// Cookbook recipes for this codec, embedded at build time.

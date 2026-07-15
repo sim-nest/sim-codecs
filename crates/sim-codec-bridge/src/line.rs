@@ -10,6 +10,9 @@ use crate::{BridgeBook, BridgeHeader, BridgePacket, BridgePart, BridgeProvenance
 pub fn encode_bridge_text(packet: &BridgePacket, book: &BridgeBook) -> Result<String> {
     for part in &packet.body {
         book.parts.require_registered(&part.kind)?;
+        if part.kind == Symbol::qualified("bridge", "Frame") {
+            book.frames.validate_payload(&part.payload)?;
+        }
     }
     let mut lines = vec![
         "BRIDGE/1".to_owned(),
@@ -199,10 +202,14 @@ fn parse_part(line: &str, book: &BridgeBook) -> Result<BridgePart> {
         .ok_or_else(|| Error::Eval(format!("BRIDGE part {keyword} has unknown field")))?;
     let kind = kind_from_keyword(keyword);
     book.parts.require_registered(&kind)?;
+    let payload = parse_payload(payload)?;
+    if kind == Symbol::qualified("bridge", "Frame") {
+        book.frames.validate_payload(&payload)?;
+    }
     Ok(BridgePart {
         id: parse_symbol(id),
         kind,
-        payload: parse_payload(payload)?,
+        payload,
     })
 }
 

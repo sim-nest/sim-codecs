@@ -132,22 +132,53 @@ pub struct BridgeBook {
     pub parts: BridgePartBook,
     /// Registered dialogue move specs.
     pub moves: crate::BridgeMoveBook,
+    /// Registered fluent frame specs.
+    pub frames: crate::BridgeFrameBook,
+    /// Registered packet profile specs.
+    pub profiles: crate::BridgeProfileBook,
 }
 
 impl BridgeBook {
-    /// Builds a book from explicit part and move books.
-    pub fn new(parts: BridgePartBook, moves: crate::BridgeMoveBook) -> Self {
-        Self { parts, moves }
+    /// Builds a book from explicit part, move, frame, and profile books.
+    pub fn new(
+        parts: BridgePartBook,
+        moves: crate::BridgeMoveBook,
+        frames: crate::BridgeFrameBook,
+        profiles: crate::BridgeProfileBook,
+    ) -> Self {
+        Self {
+            parts,
+            moves,
+            frames,
+            profiles,
+        }
     }
 
     /// Builds the standard BRIDGE book.
     pub fn standard() -> Self {
-        Self::new(crate::standard_part_book(), crate::standard_move_book())
+        Self::new(
+            crate::standard_part_book(),
+            crate::standard_move_book(),
+            crate::standard_frame_book(),
+            crate::standard_profile_book(),
+        )
     }
 
     /// Returns a copy with one more part spec registered.
     pub fn with_part(mut self, spec: BridgePartSpec) -> Self {
         self.parts.register(spec);
+        self
+    }
+
+    /// Returns a copy with one more frame spec registered.
+    pub fn with_frame(mut self, spec: crate::FrameSpec) -> Self {
+        self.frames.register(spec);
+        self
+    }
+
+    /// Returns a copy with one more profile spec registered.
+    pub fn with_profile(mut self, spec: crate::BridgeProfileSpec) -> Self {
+        self.profiles.register(spec);
         self
     }
 }

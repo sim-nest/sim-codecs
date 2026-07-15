@@ -50,6 +50,20 @@ impl BridgeMoveBook {
         self.moves.get(intent)
     }
 
+    /// Returns all registered move specs.
+    pub fn specs(&self) -> impl Iterator<Item = &BridgeMoveSpec> {
+        self.moves.values()
+    }
+
+    /// Returns registered intents that may reply to `parents`.
+    pub fn legal_reply_intents(&self, parents: &[Symbol]) -> Vec<Symbol> {
+        self.moves
+            .values()
+            .filter(|spec| check_reply_rule(&spec.intent, &spec.replies_to, parents).is_ok())
+            .map(|spec| spec.intent.clone())
+            .collect()
+    }
+
     /// Checks dialogue legality for a move, its parent intents, and its part kinds.
     pub fn check_move(&self, intent: &Symbol, parents: &[Symbol], parts: &[Symbol]) -> Result<()> {
         let spec = self

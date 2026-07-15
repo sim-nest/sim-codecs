@@ -4,10 +4,11 @@ use sim_codec::{Input, decode_with_codec, encode_with_codec};
 use sim_kernel::{DefaultFactory, EagerPolicy, EncodeOptions, Expr, NumberLiteral, Symbol};
 
 use crate::{
-    AuthorityClass, BridgeBook, BridgeCodecLib, BridgeHeader, BridgePacket, BridgePart,
-    BridgePartSpec, BridgeProvenance, RenderClass, UnknownPolicy, assert_roundtrip,
-    assert_total_ownership, decode_bridge_text, encode_bridge_text, expr_to_packet,
-    packet_content_id, packet_to_expr, stamp_packet_cid, verify_packet_cid,
+    AuthorityClass, BridgeBook, BridgeCodecLib, BridgeFramePayload, BridgeHeader, BridgePacket,
+    BridgePart, BridgePartSpec, BridgeProvenance, RenderClass, UnknownPolicy, assert_roundtrip,
+    assert_total_ownership, bridge_profile_shape_expr, brief_profile_symbol, decode_bridge_text,
+    encode_bridge_text, expr_to_packet, packet_content_id, packet_to_expr, render_frame_part,
+    stamp_packet_cid, verify_packet_cid,
 };
 
 fn packet() -> BridgePacket {
@@ -192,9 +193,63 @@ fn request_requires_frame_and_return_parts() {
 }
 
 #[test]
+fn registered_frame_renders_canonical_and_fluent_faces() {
+    let book = BridgeBook::standard();
+    let part = BridgePart {
+        id: Symbol::new("T1"),
+        kind: Symbol::qualified("bridge", "Frame"),
+        payload: BridgeFramePayload::new(Symbol::qualified("bridge", "produce-artifact"))
+            .with_slot(
+                Symbol::new("what"),
+                Expr::Symbol(Symbol::qualified("bridge", "proposal")),
+            )
+            .with_slot(
+                Symbol::new("target"),
+                Expr::String("sim-human-model".to_owned()),
+            )
+            .to_expr(),
+    };
+    let mut packet = packet();
+    packet.body[0] = part.clone();
+    let packet = stamp_packet_cid(&packet).unwrap();
+    let line = encode_bridge_text(&packet, &book).unwrap();
+    let fluent = render_frame_part(&book, &part).unwrap();
+
+    assert!(line.contains("FRAME T1 payload="));
+    assert_eq!(
+        fluent,
+        "[T1] You MUST produce bridge/proposal for sim-human-model."
+    );
+    assert_eq!(decode_bridge_text(&line, &book).unwrap(), packet);
+}
+
+#[test]
+fn unknown_frame_id_rejects_at_decode_time() {
+    let book = BridgeBook::standard();
+    let packet = stamp_packet_cid(&packet()).unwrap();
+    let text = encode_bridge_text(&packet, &book)
+        .unwrap()
+        .replace(r#""name":"proposal""#, r#""name":"unknown""#);
+    let err = decode_bridge_text(&text, &book).unwrap_err();
+
+    assert!(err.to_string().contains("unknown BRIDGE frame"));
+}
+
+#[test]
+fn brief_profile_is_registered_as_profile_choice() {
+    let book = BridgeBook::standard();
+    let packet = packet();
+    let profiles = book.profiles.matching_profiles(&packet);
+    let shape = bridge_profile_shape_expr();
+
+    assert_eq!(profiles, vec![brief_profile_symbol()]);
+    assert!(format!("{shape:?}").contains("BRIEF"));
+}
+
+#[test]
 fn line_payload_roundtrips_non_datum_expr() {
     let mut packet = packet();
-    packet.body[0].payload = Expr::Call {
+    packet.body[1].payload = Expr::Call {
         operator: Box::new(Expr::Symbol(Symbol::new("make"))),
         args: vec![Expr::Number(NumberLiteral {
             domain: Symbol::qualified("numbers", "i64"),
