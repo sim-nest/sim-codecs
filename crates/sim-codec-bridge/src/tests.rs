@@ -4,8 +4,9 @@ use sim_codec::{Input, decode_with_codec, encode_with_codec};
 use sim_kernel::{DefaultFactory, EagerPolicy, EncodeOptions, Expr, NumberLiteral, Symbol};
 
 use crate::{
-    AuthorityClass, BridgeBook, BridgeCodecLib, BridgeFramePayload, BridgeHeader, BridgePacket,
-    BridgePart, BridgePartSpec, BridgeProvenance, RenderClass, UnknownPolicy, assert_roundtrip,
+    AuthorityClass, BridgeBook, BridgeCallArgument, BridgeCallPayload, BridgeCodecLib,
+    BridgeFramePayload, BridgeHeader, BridgePacket, BridgePart, BridgePartSpec, BridgeProvenance,
+    CallArgumentMedia, RenderClass, UnknownPolicy, ask_profile_symbol, assert_roundtrip,
     assert_total_ownership, bridge_profile_shape_expr, brief_profile_symbol, decode_bridge_text,
     encode_bridge_text, expr_to_packet, packet_content_id, packet_to_expr, render_frame_part,
     stamp_packet_cid, verify_packet_cid,
@@ -41,6 +42,52 @@ fn packet() -> BridgePacket {
                 payload: Expr::Map(vec![sim_value::build::entry(
                     "codec",
                     Expr::Symbol(Symbol::qualified("codec", "bridge")),
+                )]),
+            },
+        ],
+        warrant: None,
+    }
+}
+
+fn call_payload() -> BridgeCallPayload {
+    BridgeCallPayload::new(Symbol::qualified("bridge", "answer-question")).with_arg(
+        BridgeCallArgument::new(
+            Symbol::new("question"),
+            Symbol::qualified("codec", "json"),
+            CallArgumentMedia::Text,
+            "core/sha256-datum-v1:fixture".to_owned(),
+            "<sim-data-core-sha256-datum-v1-abcdef id=\"question\">\n{}\n</sim-data-core-sha256-datum-v1-abcdef>".to_owned(),
+        ),
+    )
+}
+
+fn ask_packet() -> BridgePacket {
+    BridgePacket {
+        header: BridgeHeader {
+            cid: None,
+            move_kind: Symbol::new("request"),
+            from: "sim".to_owned(),
+            to: vec!["model:drafter".to_owned()],
+            role: Symbol::new("implementer"),
+            parents: Vec::new(),
+            task: Symbol::new("C1"),
+            output: Symbol::new("O1"),
+            ceiling: vec![Symbol::qualified("ai", "run")],
+            context: Vec::new(),
+            provenance: BridgeProvenance::default(),
+        },
+        body: vec![
+            BridgePart {
+                id: Symbol::new("C1"),
+                kind: Symbol::qualified("bridge", "Call"),
+                payload: call_payload().to_expr(),
+            },
+            BridgePart {
+                id: Symbol::new("O1"),
+                kind: Symbol::qualified("bridge", "Return"),
+                payload: Expr::Map(vec![sim_value::build::entry(
+                    "codec",
+                    Expr::Symbol(Symbol::qualified("codec", "json")),
                 )]),
             },
         ],
@@ -190,6 +237,25 @@ fn request_requires_frame_and_return_parts() {
             ],
         )
         .unwrap();
+    book.moves
+        .check_move(
+            &Symbol::new("request"),
+            &[],
+            &[
+                Symbol::qualified("bridge", "Call"),
+                Symbol::qualified("bridge", "Return"),
+            ],
+        )
+        .unwrap();
+    assert!(
+        book.moves
+            .check_move(
+                &Symbol::new("request"),
+                &[],
+                &[Symbol::qualified("bridge", "Return")],
+            )
+            .is_err()
+    );
 }
 
 #[test]
@@ -244,6 +310,28 @@ fn brief_profile_is_registered_as_profile_choice() {
 
     assert_eq!(profiles, vec![brief_profile_symbol()]);
     assert!(format!("{shape:?}").contains("BRIEF"));
+    assert!(format!("{shape:?}").contains("ASK"));
+}
+
+#[test]
+fn ask_profile_is_registered_as_call_shape() {
+    let book = BridgeBook::standard();
+    let packet = ask_packet();
+    let profiles = book.profiles.matching_profiles(&packet);
+
+    assert_eq!(profiles, vec![ask_profile_symbol()]);
+}
+
+#[test]
+fn unfenced_call_argument_rejects_at_decode_time() {
+    let book = BridgeBook::standard();
+    let packet = stamp_packet_cid(&ask_packet()).unwrap();
+    let text = encode_bridge_text(&packet, &book)
+        .unwrap()
+        .replace("<sim-data-", "<raw-data-");
+    let err = decode_bridge_text(&text, &book).unwrap_err();
+
+    assert!(err.to_string().contains("must be fence-wrapped"));
 }
 
 #[test]

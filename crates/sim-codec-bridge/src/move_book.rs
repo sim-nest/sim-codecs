@@ -24,6 +24,8 @@ pub struct BridgeMoveSpec {
     pub replies_to: ReplyRule,
     /// Required part kinds.
     pub requires_parts: Vec<Symbol>,
+    /// Alternative part-kind groups; every group must have at least one member present.
+    pub requires_any_parts: Vec<Vec<Symbol>>,
     /// Whether this move is terminal.
     pub terminal: bool,
 }
@@ -76,6 +78,17 @@ impl BridgeMoveBook {
                 return Err(Error::Eval(format!("{intent} requires a {required} part")));
             }
         }
+        for alternatives in &spec.requires_any_parts {
+            if alternatives.iter().any(|required| parts.contains(required)) {
+                continue;
+            }
+            let names = alternatives
+                .iter()
+                .map(Symbol::as_qualified_str)
+                .collect::<Vec<_>>()
+                .join(" or ");
+            return Err(Error::Eval(format!("{intent} requires {names}")));
+        }
         Ok(())
     }
 }
@@ -84,7 +97,13 @@ impl BridgeMoveBook {
 pub fn standard_move_book() -> BridgeMoveBook {
     let mut book = BridgeMoveBook::new();
     for spec in [
-        move_spec("request", ReplyRule::Opens, &["Frame", "Return"], false),
+        move_spec_with_any(
+            "request",
+            ReplyRule::Opens,
+            &["Return"],
+            &[&["Frame", "Call"]],
+            false,
+        ),
         move_spec(
             "offer",
             ReplyRule::Only(vec![intent("request")]),
@@ -181,12 +200,31 @@ fn move_spec(
     required_parts: &[&str],
     terminal: bool,
 ) -> BridgeMoveSpec {
+    move_spec_with_any(name, replies_to, required_parts, &[], terminal)
+}
+
+fn move_spec_with_any(
+    name: &str,
+    replies_to: ReplyRule,
+    required_parts: &[&str],
+    required_any_parts: &[&[&str]],
+    terminal: bool,
+) -> BridgeMoveSpec {
     BridgeMoveSpec {
         intent: intent(name),
         replies_to,
         requires_parts: required_parts
             .iter()
             .map(|name| Symbol::qualified("bridge", *name))
+            .collect(),
+        requires_any_parts: required_any_parts
+            .iter()
+            .map(|group| {
+                group
+                    .iter()
+                    .map(|name| Symbol::qualified("bridge", *name))
+                    .collect()
+            })
             .collect(),
         terminal,
     }

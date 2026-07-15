@@ -10,8 +10,14 @@ use crate::{BridgeBook, BridgeHeader, BridgePacket, BridgePart, BridgeProvenance
 pub fn encode_bridge_text(packet: &BridgePacket, book: &BridgeBook) -> Result<String> {
     for part in &packet.body {
         book.parts.require_registered(&part.kind)?;
-        if part.kind == Symbol::qualified("bridge", "Frame") {
-            book.frames.validate_payload(&part.payload)?;
+        match &part.kind {
+            kind if *kind == Symbol::qualified("bridge", "Frame") => {
+                book.frames.validate_payload(&part.payload)?;
+            }
+            kind if *kind == Symbol::qualified("bridge", "Call") => {
+                crate::validate_call_payload(&part.payload)?;
+            }
+            _ => {}
         }
     }
     let mut lines = vec![
@@ -203,8 +209,14 @@ fn parse_part(line: &str, book: &BridgeBook) -> Result<BridgePart> {
     let kind = kind_from_keyword(keyword);
     book.parts.require_registered(&kind)?;
     let payload = parse_payload(payload)?;
-    if kind == Symbol::qualified("bridge", "Frame") {
-        book.frames.validate_payload(&payload)?;
+    match &kind {
+        kind if *kind == Symbol::qualified("bridge", "Frame") => {
+            book.frames.validate_payload(&payload)?;
+        }
+        kind if *kind == Symbol::qualified("bridge", "Call") => {
+            crate::validate_call_payload(&payload)?;
+        }
+        _ => {}
     }
     Ok(BridgePart {
         id: parse_symbol(id),

@@ -151,13 +151,21 @@ pub fn brief_profile_symbol() -> Symbol {
     Symbol::qualified("bridge", "BRIEF")
 }
 
+/// Profile id for ASK packets.
+pub fn ask_profile_symbol() -> Symbol {
+    Symbol::qualified("bridge", "ASK")
+}
+
 /// Shape descriptor for the registered BRIDGE profile catalog.
 pub fn bridge_profile_shape_expr() -> Expr {
     Expr::Map(vec![
         entry("shape", Expr::Symbol(Symbol::qualified("shape", "OneOf"))),
         entry(
             "choices",
-            Expr::Vector(vec![Expr::Symbol(brief_profile_symbol())]),
+            Expr::Vector(vec![
+                Expr::Symbol(brief_profile_symbol()),
+                Expr::Symbol(ask_profile_symbol()),
+            ]),
         ),
     ])
 }
@@ -174,10 +182,24 @@ pub fn brief_profile_spec() -> BridgeProfileSpec {
     )
 }
 
+/// Builds the ASK profile spec: `Given* Frame* Call+ Return`.
+pub fn ask_profile_spec() -> BridgeProfileSpec {
+    BridgeProfileSpec::new(
+        ask_profile_symbol(),
+        vec![
+            ProfilePartRule::new(part("Given"), ProfilePartCount::ZeroOrMore),
+            ProfilePartRule::new(part("Frame"), ProfilePartCount::ZeroOrMore),
+            ProfilePartRule::new(part("Call"), ProfilePartCount::OneOrMore),
+            ProfilePartRule::new(part("Return"), ProfilePartCount::Required),
+        ],
+    )
+}
+
 /// Builds the standard BRIDGE profile book.
 pub fn standard_profile_book() -> BridgeProfileBook {
     let mut book = BridgeProfileBook::new();
     book.register(brief_profile_spec());
+    book.register(ask_profile_spec());
     book
 }
 
