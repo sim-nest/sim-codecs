@@ -11,6 +11,7 @@
 
 mod call;
 mod canonical;
+mod collab;
 mod frame_book;
 mod frame_render;
 mod identity;
@@ -29,6 +30,10 @@ mod tests;
 
 pub use call::{BridgeCallArgument, BridgeCallPayload, CallArgumentMedia, validate_call_payload};
 pub use canonical::{BridgeCodec, BridgeCodecLib};
+pub use collab::{
+    BridgeAttestPayload, BridgeEvidencePayload, BridgePatchPayload, BridgeReceiptPayload,
+    BridgeReviewPayload, BridgeScore, BridgeVotePayload, validate_collab_payload,
+};
 pub use frame_book::{
     BridgeFrameBook, BridgeFramePayload, FrameHoleKind, FrameHoleSpec, FrameKind, FrameSpec,
     standard_frame_book,
@@ -52,7 +57,8 @@ pub use part_book::{
 pub use profile::{
     BridgeProfileBook, BridgeProfileSpec, ProfilePartCount, ProfilePartRule, ask_profile_spec,
     ask_profile_symbol, bridge_profile_shape_expr, brief_profile_spec, brief_profile_symbol,
-    loom_profile_spec, loom_profile_symbol, standard_profile_book,
+    collab_profile_spec, collab_profile_symbol, loom_profile_spec, loom_profile_symbol,
+    standard_profile_book,
 };
 pub use render::{render_frame_part, render_frame_part_with_prose};
 pub use shape::bridge_packet_shape_symbol;

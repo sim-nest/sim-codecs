@@ -139,7 +139,7 @@ pub fn standard_move_book() -> BridgeMoveBook {
         move_spec(
             "attest",
             ReplyRule::Only(vec![intent("reply"), intent("receipt")]),
-            &["Evidence"],
+            &["Attest"],
             true,
         ),
         move_spec("error", ReplyRule::Any, &["Receipt"], true),

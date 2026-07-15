@@ -20,6 +20,9 @@ pub fn encode_bridge_text(packet: &BridgePacket, book: &BridgeBook) -> Result<St
             kind if *kind == Symbol::qualified("bridge", "Weave") => {
                 crate::validate_weave_payload(&part.payload)?;
             }
+            kind if collab_part(kind) => {
+                crate::validate_collab_payload(kind, &part.payload)?;
+            }
             _ => {}
         }
     }
@@ -222,6 +225,9 @@ fn parse_part(line: &str, book: &BridgeBook) -> Result<BridgePart> {
         kind if *kind == Symbol::qualified("bridge", "Weave") => {
             crate::validate_weave_payload(&payload)?;
         }
+        kind if collab_part(kind) => {
+            crate::validate_collab_payload(kind, &payload)?;
+        }
         _ => {}
     }
     Ok(BridgePart {
@@ -320,4 +326,11 @@ fn kind_from_keyword(keyword: &str) -> Symbol {
         None => String::new(),
     };
     Symbol::qualified("bridge", name)
+}
+
+fn collab_part(kind: &Symbol) -> bool {
+    matches!(
+        kind.name.as_ref(),
+        "Review" | "Vote" | "Patch" | "Evidence" | "Receipt" | "Attest"
+    )
 }

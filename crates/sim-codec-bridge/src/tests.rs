@@ -5,12 +5,13 @@ use sim_kernel::{DefaultFactory, EagerPolicy, EncodeOptions, Expr, NumberLiteral
 
 use crate::{
     AuthorityClass, BridgeBook, BridgeCallArgument, BridgeCallPayload, BridgeCodecLib,
-    BridgeFramePayload, BridgeHeader, BridgePacket, BridgePart, BridgePartSpec, BridgeProvenance,
-    BridgeWeavePayload, BridgeWeaveRow, CallArgumentMedia, RenderClass, UnknownPolicy,
-    ask_profile_symbol, assert_roundtrip, assert_total_ownership, bridge_profile_shape_expr,
-    brief_profile_symbol, decode_bridge_text, encode_bridge_text, expr_to_packet,
-    loom_profile_symbol, packet_content_id, packet_to_expr, render_frame_part, stamp_packet_cid,
-    verify_packet_cid,
+    BridgeEvidencePayload, BridgeFramePayload, BridgeHeader, BridgePacket, BridgePart,
+    BridgePartSpec, BridgePatchPayload, BridgeProvenance, BridgeReceiptPayload,
+    BridgeReviewPayload, BridgeScore, BridgeVotePayload, BridgeWeavePayload, BridgeWeaveRow,
+    CallArgumentMedia, RenderClass, UnknownPolicy, ask_profile_symbol, assert_roundtrip,
+    assert_total_ownership, bridge_profile_shape_expr, brief_profile_symbol, collab_profile_symbol,
+    decode_bridge_text, encode_bridge_text, expr_to_packet, loom_profile_symbol, packet_content_id,
+    packet_to_expr, render_frame_part, stamp_packet_cid, verify_packet_cid,
 };
 
 fn packet() -> BridgePacket {
@@ -132,6 +133,79 @@ fn loom_packet() -> BridgePacket {
                     "codec",
                     Expr::Symbol(Symbol::qualified("codec", "bridge")),
                 )]),
+            },
+        ],
+        warrant: None,
+    }
+}
+
+fn collab_packet() -> BridgePacket {
+    BridgePacket {
+        header: BridgeHeader {
+            cid: None,
+            move_kind: Symbol::new("review"),
+            from: "human:reviewer".to_owned(),
+            to: vec!["model:drafter".to_owned()],
+            role: Symbol::new("reviewer"),
+            parents: vec!["core/sha256-bridge-v1:parent".to_owned()],
+            task: Symbol::new("P1"),
+            output: Symbol::new("Rc1"),
+            ceiling: vec![Symbol::qualified("review", "comment")],
+            context: Vec::new(),
+            provenance: BridgeProvenance::default(),
+        },
+        body: vec![
+            BridgePart {
+                id: Symbol::new("R1"),
+                kind: Symbol::qualified("bridge", "Review"),
+                payload: BridgeReviewPayload::new("body/0/payload", "tighten wording").to_expr(),
+            },
+            BridgePart {
+                id: Symbol::new("V1"),
+                kind: Symbol::qualified("bridge", "Vote"),
+                payload: BridgeVotePayload::new(
+                    "body/0/payload",
+                    vec![BridgeScore::new(
+                        Symbol::new("correctness"),
+                        1,
+                        "keeps the contract",
+                    )],
+                )
+                .to_expr(),
+            },
+            BridgePart {
+                id: Symbol::new("P1"),
+                kind: Symbol::qualified("bridge", "Patch"),
+                payload: BridgePatchPayload::new(
+                    "core/sha256-bridge-v1:parent",
+                    "body/0/payload",
+                    Expr::String("replacement".to_owned()),
+                )
+                .to_expr(),
+            },
+            BridgePart {
+                id: Symbol::new("E1"),
+                kind: Symbol::qualified("bridge", "Evidence"),
+                payload: BridgeEvidencePayload::new("packet:P1", "checked locally").to_expr(),
+            },
+            BridgePart {
+                id: Symbol::new("Rc1"),
+                kind: Symbol::qualified("bridge", "Receipt"),
+                payload: BridgeReceiptPayload::new(
+                    Symbol::new("accepted"),
+                    vec!["body/0/payload".to_owned()],
+                )
+                .to_expr(),
+            },
+            BridgePart {
+                id: Symbol::new("A1"),
+                kind: Symbol::qualified("bridge", "Attest"),
+                payload: crate::BridgeAttestPayload::new(
+                    "packet:P1",
+                    "reviewed",
+                    vec!["E1".to_owned()],
+                )
+                .to_expr(),
             },
         ],
         warrant: None,
@@ -268,6 +342,27 @@ fn receipt_requires_receipt_part() {
 }
 
 #[test]
+fn attest_requires_attest_part() {
+    let book = BridgeBook::standard();
+    book.moves
+        .check_move(
+            &Symbol::new("attest"),
+            &[Symbol::new("reply")],
+            &[Symbol::qualified("bridge", "Attest")],
+        )
+        .unwrap();
+    assert!(
+        book.moves
+            .check_move(
+                &Symbol::new("attest"),
+                &[Symbol::new("reply")],
+                &[Symbol::qualified("bridge", "Evidence")],
+            )
+            .is_err()
+    );
+}
+
+#[test]
 fn request_requires_frame_and_return_parts() {
     let book = BridgeBook::standard();
     book.moves
@@ -365,6 +460,7 @@ fn brief_profile_is_registered_as_profile_choice() {
     assert!(format!("{shape:?}").contains("BRIEF"));
     assert!(format!("{shape:?}").contains("ASK"));
     assert!(format!("{shape:?}").contains("LOOM"));
+    assert!(format!("{shape:?}").contains("COLLAB"));
 }
 
 #[test]
@@ -386,6 +482,44 @@ fn loom_profile_is_registered_as_weave_shape() {
     assert_eq!(profiles, vec![loom_profile_symbol()]);
     assert!(text.contains("WEAVE W1 payload="));
     assert!(text.contains("result-shape"));
+}
+
+#[test]
+fn collab_profile_is_registered_as_any_collab_shape() {
+    let book = BridgeBook::standard();
+    let packet = collab_packet();
+    let profiles = book.profiles.matching_profiles(&packet);
+    let text = encode_bridge_text(&stamp_packet_cid(&packet).unwrap(), &book).unwrap();
+
+    assert_eq!(profiles, vec![collab_profile_symbol()]);
+    assert!(text.contains("REVIEW R1 payload="));
+    assert!(text.contains("VOTE V1 payload="));
+    assert!(text.contains("PATCH P1 payload="));
+}
+
+#[test]
+fn collab_payloads_roundtrip_and_validate() {
+    let book = BridgeBook::standard();
+    let packet = stamp_packet_cid(&collab_packet()).unwrap();
+    let text = encode_bridge_text(&packet, &book).unwrap();
+    let decoded = decode_bridge_text(&text, &book).unwrap();
+    let patch = BridgePatchPayload::from_expr(&decoded.body[2].payload).unwrap();
+    let vote = BridgeVotePayload::from_expr(&decoded.body[1].payload).unwrap();
+
+    assert_eq!(decoded, packet);
+    assert_eq!(patch.target, "body/0/payload");
+    assert_eq!(patch.parent_cid, "core/sha256-bridge-v1:parent");
+    assert_eq!(vote.scores[0].axis, Symbol::new("correctness"));
+    verify_packet_cid(&decoded).unwrap();
+}
+
+#[test]
+fn empty_collab_vote_rejects() {
+    let mut packet = collab_packet();
+    packet.body[1].payload = BridgeVotePayload::new("body/0/payload", Vec::new()).to_expr();
+    let err = encode_bridge_text(&packet, &BridgeBook::standard()).unwrap_err();
+
+    assert!(err.to_string().contains("at least one score"));
 }
 
 #[test]

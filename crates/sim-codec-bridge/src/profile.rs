@@ -41,12 +41,27 @@ pub struct BridgeProfileSpec {
     pub id: Symbol,
     /// Ordered part-kind rules.
     pub parts: Vec<ProfilePartRule>,
+    /// Alternative part kinds accepted one-or-more times in any order.
+    pub one_or_more_of: Vec<Symbol>,
 }
 
 impl BridgeProfileSpec {
     /// Builds a profile spec.
     pub fn new(id: Symbol, parts: Vec<ProfilePartRule>) -> Self {
-        Self { id, parts }
+        Self {
+            id,
+            parts,
+            one_or_more_of: Vec::new(),
+        }
+    }
+
+    /// Builds a profile spec accepting one or more of the listed part kinds.
+    pub fn one_or_more_of(id: Symbol, kinds: Vec<Symbol>) -> Self {
+        Self {
+            id,
+            parts: Vec::new(),
+            one_or_more_of: kinds,
+        }
     }
 
     /// Returns true when `packet` matches this ordered profile.
@@ -56,6 +71,12 @@ impl BridgeProfileSpec {
             .iter()
             .map(|part| &part.kind)
             .collect::<Vec<_>>();
+        if !self.one_or_more_of.is_empty() {
+            return !kinds.is_empty()
+                && kinds
+                    .iter()
+                    .all(|kind| self.one_or_more_of.iter().any(|accepted| accepted == *kind));
+        }
         let mut cursor = 0usize;
         for rule in &self.parts {
             let mut count = 0usize;
@@ -82,17 +103,33 @@ impl BridgeProfileSpec {
             entry("id", Expr::Symbol(self.id.clone())),
             entry(
                 "parts",
-                Expr::Vector(
-                    self.parts
-                        .iter()
-                        .map(|rule| {
-                            Expr::Map(vec![
-                                entry("kind", Expr::Symbol(rule.kind.clone())),
-                                entry("count", Expr::Symbol(rule.count.symbol())),
-                            ])
-                        })
-                        .collect(),
-                ),
+                if self.one_or_more_of.is_empty() {
+                    Expr::Vector(
+                        self.parts
+                            .iter()
+                            .map(|rule| {
+                                Expr::Map(vec![
+                                    entry("kind", Expr::Symbol(rule.kind.clone())),
+                                    entry("count", Expr::Symbol(rule.count.symbol())),
+                                ])
+                            })
+                            .collect(),
+                    )
+                } else {
+                    Expr::Vector(vec![Expr::Map(vec![
+                        entry(
+                            "any-of",
+                            Expr::Vector(
+                                self.one_or_more_of
+                                    .iter()
+                                    .cloned()
+                                    .map(Expr::Symbol)
+                                    .collect(),
+                            ),
+                        ),
+                        entry("count", Expr::Symbol(ProfilePartCount::OneOrMore.symbol())),
+                    ])])
+                },
             ),
         ])
     }
@@ -161,6 +198,11 @@ pub fn loom_profile_symbol() -> Symbol {
     Symbol::qualified("bridge", "LOOM")
 }
 
+/// Profile id for COLLAB packets.
+pub fn collab_profile_symbol() -> Symbol {
+    Symbol::qualified("bridge", "COLLAB")
+}
+
 /// Shape descriptor for the registered BRIDGE profile catalog.
 pub fn bridge_profile_shape_expr() -> Expr {
     Expr::Map(vec![
@@ -171,6 +213,7 @@ pub fn bridge_profile_shape_expr() -> Expr {
                 Expr::Symbol(brief_profile_symbol()),
                 Expr::Symbol(ask_profile_symbol()),
                 Expr::Symbol(loom_profile_symbol()),
+                Expr::Symbol(collab_profile_symbol()),
             ]),
         ),
     ])
@@ -214,12 +257,28 @@ pub fn loom_profile_spec() -> BridgeProfileSpec {
     )
 }
 
+/// Builds the COLLAB profile spec: `(Review|Vote|Patch|Evidence|Receipt|Attest)+`.
+pub fn collab_profile_spec() -> BridgeProfileSpec {
+    BridgeProfileSpec::one_or_more_of(
+        collab_profile_symbol(),
+        vec![
+            part("Review"),
+            part("Vote"),
+            part("Patch"),
+            part("Evidence"),
+            part("Receipt"),
+            part("Attest"),
+        ],
+    )
+}
+
 /// Builds the standard BRIDGE profile book.
 pub fn standard_profile_book() -> BridgeProfileBook {
     let mut book = BridgeProfileBook::new();
     book.register(brief_profile_spec());
     book.register(ask_profile_spec());
     book.register(loom_profile_spec());
+    book.register(collab_profile_spec());
     book
 }
 
