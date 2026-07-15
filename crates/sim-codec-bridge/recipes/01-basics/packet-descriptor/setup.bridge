@@ -11,6 +11,6 @@ CEIL [ai/run]
 CONTEXT [C1]
 PROV author=sim card=nil
 BODY
-FRAME T1 payload={"$expr":"map","entries":[{"key":{"$expr":"symbol","name":"frame"},"value":{"$expr":"symbol","namespace":"bridge","name":"produce-artifact"}}]}
+FRAME T1 payload={"$expr":"map","entries":[{"key":{"$expr":"symbol","name":"frame"},"value":{"$expr":"symbol","namespace":"bridge","name":"produce-artifact"}},{"key":{"$expr":"symbol","name":"slots"},"value":{"$expr":"map","entries":[{"key":{"$expr":"symbol","name":"what"},"value":{"$expr":"symbol","namespace":"bridge","name":"proposal"}},{"key":{"$expr":"symbol","name":"target"},"value":{"$expr":"string","value":"sim-human-model"}}]}}]}
 RETURN O1 payload={"$expr":"map","entries":[{"key":{"$expr":"symbol","name":"codec"},"value":{"$expr":"symbol","namespace":"codec","name":"bridge"}}]}
 END
