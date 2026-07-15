@@ -1,5 +1,6 @@
-# Lisp codec load-smoke
+# Lisp codec quoted symbol
 
-This is the Lisp codec's load smoke: the recipe calls the Lisp CLI entrypoint
-with an eval string, the entrypoint decodes that source through `codec/lisp`,
-and the recipe encodes the returned symbol through the same codec.
+This recipe sends a quoted symbol through the Lisp CLI entrypoint. The entrypoint
+decodes the source through `codec/lisp`, evaluates the quote form without looking
+up the symbol as a binding, and encodes the returned symbol through the same
+codec.

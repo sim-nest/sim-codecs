@@ -8,4 +8,4 @@ tags = ["codec", "lisp", "roundtrip"]
 requires = ["core", "codec/lisp"]
 [[expect]]
 form = 0
-result = "codec-lisp-ok"
+result = "quoted-symbol"

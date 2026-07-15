@@ -1,6 +1,6 @@
 (cli/main/codec-lisp
   (expr:map
     [args ()]
-    [eval "(quote codec-lisp-ok)"]
+    [eval "(quote quoted-symbol)"]
     [script nil]
     [stdin nil]))
