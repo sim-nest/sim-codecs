@@ -23,6 +23,11 @@
 {"kind":"recipe","path":"crates/sim-codec-bitwise/recipes/01-basics/frame-descriptor/recipe.toml"}
 {"kind":"recipe","path":"crates/sim-codec-bitwise/recipes/01-basics/frame-descriptor/setup.siml"}
 {"kind":"recipe","path":"crates/sim-codec-bitwise/recipes/book.toml"}
+{"kind":"recipe","path":"crates/sim-codec-bridge/recipes/01-basics/chapter.toml"}
+{"kind":"recipe","path":"crates/sim-codec-bridge/recipes/01-basics/packet-descriptor/purpose.md"}
+{"kind":"recipe","path":"crates/sim-codec-bridge/recipes/01-basics/packet-descriptor/recipe.toml"}
+{"kind":"recipe","path":"crates/sim-codec-bridge/recipes/01-basics/packet-descriptor/setup.bridge"}
+{"kind":"recipe","path":"crates/sim-codec-bridge/recipes/book.toml"}
 {"kind":"recipe","path":"crates/sim-codec-chat/recipes/01-basics/chapter.toml"}
 {"kind":"recipe","path":"crates/sim-codec-chat/recipes/01-basics/provider-codec-profiles/purpose.md"}
 {"kind":"recipe","path":"crates/sim-codec-chat/recipes/01-basics/provider-codec-profiles/recipe.toml"}

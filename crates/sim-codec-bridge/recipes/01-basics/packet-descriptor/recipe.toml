@@ -1,0 +1,8 @@
+id = "packet-descriptor"
+title = "Packet descriptor"
+codec = "bridge"
+setup = "setup.bridge"
+purpose = "purpose.md"
+order = 10
+tags = ["codec", "bridge", "packet", "roundtrip"]
+requires = ["codec/bridge"]
