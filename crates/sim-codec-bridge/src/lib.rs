@@ -22,6 +22,7 @@ mod part_book;
 mod profile;
 mod render;
 mod shape;
+mod weave;
 
 #[cfg(test)]
 mod tests;
@@ -51,10 +52,14 @@ pub use part_book::{
 pub use profile::{
     BridgeProfileBook, BridgeProfileSpec, ProfilePartCount, ProfilePartRule, ask_profile_spec,
     ask_profile_symbol, bridge_profile_shape_expr, brief_profile_spec, brief_profile_symbol,
-    standard_profile_book,
+    loom_profile_spec, loom_profile_symbol, standard_profile_book,
 };
 pub use render::{render_frame_part, render_frame_part_with_prose};
 pub use shape::bridge_packet_shape_symbol;
+pub use weave::{
+    BridgeWeavePayload, BridgeWeaveRow, WeavePart, derive_weave_result_shape,
+    validate_weave_payload,
+};
 
 /// Cookbook recipes for this codec, embedded at build time.
 pub static RECIPES: sim_cookbook::EmbeddedDir =

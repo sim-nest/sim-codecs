@@ -101,7 +101,7 @@ pub fn standard_move_book() -> BridgeMoveBook {
             "request",
             ReplyRule::Opens,
             &["Return"],
-            &[&["Frame", "Call"]],
+            &[&["Frame", "Call", "Weave"]],
             false,
         ),
         move_spec(

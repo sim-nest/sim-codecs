@@ -17,6 +17,9 @@ pub fn encode_bridge_text(packet: &BridgePacket, book: &BridgeBook) -> Result<St
             kind if *kind == Symbol::qualified("bridge", "Call") => {
                 crate::validate_call_payload(&part.payload)?;
             }
+            kind if *kind == Symbol::qualified("bridge", "Weave") => {
+                crate::validate_weave_payload(&part.payload)?;
+            }
             _ => {}
         }
     }
@@ -215,6 +218,9 @@ fn parse_part(line: &str, book: &BridgeBook) -> Result<BridgePart> {
         }
         kind if *kind == Symbol::qualified("bridge", "Call") => {
             crate::validate_call_payload(&payload)?;
+        }
+        kind if *kind == Symbol::qualified("bridge", "Weave") => {
+            crate::validate_weave_payload(&payload)?;
         }
         _ => {}
     }
