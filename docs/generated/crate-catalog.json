@@ -1,6 +1,6 @@
 {
   "generator": "xtask crate-catalog v1",
-  "package_count": 16,
+  "package_count": 17,
   "packages": [
     {
       "description": "SIM workspace package for sim codec algol.",
@@ -62,6 +62,19 @@
       "publish": "true",
       "readme": "crates/sim-codec-bitwise/README.md",
       "root": "crates/sim-codec-bitwise",
+      "target_kinds": [
+        "custom-build",
+        "lib"
+      ]
+    },
+    {
+      "description": "BRIDGE packet line codec for SIM.",
+      "generated_readme": true,
+      "manifest": "crates/sim-codec-bridge/Cargo.toml",
+      "name": "sim-codec-bridge",
+      "publish": "true",
+      "readme": "crates/sim-codec-bridge/README.md",
+      "root": "crates/sim-codec-bridge",
       "target_kinds": [
         "custom-build",
         "lib"

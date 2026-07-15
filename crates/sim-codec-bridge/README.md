@@ -7,7 +7,7 @@ BRIDGE packet line codec for SIM.
 ## Package Metadata
 
 - Manifest: `crates/sim-codec-bridge/Cargo.toml`
-- Publish: `false`
+- Publish: `true`
 - Targets: `custom-build, lib`
 
 ## Crate Documentation
