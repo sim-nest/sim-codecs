@@ -7,11 +7,12 @@ use crate::{
     AuthorityClass, BridgeBook, BridgeCallArgument, BridgeCallPayload, BridgeCodecLib,
     BridgeEvidencePayload, BridgeFramePayload, BridgeHeader, BridgePacket, BridgePart,
     BridgePartSpec, BridgePatchPayload, BridgeProvenance, BridgeReceiptPayload,
-    BridgeReviewPayload, BridgeScore, BridgeVotePayload, BridgeWeavePayload, BridgeWeaveRow,
-    CallArgumentMedia, RenderClass, UnknownPolicy, ask_profile_symbol, assert_roundtrip,
-    assert_total_ownership, bridge_profile_shape_expr, brief_profile_symbol, collab_profile_symbol,
-    decode_bridge_text, encode_bridge_text, expr_to_packet, loom_profile_symbol, packet_content_id,
-    packet_to_expr, render_frame_part, stamp_packet_cid, verify_packet_cid,
+    BridgeReviewPayload, BridgeScore, BridgeVotePayload, BridgeWarrantPolicy, BridgeWeavePayload,
+    BridgeWeaveRow, CallArgumentMedia, RenderClass, UnknownPolicy, ask_profile_symbol,
+    assert_roundtrip, assert_total_ownership, bridge_profile_shape_expr, brief_profile_symbol,
+    collab_profile_symbol, decode_bridge_text, encode_bridge_text, expr_to_packet,
+    loom_profile_symbol, packet_content_id, packet_to_expr, render_frame_part, stamp_packet_cid,
+    verify_packet_cid, warrant_for_packet,
 };
 
 fn packet() -> BridgePacket {
@@ -244,6 +245,31 @@ fn packet_roundtrips_and_cid_is_stable() {
     assert_eq!(packet_content_id(&decoded).unwrap(), first_id);
     assert_roundtrip(&packet, &book).unwrap();
     verify_packet_cid(&decoded).unwrap();
+}
+
+#[test]
+fn packet_warrant_roundtrips_through_expr_and_line_face() {
+    let book = BridgeBook::standard().with_warrant_policy(BridgeWarrantPolicy::Verify);
+    let mut packet = packet();
+    packet.warrant = Some(warrant_for_packet(&book, &packet).unwrap());
+    let packet = stamp_packet_cid(&packet).unwrap();
+    let warrant = packet.warrant.as_ref().unwrap();
+
+    assert_eq!(warrant.parts.len(), 2);
+    assert_eq!(warrant.parts[0].0, Symbol::qualified("bridge", "Frame"));
+    assert_eq!(warrant.parts[1].0, Symbol::qualified("bridge", "Return"));
+
+    let expr = packet_to_expr(&packet);
+    assert_eq!(expr_to_packet(&expr).unwrap(), packet);
+
+    let text = encode_bridge_text(&packet, &book).unwrap();
+    assert!(text.contains("WARRANT moves="));
+    assert!(text.contains("parts=[bridge/Frame="));
+    let decoded = decode_bridge_text(&text, &book).unwrap();
+
+    assert_eq!(decoded, packet);
+    verify_packet_cid(&decoded).unwrap();
+    assert_roundtrip(&packet, &book).unwrap();
 }
 
 #[test]

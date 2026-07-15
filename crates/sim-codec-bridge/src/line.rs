@@ -4,7 +4,9 @@ use serde_json::Value as JsonValue;
 use sim_codec::{DecodeBudget, DecodeLimits};
 use sim_kernel::{CodecId, Error, Expr, Result, Symbol};
 
-use crate::{BridgeBook, BridgeHeader, BridgePacket, BridgePart, BridgeProvenance};
+use crate::identity::content_id_string;
+use crate::warrant::parse_content_id_string;
+use crate::{BridgeBook, BridgeHeader, BridgePacket, BridgePart, BridgeProvenance, BridgeWarrant};
 
 /// Encodes a BRIDGE packet to the strict `BRIDGE/1` line face.
 pub fn encode_bridge_text(packet: &BridgePacket, book: &BridgeBook) -> Result<String> {
@@ -43,8 +45,11 @@ pub fn encode_bridge_text(packet: &BridgePacket, book: &BridgeBook) -> Result<St
             symbol_text(&packet.header.provenance.author),
             packet.header.provenance.card.as_deref().unwrap_or("nil")
         ),
-        "BODY".to_owned(),
     ];
+    if let Some(warrant) = &packet.warrant {
+        lines.push(format!("WARRANT {}", warrant_text(warrant)));
+    }
+    lines.push("BODY".to_owned());
     for part in &packet.body {
         lines.push(format!(
             "{} {} payload={}",
@@ -127,7 +132,10 @@ pub fn decode_bridge_text(text: &str, book: &BridgeBook) -> Result<BridgePacket>
             .iter()
             .map(|line| parse_part(line, book))
             .collect::<Result<Vec<_>>>()?,
-        warrant: None,
+        warrant: match headers.get("WARRANT") {
+            Some(value) => Some(parse_warrant(value)?),
+            None => None,
+        },
     };
     Ok(packet)
 }
@@ -151,6 +159,7 @@ fn is_known_header(header: &str) -> bool {
             | "CEIL"
             | "CONTEXT"
             | "PROV"
+            | "WARRANT"
     )
 }
 
@@ -196,6 +205,60 @@ fn parse_provenance(value: &str) -> Result<BridgeProvenance> {
         author: author.ok_or_else(|| Error::Eval("BRIDGE provenance missing author".to_owned()))?,
         card: card.ok_or_else(|| Error::Eval("BRIDGE provenance missing card".to_owned()))?,
     })
+}
+
+fn warrant_text(warrant: &BridgeWarrant) -> String {
+    format!(
+        "moves={} frames={} parts={}",
+        content_id_string(&warrant.moves),
+        content_id_string(&warrant.frames),
+        warrant_parts_text(&warrant.parts)
+    )
+}
+
+fn warrant_parts_text(parts: &[(Symbol, sim_kernel::ContentId)]) -> String {
+    format!(
+        "[{}]",
+        parts
+            .iter()
+            .map(|(kind, id)| format!("{}={}", symbol_text(kind), content_id_string(id)))
+            .collect::<Vec<_>>()
+            .join(",")
+    )
+}
+
+fn parse_warrant(value: &str) -> Result<BridgeWarrant> {
+    let mut moves = None;
+    let mut frames = None;
+    let mut parts = None;
+    for item in value.split(' ') {
+        let Some((key, value)) = item.split_once('=') else {
+            return Err(Error::Eval(format!("malformed BRIDGE warrant {item}")));
+        };
+        match key {
+            "moves" => moves = Some(parse_content_id_string(value)?),
+            "frames" => frames = Some(parse_content_id_string(value)?),
+            "parts" => parts = Some(parse_warrant_parts(value)?),
+            _ => return Err(Error::Eval(format!("unknown BRIDGE warrant field {key}"))),
+        }
+    }
+    Ok(BridgeWarrant {
+        moves: moves.ok_or_else(|| Error::Eval("BRIDGE warrant missing moves".to_owned()))?,
+        frames: frames.ok_or_else(|| Error::Eval("BRIDGE warrant missing frames".to_owned()))?,
+        parts: parts.ok_or_else(|| Error::Eval("BRIDGE warrant missing parts".to_owned()))?,
+    })
+}
+
+fn parse_warrant_parts(text: &str) -> Result<Vec<(Symbol, sim_kernel::ContentId)>> {
+    parse_list(text)?
+        .into_iter()
+        .map(|item| {
+            let (kind, cid) = item
+                .split_once('=')
+                .ok_or_else(|| Error::Eval(format!("malformed BRIDGE warrant part {item}")))?;
+            Ok((parse_symbol(kind), parse_content_id_string(cid)?))
+        })
+        .collect()
 }
 
 fn parse_part(line: &str, book: &BridgeBook) -> Result<BridgePart> {

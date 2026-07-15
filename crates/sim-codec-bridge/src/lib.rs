@@ -23,6 +23,7 @@ mod part_book;
 mod profile;
 mod render;
 mod shape;
+mod warrant;
 mod weave;
 
 #[cfg(test)]
@@ -47,8 +48,7 @@ pub use line::{decode_bridge_text, encode_bridge_text};
 pub use move_book::{BridgeMoveBook, BridgeMoveSpec, ReplyRule, standard_move_book};
 pub use ownership::{OwnedSpan, assert_roundtrip, assert_total_ownership};
 pub use packet::{
-    BridgeHeader, BridgePacket, BridgePart, BridgeProvenance, BridgeWarrant, expr_to_packet,
-    packet_to_expr,
+    BridgeHeader, BridgePacket, BridgePart, BridgeProvenance, expr_to_packet, packet_to_expr,
 };
 pub use part_book::{
     AuthorityClass, BridgeBook, BridgePartBook, BridgePartSpec, RenderClass, UnknownPolicy,
@@ -62,6 +62,10 @@ pub use profile::{
 };
 pub use render::{render_frame_part, render_frame_part_with_prose};
 pub use shape::bridge_packet_shape_symbol;
+pub use warrant::{
+    BridgeWarrant, BridgeWarrantPolicy, frame_book_content_id, move_book_content_id,
+    part_spec_content_id, warrant_for_packet,
+};
 pub use weave::{
     BridgeWeavePayload, BridgeWeaveRow, WeavePart, derive_weave_result_shape,
     validate_weave_payload,

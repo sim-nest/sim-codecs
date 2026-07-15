@@ -1,6 +1,7 @@
 use sim_codec_json::expr_to_json;
 use sim_kernel::{ContentId, Datum, Expr, Result, Symbol};
 
+use crate::warrant::content_id_datum;
 use crate::{BridgePacket, BridgePart};
 
 /// Builds the canonical datum used to hash a packet with `cid` cleared.
@@ -93,12 +94,26 @@ pub fn canonical_packet_datum(packet: &BridgePacket) -> Datum {
                     .warrant
                     .map(|warrant| Datum::Node {
                         tag: Symbol::qualified("bridge", "Warrant"),
-                        fields: vec![(
-                            Symbol::new("content-ids"),
-                            Datum::Vector(
-                                warrant.content_ids.into_iter().map(Datum::String).collect(),
+                        fields: vec![
+                            (Symbol::new("moves"), content_id_datum(&warrant.moves)),
+                            (Symbol::new("frames"), content_id_datum(&warrant.frames)),
+                            (
+                                Symbol::new("parts"),
+                                Datum::Vector(
+                                    warrant
+                                        .parts
+                                        .into_iter()
+                                        .map(|(kind, id)| Datum::Node {
+                                            tag: Symbol::qualified("bridge", "WarrantPart"),
+                                            fields: vec![
+                                                (Symbol::new("kind"), Datum::Symbol(kind)),
+                                                (Symbol::new("cid"), content_id_datum(&id)),
+                                            ],
+                                        })
+                                        .collect(),
+                                ),
                             ),
-                        )],
+                        ],
                     })
                     .unwrap_or(Datum::Nil),
             ),

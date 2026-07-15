@@ -1,7 +1,10 @@
 use std::collections::BTreeSet;
 
-use sim_kernel::{Error, Expr, Result, Symbol};
+use sim_kernel::{ContentId, Error, Expr, Result, Symbol};
 use sim_value::build::entry as field;
+
+use crate::warrant::parse_content_id_string;
+use crate::{BridgeWarrant, content_id_string};
 
 /// One BRIDGE packet, carrying a header, ordered typed parts, and optional warrant.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -10,7 +13,7 @@ pub struct BridgePacket {
     pub header: BridgeHeader,
     /// Ordered packet body parts.
     pub body: Vec<BridgePart>,
-    /// Optional cross-trust warrant, populated by later bridge layers.
+    /// Optional cross-trust warrant for book and spec content ids.
     pub warrant: Option<BridgeWarrant>,
 }
 
@@ -59,13 +62,6 @@ pub struct BridgePart {
     pub kind: Symbol,
     /// Part payload expression.
     pub payload: Expr,
-}
-
-/// Content ids of protocol books and specs used to build a packet.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct BridgeWarrant {
-    /// Content ids of books and specs.
-    pub content_ids: Vec<String>,
 }
 
 impl BridgePacket {
@@ -265,24 +261,61 @@ fn provenance_from_expr(expr: &Expr) -> Result<BridgeProvenance> {
 }
 
 fn warrant_to_expr(warrant: &BridgeWarrant) -> Expr {
-    Expr::Map(vec![field(
-        "content-ids",
-        Expr::Vector(
-            warrant
-                .content_ids
-                .iter()
-                .map(|id| Expr::String(id.clone()))
-                .collect(),
+    Expr::Map(vec![
+        field("moves", content_id_expr(&warrant.moves)),
+        field("frames", content_id_expr(&warrant.frames)),
+        field(
+            "parts",
+            Expr::Vector(
+                warrant
+                    .parts
+                    .iter()
+                    .map(|(kind, id)| {
+                        Expr::Map(vec![
+                            field("kind", Expr::Symbol(kind.clone())),
+                            field("cid", content_id_expr(id)),
+                        ])
+                    })
+                    .collect(),
+            ),
         ),
-    )])
+    ])
 }
 
 fn warrant_from_expr(expr: &Expr) -> Result<BridgeWarrant> {
     let fields = map_fields(expr, "BRIDGE warrant")?;
-    reject_unknown(fields, &["content-ids"])?;
+    reject_unknown(fields, &["moves", "frames", "parts"])?;
     Ok(BridgeWarrant {
-        content_ids: required_string_vector(fields, "content-ids")?,
+        moves: required_content_id(fields, "moves")?,
+        frames: required_content_id(fields, "frames")?,
+        parts: vector_field(required_field(fields, "parts")?, "parts")?
+            .iter()
+            .map(warrant_part_from_expr)
+            .collect::<Result<Vec<_>>>()?,
     })
+}
+
+fn warrant_part_from_expr(expr: &Expr) -> Result<(Symbol, ContentId)> {
+    let fields = map_fields(expr, "BRIDGE warrant part")?;
+    reject_unknown(fields, &["kind", "cid"])?;
+    Ok((
+        required_symbol(fields, "kind")?,
+        required_content_id(fields, "cid")?,
+    ))
+}
+
+fn content_id_expr(id: &ContentId) -> Expr {
+    Expr::String(content_id_string(id))
+}
+
+fn required_content_id(fields: &[(Expr, Expr)], name: &str) -> Result<ContentId> {
+    match required_field(fields, name)? {
+        Expr::String(value) => parse_content_id_string(value),
+        _ => Err(Error::TypeMismatch {
+            expected: "content id string",
+            found: "non-string",
+        }),
+    }
 }
 
 fn required_symbol(fields: &[(Expr, Expr)], name: &str) -> Result<Symbol> {

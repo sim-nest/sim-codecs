@@ -118,6 +118,11 @@ impl BridgePartBook {
         self.specs.get(kind)
     }
 
+    /// Returns all registered part specs.
+    pub fn specs(&self) -> impl Iterator<Item = &BridgePartSpec> {
+        self.specs.values()
+    }
+
     /// Checks that `kind` is registered for decoding.
     pub fn require_registered(&self, kind: &Symbol) -> Result<&BridgePartSpec> {
         self.spec(kind)
@@ -136,6 +141,8 @@ pub struct BridgeBook {
     pub frames: crate::BridgeFrameBook,
     /// Registered packet profile specs.
     pub profiles: crate::BridgeProfileBook,
+    /// Policy for warrant verification by receivers using this book.
+    pub warrant_policy: crate::BridgeWarrantPolicy,
 }
 
 impl BridgeBook {
@@ -151,6 +158,7 @@ impl BridgeBook {
             moves,
             frames,
             profiles,
+            warrant_policy: crate::BridgeWarrantPolicy::SharedTrust,
         }
     }
 
@@ -179,6 +187,12 @@ impl BridgeBook {
     /// Returns a copy with one more profile spec registered.
     pub fn with_profile(mut self, spec: crate::BridgeProfileSpec) -> Self {
         self.profiles.register(spec);
+        self
+    }
+
+    /// Returns a copy with the warrant verification policy set.
+    pub fn with_warrant_policy(mut self, policy: crate::BridgeWarrantPolicy) -> Self {
+        self.warrant_policy = policy;
         self
     }
 }
