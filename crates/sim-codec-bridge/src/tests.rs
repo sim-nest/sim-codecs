@@ -8,11 +8,12 @@ use crate::{
     BridgeEvidencePayload, BridgeFramePayload, BridgeHeader, BridgePacket, BridgePart,
     BridgePartSpec, BridgePatchPayload, BridgeProvenance, BridgeReceiptPayload,
     BridgeReviewPayload, BridgeScore, BridgeVotePayload, BridgeWarrantPolicy, BridgeWeavePayload,
-    BridgeWeaveRow, CallArgumentMedia, RenderClass, UnknownPolicy, ask_profile_symbol,
-    assert_roundtrip, assert_total_ownership, bridge_profile_shape_expr, brief_profile_symbol,
-    collab_profile_symbol, decode_bridge_text, encode_bridge_text, expr_to_packet,
-    loom_profile_symbol, packet_content_id, packet_to_expr, render_frame_part, stamp_packet_cid,
-    verify_packet_cid, warrant_for_packet,
+    BridgeWeaveRow, CallArgumentMedia, FrameHoleKind, FrameHoleSpec, FrameKind, FrameSpec,
+    RenderClass, UnknownPolicy, ask_profile_symbol, assert_roundtrip, assert_total_ownership,
+    bridge_profile_shape_expr, brief_profile_symbol, collab_profile_symbol, decode_bridge_text,
+    encode_bridge_text, expr_to_packet, frame_book_content_id, loom_profile_symbol,
+    packet_content_id, packet_to_expr, render_frame_part, stamp_packet_cid, verify_packet_cid,
+    warrant_for_packet,
 };
 
 fn packet() -> BridgePacket {
@@ -461,6 +462,36 @@ fn registered_frame_renders_canonical_and_fluent_faces() {
         "[T1] You MUST produce bridge/proposal for sim-human-model."
     );
     assert_eq!(decode_bridge_text(&line, &book).unwrap(), packet);
+}
+
+#[test]
+fn owned_template_frame_spec_registers_and_changes_book_id() {
+    let mut book = BridgeBook::standard();
+    let before = frame_book_content_id(&book.frames).unwrap();
+    book.frames.register(FrameSpec::new(
+        Symbol::qualified("bridge", "summarize-transcript"),
+        FrameKind::Task,
+        "summarize {target}.".to_owned(),
+        vec![FrameHoleSpec::new(
+            Symbol::new("target"),
+            FrameHoleKind::Term,
+        )],
+    ));
+    let after = frame_book_content_id(&book.frames).unwrap();
+    let part = BridgePart {
+        id: Symbol::new("T1"),
+        kind: Symbol::qualified("bridge", "Frame"),
+        payload: BridgeFramePayload::new(Symbol::qualified("bridge", "summarize-transcript"))
+            .with_slot(
+                Symbol::new("target"),
+                Expr::Symbol(Symbol::new("transcript")),
+            )
+            .to_expr(),
+    };
+    let fluent = render_frame_part(&book, &part).unwrap();
+
+    assert_ne!(before, after);
+    assert_eq!(fluent, "[T1] You MUST summarize transcript.");
 }
 
 #[test]

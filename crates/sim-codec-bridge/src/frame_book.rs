@@ -120,9 +120,9 @@ pub struct FrameSpec {
     /// Illocutionary frame kind.
     pub kind: FrameKind,
     /// Deterministic sentence prefix.
-    pub prefix: &'static str,
+    pub prefix: String,
     /// Deterministic template body using `{hole}` placeholders.
-    pub template: &'static str,
+    pub template: String,
     /// Typed holes accepted by this frame.
     pub holes: Vec<FrameHoleSpec>,
     /// Priority for grammar menus.
@@ -134,14 +134,14 @@ impl FrameSpec {
     pub fn new(
         id: Symbol,
         kind: FrameKind,
-        template: &'static str,
+        template: impl Into<String>,
         holes: Vec<FrameHoleSpec>,
     ) -> Self {
         Self {
             id,
             kind,
-            prefix: kind.prefix(),
-            template,
+            prefix: kind.prefix().to_owned(),
+            template: template.into(),
             holes,
             grammar_priority: kind.grammar_priority(),
         }
