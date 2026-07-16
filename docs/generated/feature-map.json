@@ -1,5 +1,120 @@
 {
-  "schema": "sim.feature-map.v1",
-  "repo": "sim-codecs",
-  "packages": []
+  "generator": "xtask repo-contract v1",
+  "packages": [
+    {
+      "features": [],
+      "group": "workspace",
+      "package": "sim-codec"
+    },
+    {
+      "features": [],
+      "group": "workspace",
+      "package": "sim-codec-algol"
+    },
+    {
+      "features": [],
+      "group": "workspace",
+      "package": "sim-codec-binary"
+    },
+    {
+      "features": [],
+      "group": "workspace",
+      "package": "sim-codec-binary-base64"
+    },
+    {
+      "features": [],
+      "group": "workspace",
+      "package": "sim-codec-bitwise"
+    },
+    {
+      "features": [],
+      "group": "workspace",
+      "package": "sim-codec-bitwise-base64"
+    },
+    {
+      "features": [],
+      "group": "workspace",
+      "package": "sim-codec-bridge"
+    },
+    {
+      "features": [],
+      "group": "workspace",
+      "package": "sim-codec-chat"
+    },
+    {
+      "features": [],
+      "group": "workspace",
+      "package": "sim-codec-compare"
+    },
+    {
+      "features": [],
+      "group": "workspace",
+      "package": "sim-codec-config"
+    },
+    {
+      "features": [],
+      "group": "workspace",
+      "package": "sim-codec-doc"
+    },
+    {
+      "features": [],
+      "group": "workspace",
+      "package": "sim-codec-json"
+    },
+    {
+      "features": [
+        {
+          "edges": [
+            "dep:sim-codec-binary",
+            "dep:sim-macros"
+          ],
+          "name": "native-export",
+          "workspace_edges": [
+            {
+              "feature": null,
+              "package": "sim-codec-binary"
+            }
+          ]
+        }
+      ],
+      "group": "workspace",
+      "package": "sim-codec-lisp"
+    },
+    {
+      "features": [],
+      "group": "workspace",
+      "package": "sim-codec-mcp"
+    },
+    {
+      "features": [],
+      "group": "workspace",
+      "package": "sim-test-support"
+    },
+    {
+      "features": [
+        {
+          "edges": [],
+          "name": "audio",
+          "workspace_edges": []
+        },
+        {
+          "edges": [],
+          "name": "default",
+          "workspace_edges": []
+        },
+        {
+          "edges": [],
+          "name": "model",
+          "workspace_edges": []
+        }
+      ],
+      "group": "workspace",
+      "package": "sim-wasm-abi"
+    },
+    {
+      "features": [],
+      "group": "workspace",
+      "package": "xtask"
+    }
+  ]
 }

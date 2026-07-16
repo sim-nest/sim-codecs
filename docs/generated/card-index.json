@@ -1,88 +1,102 @@
 {
-  "schema": "sim.card-index.v1",
+  "card_count": 16,
   "cards": [
-    "crates/sim-codec-algol/recipes/01-basics/algol-arithmetic/purpose.md",
-    "crates/sim-codec-algol/recipes/01-basics/algol-arithmetic/recipe.toml",
-    "crates/sim-codec-algol/recipes/01-basics/algol-arithmetic/setup.siml",
-    "crates/sim-codec-algol/recipes/01-basics/chapter.toml",
-    "crates/sim-codec-algol/recipes/book.toml",
-    "crates/sim-codec-binary-base64/recipes/01-basics/chapter.toml",
-    "crates/sim-codec-binary-base64/recipes/01-basics/text-wrapper/purpose.md",
-    "crates/sim-codec-binary-base64/recipes/01-basics/text-wrapper/recipe.toml",
-    "crates/sim-codec-binary-base64/recipes/01-basics/text-wrapper/setup.siml",
-    "crates/sim-codec-binary-base64/recipes/book.toml",
-    "crates/sim-codec-binary/recipes/01-basics/chapter.toml",
-    "crates/sim-codec-binary/recipes/01-basics/frame-descriptor/purpose.md",
-    "crates/sim-codec-binary/recipes/01-basics/frame-descriptor/recipe.toml",
-    "crates/sim-codec-binary/recipes/01-basics/frame-descriptor/setup.siml",
-    "crates/sim-codec-binary/recipes/book.toml",
-    "crates/sim-codec-bitwise-base64/recipes/01-basics/chapter.toml",
-    "crates/sim-codec-bitwise-base64/recipes/01-basics/text-wrapper/purpose.md",
-    "crates/sim-codec-bitwise-base64/recipes/01-basics/text-wrapper/recipe.toml",
-    "crates/sim-codec-bitwise-base64/recipes/01-basics/text-wrapper/setup.siml",
-    "crates/sim-codec-bitwise-base64/recipes/book.toml",
-    "crates/sim-codec-bitwise/recipes/01-basics/chapter.toml",
-    "crates/sim-codec-bitwise/recipes/01-basics/frame-descriptor/purpose.md",
-    "crates/sim-codec-bitwise/recipes/01-basics/frame-descriptor/recipe.toml",
-    "crates/sim-codec-bitwise/recipes/01-basics/frame-descriptor/setup.siml",
-    "crates/sim-codec-bitwise/recipes/book.toml",
-    "crates/sim-codec-bridge/recipes/01-basics/chapter.toml",
-    "crates/sim-codec-bridge/recipes/01-basics/packet-descriptor/purpose.md",
-    "crates/sim-codec-bridge/recipes/01-basics/packet-descriptor/recipe.toml",
-    "crates/sim-codec-bridge/recipes/01-basics/packet-descriptor/setup.bridge",
-    "crates/sim-codec-bridge/recipes/book.toml",
-    "crates/sim-codec-chat/recipes/01-basics/chapter.toml",
-    "crates/sim-codec-chat/recipes/01-basics/provider-codec-profiles/purpose.md",
-    "crates/sim-codec-chat/recipes/01-basics/provider-codec-profiles/recipe.toml",
-    "crates/sim-codec-chat/recipes/01-basics/provider-codec-profiles/setup.siml",
-    "crates/sim-codec-chat/recipes/01-basics/transcript-descriptor/purpose.md",
-    "crates/sim-codec-chat/recipes/01-basics/transcript-descriptor/recipe.toml",
-    "crates/sim-codec-chat/recipes/01-basics/transcript-descriptor/setup.siml",
-    "crates/sim-codec-chat/recipes/book.toml",
-    "crates/sim-codec-compare/recipes/01-basics/chapter.toml",
-    "crates/sim-codec-compare/recipes/01-basics/run-report/purpose.md",
-    "crates/sim-codec-compare/recipes/01-basics/run-report/recipe.toml",
-    "crates/sim-codec-compare/recipes/01-basics/run-report/setup.siml",
-    "crates/sim-codec-compare/recipes/book.toml",
-    "crates/sim-codec-config/recipes/01-basics/chapter.toml",
-    "crates/sim-codec-config/recipes/01-basics/per-lib-config/purpose.md",
-    "crates/sim-codec-config/recipes/01-basics/per-lib-config/recipe.toml",
-    "crates/sim-codec-config/recipes/01-basics/per-lib-config/setup.toml",
-    "crates/sim-codec-config/recipes/book.toml",
-    "crates/sim-codec-doc/recipes/01-basics/backend-catalog/purpose.md",
-    "crates/sim-codec-doc/recipes/01-basics/backend-catalog/recipe.toml",
-    "crates/sim-codec-doc/recipes/01-basics/backend-catalog/setup.siml",
-    "crates/sim-codec-doc/recipes/01-basics/chapter.toml",
-    "crates/sim-codec-doc/recipes/01-basics/document-chunks/purpose.md",
-    "crates/sim-codec-doc/recipes/01-basics/document-chunks/recipe.toml",
-    "crates/sim-codec-doc/recipes/01-basics/document-chunks/setup.siml",
-    "crates/sim-codec-doc/recipes/01-basics/markdown-to-typst/purpose.md",
-    "crates/sim-codec-doc/recipes/01-basics/markdown-to-typst/recipe.toml",
-    "crates/sim-codec-doc/recipes/01-basics/markdown-to-typst/setup.siml",
-    "crates/sim-codec-doc/recipes/book.toml",
-    "crates/sim-codec-json/recipes/01-basics/chapter.toml",
-    "crates/sim-codec-json/recipes/01-basics/tagged-string/purpose.md",
-    "crates/sim-codec-json/recipes/01-basics/tagged-string/recipe.toml",
-    "crates/sim-codec-json/recipes/01-basics/tagged-string/setup.simj",
-    "crates/sim-codec-json/recipes/book.toml",
-    "crates/sim-codec-lisp/recipes/01-basics/chapter.toml",
-    "crates/sim-codec-lisp/recipes/01-basics/quote-symbol/purpose.md",
-    "crates/sim-codec-lisp/recipes/01-basics/quote-symbol/recipe.toml",
-    "crates/sim-codec-lisp/recipes/01-basics/quote-symbol/setup.siml",
-    "crates/sim-codec-lisp/recipes/02-loadable/chapter.toml",
-    "crates/sim-codec-lisp/recipes/02-loadable/native-script/purpose.md",
-    "crates/sim-codec-lisp/recipes/02-loadable/native-script/recipe.toml",
-    "crates/sim-codec-lisp/recipes/02-loadable/native-script/setup.siml",
-    "crates/sim-codec-lisp/recipes/book.toml",
-    "crates/sim-codec-mcp/recipes/01-basics/chapter.toml",
-    "crates/sim-codec-mcp/recipes/01-basics/envelope-descriptor/purpose.md",
-    "crates/sim-codec-mcp/recipes/01-basics/envelope-descriptor/recipe.toml",
-    "crates/sim-codec-mcp/recipes/01-basics/envelope-descriptor/setup.json",
-    "crates/sim-codec-mcp/recipes/book.toml",
-    "crates/sim-codec/recipes/01-basics/chapter.toml",
-    "crates/sim-codec/recipes/01-basics/positions-and-limits/purpose.md",
-    "crates/sim-codec/recipes/01-basics/positions-and-limits/recipe.toml",
-    "crates/sim-codec/recipes/01-basics/positions-and-limits/setup.siml",
-    "crates/sim-codec/recipes/book.toml"
-  ]
+    {
+      "id": "browse/catalog",
+      "kind": "browse-root",
+      "owner": "workspace",
+      "summary": "root browse catalog"
+    },
+    {
+      "id": "cookbook/codec/algol",
+      "kind": "cookbook-recipe",
+      "owner": "sim-codec-algol",
+      "summary": "Rust-clean textual expression surface with Pratt parsing."
+    },
+    {
+      "id": "cookbook/codec/binary",
+      "kind": "cookbook-recipe",
+      "owner": "sim-codec-binary",
+      "summary": "Canonical SLB8 expression frames."
+    },
+    {
+      "id": "cookbook/codec/binary-base64",
+      "kind": "cookbook-recipe",
+      "owner": "sim-codec-binary-base64",
+      "summary": "ASCII-safe Base64 text wrapper around binary frames."
+    },
+    {
+      "id": "cookbook/codec/bitwise",
+      "kind": "cookbook-recipe",
+      "owner": "sim-codec-bitwise",
+      "summary": "Canonical minimal bit-packed expression frames."
+    },
+    {
+      "id": "cookbook/codec/bitwise-base64",
+      "kind": "cookbook-recipe",
+      "owner": "sim-codec-bitwise-base64",
+      "summary": "ASCII-safe Base64 text wrapper around canonical bitwise frames."
+    },
+    {
+      "id": "cookbook/codec/bridge",
+      "kind": "cookbook-recipe",
+      "owner": "sim-codec-bridge",
+      "summary": "Strict packet envelopes for checked exchanges."
+    },
+    {
+      "id": "cookbook/codec/chat",
+      "kind": "cookbook-recipe",
+      "owner": "sim-codec-chat",
+      "summary": "Chat transcript and provider projection forms."
+    },
+    {
+      "id": "cookbook/codec/compare",
+      "kind": "cookbook-recipe",
+      "owner": "sim-codec-compare",
+      "summary": "Measured bitwise-vs-binary size and speed comparison."
+    },
+    {
+      "id": "cookbook/codec/config",
+      "kind": "cookbook-recipe",
+      "owner": "sim-codec-config",
+      "summary": "Configuration tables for library defaults and shared launcher files."
+    },
+    {
+      "id": "cookbook/codec/core",
+      "kind": "cookbook-recipe",
+      "owner": "sim-codec",
+      "summary": "Shared codec runtime traits, positions, and limits."
+    },
+    {
+      "id": "cookbook/codec/doc",
+      "kind": "cookbook-recipe",
+      "owner": "sim-codec-doc",
+      "summary": "Document decoding and provenance-preserving chunk descriptors."
+    },
+    {
+      "id": "cookbook/codec/json",
+      "kind": "cookbook-recipe",
+      "owner": "sim-codec-json",
+      "summary": "Tagged JSON expression forms."
+    },
+    {
+      "id": "cookbook/codec/lisp",
+      "kind": "cookbook-recipe",
+      "owner": "sim-codec-lisp",
+      "summary": "Lisp surface forms for SIM expressions."
+    },
+    {
+      "id": "cookbook/codec/mcp",
+      "kind": "cookbook-recipe",
+      "owner": "sim-codec-mcp",
+      "summary": "MCP JSON-RPC request, response, notification, and error envelopes."
+    },
+    {
+      "id": "registry/catalog",
+      "kind": "browse-registry",
+      "owner": "workspace",
+      "summary": "registry catalog browse card"
+    }
+  ],
+  "generator": "xtask repo-contract v1"
 }
