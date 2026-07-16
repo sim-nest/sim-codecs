@@ -321,6 +321,12 @@ impl WasmExport {
             Export::Value { symbol } => Self::Value {
                 symbol: symbol.clone(),
             },
+            #[allow(unreachable_patterns)]
+            export => panic!(
+                "wasm ABI v1 cannot encode open export declaration kind {} for symbol {}",
+                export.kind_symbol().symbol(),
+                export.symbol()
+            ),
         }
     }
 
