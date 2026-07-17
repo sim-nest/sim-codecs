@@ -322,10 +322,11 @@ Canonical output is compact JSON with `jsonrpc` set to `"2.0"`. The in-process
 surface is an `Expr::Map` with an `mcp` version field plus the envelope fields
 `id`, `method`, `params`, `result`, or `error`. Request ids round-trip as
 strings, numbers, or `nil`. `params`, `result`, and error `data` reuse the
-tagged JSON expression mapping from `codec:json`. Unknown fields, duplicate
-fields, invalid field combinations, unsupported versions, malformed ids, and
-non-envelope expressions fail closed. MCP is not a total codec for arbitrary
-`Expr`.
+tagged JSON expression mapping from `codec:json`. Unknown envelope fields,
+duplicate envelope fields, duplicate structured error fields, invalid field
+combinations, unsupported versions, malformed ids, and non-envelope expressions
+fail closed. Duplicate policy inside tagged expression payloads belongs to
+`codec:json`. MCP is not a total codec for arbitrary `Expr`.
 
 ## What round-trip guarantees
 

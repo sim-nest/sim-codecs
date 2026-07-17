@@ -15,6 +15,7 @@
 //!   helper.
 //! - expr: conversion between envelopes and checked `Expr` values
 //!   (`envelope_to_expr`, `expr_to_envelope`).
+//! - wire_keys: duplicate-preserving checks for MCP-owned JSON object fields.
 
 #![forbid(unsafe_code)]
 #![deny(missing_docs)]
@@ -23,6 +24,7 @@ mod canonical;
 mod envelope;
 mod error;
 mod expr;
+mod wire_keys;
 
 #[cfg(test)]
 mod tests;

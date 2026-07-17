@@ -150,6 +150,67 @@ fn invalid_inputs_fail_closed() {
 }
 
 #[test]
+fn duplicate_wire_envelope_fields_fail_closed() {
+    let mut cx = cx();
+    for source in [
+        r#"{"jsonrpc":"2.0","jsonrpc":"2.0","method":"ping"}"#,
+        r#"{"jsonrpc":"2.0","id":"r1","id":"r2","method":"ping"}"#,
+        r#"{"jsonrpc":"2.0","id":"r1","method":"ping","method":"pong"}"#,
+        r#"{"jsonrpc":"2.0","id":"r1","method":"ping","params":null,"params":null}"#,
+        r#"{"jsonrpc":"2.0","id":"r1","result":null,"result":null}"#,
+        r#"{"jsonrpc":"2.0","id":"r1","error":{"code":-1,"message":"x"},"error":{"code":-2,"message":"y"}}"#,
+    ] {
+        assert!(
+            decode_with_codec(
+                &mut cx,
+                &codec_symbol(),
+                Input::Text(source.to_owned()),
+                Default::default(),
+            )
+            .is_err(),
+            "{source} should fail"
+        );
+    }
+}
+
+#[test]
+fn duplicate_wire_error_fields_fail_closed() {
+    let mut cx = cx();
+    for source in [
+        r#"{"jsonrpc":"2.0","id":"r1","error":{"code":-1,"code":-2,"message":"x"}}"#,
+        r#"{"jsonrpc":"2.0","id":"r1","error":{"code":-1,"message":"x","message":"y"}}"#,
+        r#"{"jsonrpc":"2.0","id":"r1","error":{"code":-1,"message":"x","data":null,"data":null}}"#,
+    ] {
+        assert!(
+            decode_with_codec(
+                &mut cx,
+                &codec_symbol(),
+                Input::Text(source.to_owned()),
+                Default::default(),
+            )
+            .is_err(),
+            "{source} should fail"
+        );
+    }
+}
+
+#[test]
+fn duplicate_payload_keys_are_not_mcp_envelope_fields() {
+    let mut cx = cx();
+    let decoded = decode_with_codec(
+        &mut cx,
+        &codec_symbol(),
+        Input::Text(
+            r#"{"jsonrpc":"2.0","id":"r1","method":"ping","params":{"$expr":"nil","$expr":"nil"}}"#
+                .to_owned(),
+        ),
+        Default::default(),
+    );
+
+    assert!(decoded.is_ok());
+}
+
+#[test]
 fn fuzz_style_invalid_jsonrpc_envelopes_fail_closed() {
     let mut cx = cx();
     let cases = [

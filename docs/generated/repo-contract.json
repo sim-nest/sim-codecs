@@ -1124,10 +1124,10 @@
     "generated_by": "cargo run -p xtask -- simdoc",
     "generation_timestamp": "2026-07-16T02:55:26+02:00",
     "generator": "xtask repo-contract v1",
-    "git_commit": "f5ceb0af17a6ea94643788515aa35882d40514c5",
+    "git_commit": "837750bf465cd6999f06a2485bb87e4333db85b5",
     "repo": "sim-codecs",
     "schema": "sim.provenance.v1",
-    "source_commit": "f5ceb0af17a6ea94643788515aa35882d40514c5",
+    "source_commit": "837750bf465cd6999f06a2485bb87e4333db85b5",
     "source_remote": "https://github.com/sim-nest/sim-codecs",
     "validation_commands": [
       "cargo fmt --all --check",
@@ -1140,9 +1140,9 @@
       "cargo run -p xtask -- validation-matrix --check --repo .",
       "cargo run -p xtask -- crate-catalog --check --repo ."
     ],
-    "workspace_hash": "d08cce521c61eaf3",
+    "workspace_hash": "e3a266cc0e40b0ac",
     "workspace_hash_algorithm": "fnv1a64",
-    "workspace_hash_input_count": 257,
+    "workspace_hash_input_count": 258,
     "workspace_hash_inputs": [
       "Cargo.toml",
       "crates/sim-codec/Cargo.toml",
@@ -1385,6 +1385,7 @@
       "crates/sim-codec-mcp/src/expr.rs",
       "crates/sim-codec-mcp/src/lib.rs",
       "crates/sim-codec-mcp/src/tests.rs",
+      "crates/sim-codec-mcp/src/wire_keys.rs",
       "crates/sim-test-support/Cargo.toml",
       "crates/sim-test-support/src/lib.rs",
       "crates/sim-test-support/src/number_domain.rs",
