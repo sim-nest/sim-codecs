@@ -10,7 +10,8 @@ use sim_kernel::{
 
 #[non_citizen(
     reason = "test-only f64 number-domain fixture for codec boundary tests",
-    kind = "test-fixture"
+    kind = "test-fixture",
+    descriptor = "numbers/f64"
 )]
 struct TestF64NumberDomain;
 
