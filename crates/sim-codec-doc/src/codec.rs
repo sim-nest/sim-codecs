@@ -51,7 +51,7 @@ impl MarkupCodec {
 
 impl Decoder for MarkupCodec {
     fn decode(&self, cx: &mut ReadCx<'_>, input: Input) -> Result<sim_kernel::Expr> {
-        let source = input.into_string()?;
+        let source = input.into_string_for(cx.codec)?;
         let budget = DecodeBudget::new(cx.limits);
         budget.check_input_bytes(cx.codec, source.len())?;
         let (doc, _fidelity) = self
@@ -92,7 +92,7 @@ pub struct DocCodec;
 
 impl Decoder for DocCodec {
     fn decode(&self, cx: &mut ReadCx<'_>, input: Input) -> Result<sim_kernel::Expr> {
-        let source = input.into_string()?;
+        let source = input.into_string_for(cx.codec)?;
         let budget = DecodeBudget::new(cx.limits);
         budget.check_input_bytes(cx.codec, source.len())?;
         let (doc, _fidelity) = MarkdownBackend

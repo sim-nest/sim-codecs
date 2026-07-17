@@ -42,7 +42,7 @@ pub struct ConfigCodec;
 
 impl Decoder for ConfigCodec {
     fn decode(&self, cx: &mut sim_codec::ReadCx<'_>, input: Input) -> Result<Expr> {
-        let source = input.into_string()?;
+        let source = input.into_string_for(cx.codec)?;
         let budget = sim_codec::DecodeBudget::new(cx.limits);
         budget.check_input_bytes(cx.codec, source.len())?;
         decode::decode_auto_text(cx.codec, &source)

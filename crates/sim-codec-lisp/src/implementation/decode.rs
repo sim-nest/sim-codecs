@@ -35,7 +35,7 @@ pub struct LispProcMacroDecoder;
 
 impl Decoder for LispProcMacroDecoder {
     fn decode(&self, cx: &mut ReadCx<'_>, input: Input) -> Result<Expr> {
-        let source = input.into_string()?;
+        let source = input.into_string_for(cx.codec)?;
         let mut budget = DecodeBudget::new(cx.limits);
         budget.check_input_bytes(cx.codec, source.len())?;
         let tokens = lex_lisp_tokens_without_trivia(cx.codec, &source, &mut budget)?;
@@ -87,7 +87,7 @@ pub fn decode_lisp_located(
     source_id: impl Into<String>,
     input: Input,
 ) -> Result<LocatedExpr> {
-    let source = input.into_string()?;
+    let source = input.into_string_for(cx.codec)?;
     let mut budget = DecodeBudget::new(cx.limits);
     budget.check_input_bytes(cx.codec, source.len())?;
     let source_id = SourceId(source_id.into());
@@ -123,7 +123,7 @@ pub fn decode_lisp_tree(
     source_id: impl Into<String>,
     input: Input,
 ) -> Result<LocatedExprTree> {
-    let source = input.into_string()?;
+    let source = input.into_string_for(cx.codec)?;
     let mut budget = DecodeBudget::new(cx.limits);
     budget.check_input_bytes(cx.codec, source.len())?;
     let source_id = SourceId(source_id.into());

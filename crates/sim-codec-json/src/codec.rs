@@ -32,7 +32,7 @@ pub struct JsonCodec;
 
 impl Decoder for JsonCodec {
     fn decode(&self, cx: &mut ReadCx<'_>, input: Input) -> Result<Expr> {
-        let source = input.into_string()?;
+        let source = input.into_string_for(cx.codec)?;
         let mut budget = DecodeBudget::new(cx.limits);
         budget.check_input_bytes(cx.codec, source.len())?;
         let value =
@@ -62,7 +62,7 @@ impl LocatedDecoder for JsonCodec {
         input: Input,
         _source_id: String,
     ) -> Result<LocatedExpr> {
-        let source = input.into_string()?;
+        let source = input.into_string_for(cx.codec)?;
         let mut budget = DecodeBudget::new(cx.limits);
         budget.check_input_bytes(cx.codec, source.len())?;
         let value =
@@ -92,7 +92,7 @@ impl TreeDecoder for JsonCodec {
         input: Input,
         _source_id: String,
     ) -> Result<LocatedExprTree> {
-        let source = input.into_string()?;
+        let source = input.into_string_for(cx.codec)?;
         let mut budget = DecodeBudget::new(cx.limits);
         budget.check_input_bytes(cx.codec, source.len())?;
         let value =

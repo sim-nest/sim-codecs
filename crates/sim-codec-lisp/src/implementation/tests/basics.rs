@@ -32,6 +32,24 @@ fn codec_is_registered_as_lib_export() {
 }
 
 #[test]
+fn invalid_utf8_input_reports_lisp_codec_id() {
+    let mut cx = cx();
+    register_lisp_codec(&mut cx);
+    let symbol = Symbol::qualified("codec", "lisp");
+    let expected = runtime_codec_id(&mut cx, &symbol);
+
+    let err = decode_with_codec(
+        &mut cx,
+        &symbol,
+        Input::Bytes(vec![0xff]),
+        ReadPolicy::default(),
+    )
+    .unwrap_err();
+
+    assert_codec_error(err, expected, "not valid UTF-8");
+}
+
+#[test]
 fn quote_encoding_is_canonical_and_round_trips() {
     let mut cx = cx();
     register_lisp_codec(&mut cx);

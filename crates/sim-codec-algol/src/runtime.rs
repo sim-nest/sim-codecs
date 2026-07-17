@@ -36,7 +36,7 @@ impl Default for AlgolCodec {
 
 impl Decoder for AlgolCodec {
     fn decode(&self, cx: &mut ReadCx<'_>, input: Input) -> Result<Expr> {
-        let source = input.into_string()?;
+        let source = input.into_string_for(cx.codec)?;
         let mut budget = DecodeBudget::new(cx.limits);
         budget.check_input_bytes(cx.codec, source.len())?;
         let mut tree =
@@ -54,7 +54,7 @@ impl LocatedDecoder for AlgolCodec {
         input: Input,
         source_id: String,
     ) -> Result<sim_kernel::LocatedExpr> {
-        let source = input.into_string()?;
+        let source = input.into_string_for(cx.codec)?;
         let mut budget = DecodeBudget::new(cx.limits);
         budget.check_input_bytes(cx.codec, source.len())?;
         cx.cx
@@ -74,7 +74,7 @@ impl TreeDecoder for AlgolCodec {
         input: Input,
         source_id: String,
     ) -> Result<LocatedExprTree> {
-        let source = input.into_string()?;
+        let source = input.into_string_for(cx.codec)?;
         let mut budget = DecodeBudget::new(cx.limits);
         budget.check_input_bytes(cx.codec, source.len())?;
         cx.cx
