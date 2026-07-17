@@ -92,7 +92,7 @@ pub use identity::{
     canonical_packet_datum, content_id_string, packet_content_id, stamp_packet_cid,
     verify_packet_cid,
 };
-pub use line::{decode_bridge_text, encode_bridge_text};
+pub use line::{decode_bridge_text, decode_bridge_text_with_limits, encode_bridge_text};
 pub use move_book::{BridgeMoveBook, BridgeMoveSpec, ReplyRule, standard_move_book};
 pub use ownership::{OwnedSpan, assert_roundtrip, assert_total_ownership};
 pub use packet::{

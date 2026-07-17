@@ -47,6 +47,18 @@ pub fn encode_bridge_text(packet: &BridgePacket, book: &BridgeBook) -> Result<St
 
 /// Decodes the strict `BRIDGE/1` line face to a BRIDGE packet.
 pub fn decode_bridge_text(text: &str, book: &BridgeBook) -> Result<BridgePacket> {
+    decode_bridge_text_with_limits(text, book, CodecId(0), DecodeLimits::default())
+}
+
+/// Decodes the strict `BRIDGE/1` line face under caller-supplied decode limits.
+pub fn decode_bridge_text_with_limits(
+    text: &str,
+    book: &BridgeBook,
+    codec: CodecId,
+    limits: DecodeLimits,
+) -> Result<BridgePacket> {
+    let mut budget = DecodeBudget::new(limits);
+    budget.check_input_bytes(codec, text.len())?;
     let mut lines = text.lines();
     match lines.next() {
         Some("BRIDGE/1") => {}
@@ -113,7 +125,7 @@ pub fn decode_bridge_text(text: &str, book: &BridgeBook) -> Result<BridgePacket>
         },
         body: body_lines
             .iter()
-            .map(|line| parse_part(line, book))
+            .map(|line| parse_part(line, book, codec, &mut budget))
             .collect::<Result<Vec<_>>>()?,
         warrant: match headers.get("WARRANT") {
             Some(value) => Some(parse_warrant(value)?),
@@ -245,7 +257,12 @@ fn parse_warrant_parts(text: &str) -> Result<Vec<(Symbol, sim_kernel::ContentId)
         .collect()
 }
 
-fn parse_part(line: &str, book: &BridgeBook) -> Result<BridgePart> {
+fn parse_part(
+    line: &str,
+    book: &BridgeBook,
+    codec: CodecId,
+    budget: &mut DecodeBudget,
+) -> Result<BridgePart> {
     let mut fields = line.splitn(3, ' ');
     let keyword = fields
         .next()
@@ -261,7 +278,7 @@ fn parse_part(line: &str, book: &BridgeBook) -> Result<BridgePart> {
         .ok_or_else(|| Error::Eval(format!("BRIDGE part {keyword} has unknown field")))?;
     let kind = kind_from_keyword(keyword);
     book.parts.require_registered(&kind)?;
-    let payload = parse_payload(payload)?;
+    let payload = parse_payload(payload, codec, budget)?;
     match &kind {
         kind if *kind == Symbol::qualified("bridge", "Frame") => {
             book.frames.validate_payload(&payload)?;
@@ -289,11 +306,10 @@ fn payload_text(expr: &Expr) -> Result<String> {
         .map_err(|err| Error::Eval(format!("encode BRIDGE payload JSON: {err}")))
 }
 
-fn parse_payload(text: &str) -> Result<Expr> {
+fn parse_payload(text: &str, codec: CodecId, budget: &mut DecodeBudget) -> Result<Expr> {
     let value = serde_json::from_str::<JsonValue>(text)
         .map_err(|err| Error::Eval(format!("parse BRIDGE payload JSON: {err}")))?;
-    let mut budget = DecodeBudget::new(DecodeLimits::default());
-    sim_codec_json::json_to_expr(CodecId(0), &value, &mut budget, 0)
+    sim_codec_json::json_to_expr(codec, &value, budget, 0)
 }
 
 fn symbol_text(symbol: &Symbol) -> String {

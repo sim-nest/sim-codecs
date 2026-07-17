@@ -1,9 +1,10 @@
-use sim_codec::{Input, decode_with_codec};
-use sim_kernel::{Expr, ReadPolicy, Symbol};
+use sim_codec::{DecodeLimits, Input, decode_with_codec, decode_with_codec_and_limits};
+use sim_kernel::{Error, Expr, ReadPolicy, Symbol};
 
 use crate::{
-    AnthropicRequestOptions, decode_anthropic_response, decode_anthropic_stream,
-    decode_anthropic_stream_events, encode_anthropic_request,
+    AnthropicRequestOptions, decode_anthropic_response, decode_anthropic_response_with_limits,
+    decode_anthropic_stream, decode_anthropic_stream_events, decode_anthropic_stream_with_limits,
+    encode_anthropic_request,
 };
 
 use super::{cx, message_expr};
@@ -26,6 +27,30 @@ fn anthropic_runtime_codec_decodes_messages_request() {
     assert!(format!("{decoded:?}").contains("model-request"));
     assert!(format!("{decoded:?}").contains("Answer briefly."));
     assert!(format!("{decoded:?}").contains("hello"));
+}
+
+#[test]
+fn anthropic_runtime_request_honors_decode_input_limit() {
+    let mut cx = cx();
+    let err = decode_with_codec_and_limits(
+        &mut cx,
+        &Symbol::qualified("codec", "anthropic"),
+        Input::Text(
+            r#"{"model":"claude-sonnet-4-20250514","max_tokens":64,"messages":[{"role":"user","content":"hello"}]}"#
+                .to_owned(),
+        ),
+        ReadPolicy::default(),
+        DecodeLimits {
+            max_input_bytes: 8,
+            ..DecodeLimits::default()
+        },
+    )
+    .unwrap_err();
+
+    assert!(
+        matches!(err, Error::CodecError { ref message, .. } if message.contains("input bytes")),
+        "expected input-byte budget error, got {err:?}"
+    );
 }
 
 #[test]
@@ -117,6 +142,27 @@ fn anthropic_messages_response_decodes() {
 }
 
 #[test]
+fn anthropic_response_raw_projection_honors_decode_collection_limit() {
+    let body = br#"{"id":"msg_1","type":"message","role":"assistant","model":"claude-sonnet-4-20250514","content":[{"type":"text","text":"ok"}],"stop_reason":"end_turn"}"#;
+    let err = decode_anthropic_response_with_limits(
+        Symbol::qualified("runner", "anthropic"),
+        "claude-sonnet-4-20250514",
+        body,
+        true,
+        DecodeLimits {
+            max_collection_len: 0,
+            ..DecodeLimits::default()
+        },
+    )
+    .unwrap_err();
+
+    assert!(
+        matches!(err, Error::CodecError { ref message, .. } if message.contains("collection length")),
+        "expected collection-length budget error, got {err:?}"
+    );
+}
+
+#[test]
 fn anthropic_tool_use_response_decodes_to_tool_call_part() {
     let body = br#"{"id":"msg_tool","type":"message","role":"assistant","model":"claude-sonnet-4-20250514","content":[{"type":"tool_use","id":"toolu_1","name":"get_weather","input":{"location":"Stockholm"}}],"stop_reason":"tool_use","usage":{"input_tokens":9,"output_tokens":4}}"#;
     let expr = decode_anthropic_response(
@@ -184,6 +230,58 @@ data: {"type":"message_stop"}
     crate::validate_chat_transcript(&final_response).unwrap();
     assert!(format!("{final_response:?}").contains("hello world"));
     assert!(format!("{final_response:?}").contains("raw-provider-response"));
+}
+
+#[test]
+fn anthropic_stream_honors_decode_input_limit() {
+    let body = br#"event: message_start
+data: {"type":"message_start","message":{"id":"msg_1","model":"claude-sonnet-4-20250514"}}
+
+event: message_stop
+data: {"type":"message_stop"}
+"#;
+    let err = decode_anthropic_stream_with_limits(
+        Symbol::qualified("runner", "anthropic"),
+        "claude-sonnet-4-20250514",
+        body,
+        true,
+        DecodeLimits {
+            max_input_bytes: 8,
+            ..DecodeLimits::default()
+        },
+    )
+    .unwrap_err();
+
+    assert!(
+        matches!(err, Error::CodecError { ref message, .. } if message.contains("input bytes")),
+        "expected input-byte budget error, got {err:?}"
+    );
+}
+
+#[test]
+fn anthropic_stream_event_accumulation_honors_decode_collection_limit() {
+    let body = br#"event: message_start
+data: {"type":"message_start","message":{"id":"msg_1","model":"claude-sonnet-4-20250514"}}
+
+event: message_stop
+data: {"type":"message_stop"}
+"#;
+    let err = decode_anthropic_stream_with_limits(
+        Symbol::qualified("runner", "anthropic"),
+        "claude-sonnet-4-20250514",
+        body,
+        false,
+        DecodeLimits {
+            max_collection_len: 0,
+            ..DecodeLimits::default()
+        },
+    )
+    .unwrap_err();
+
+    assert!(
+        matches!(err, Error::CodecError { ref message, .. } if message.contains("collection length")),
+        "expected collection-length budget error, got {err:?}"
+    );
 }
 
 #[test]

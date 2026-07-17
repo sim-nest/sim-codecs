@@ -1,6 +1,8 @@
 use std::sync::Arc;
 
-use sim_codec::{Input, decode_with_codec, encode_with_codec};
+use sim_codec::{
+    DecodeLimits, Input, decode_with_codec, decode_with_codec_and_limits, encode_with_codec,
+};
 use sim_kernel::{
     Args, DefaultFactory, EagerPolicy, EncodeOptions, Error, Expr, ReadPolicy, Symbol,
 };
@@ -8,8 +10,9 @@ use sim_kernel::{
 use crate::{
     AnthropicCodecLib, ChatCodecLib, LemonadeCodecLib, LmStudioCodecLib, OllamaCodecLib,
     OpenAiCodecLib, OpenAiRequestOptions, RequestWire, StreamWire, decode_openai_response,
-    decode_openai_stream, encode_openai_request, is_model_request_expr, model_card_expr,
-    model_error_expr, model_request_messages_expr, model_response_expr,
+    decode_openai_response_with_limits, decode_openai_stream, decode_openai_stream_with_limits,
+    encode_openai_request, is_model_request_expr, model_card_expr, model_error_expr,
+    model_request_messages_expr, model_response_expr,
 };
 
 mod anthropic;
@@ -403,6 +406,29 @@ fn openai_runtime_codec_decodes_chat_request() {
 }
 
 #[test]
+fn openai_runtime_request_honors_decode_input_limit() {
+    let mut cx = cx();
+    let err = decode_with_codec_and_limits(
+        &mut cx,
+        &Symbol::qualified("codec", "openai"),
+        Input::Text(
+            r#"{"model":"gpt-5-mini","messages":[{"role":"user","content":"hello"}]}"#.to_owned(),
+        ),
+        ReadPolicy::default(),
+        DecodeLimits {
+            max_input_bytes: 8,
+            ..DecodeLimits::default()
+        },
+    )
+    .unwrap_err();
+
+    assert!(
+        matches!(err, Error::CodecError { ref message, .. } if message.contains("input bytes")),
+        "expected input-byte budget error, got {err:?}"
+    );
+}
+
+#[test]
 fn openai_request_encoder_matches_fixture_shape() {
     let body = encode_openai_request(
         &request_expr(),
@@ -431,6 +457,26 @@ fn openai_response_decoder_matches_fixture_shape() {
     assert!(format!("{expr:?}").contains("compiled"));
     assert!(format!("{expr:?}").contains("raw-provider-response"));
     assert!(format!("{expr:?}").contains("input-tokens"));
+}
+
+#[test]
+fn openai_response_raw_projection_honors_decode_collection_limit() {
+    let err = decode_openai_response_with_limits(
+        Symbol::new("remote"),
+        "gpt-5-mini",
+        br#"{"id":"chatcmpl-1","choices":[{"index":0,"finish_reason":"stop","message":{"role":"assistant","content":"compiled"}}]}"#,
+        true,
+        DecodeLimits {
+            max_collection_len: 0,
+            ..DecodeLimits::default()
+        },
+    )
+    .unwrap_err();
+
+    assert!(
+        matches!(err, Error::CodecError { ref message, .. } if message.contains("collection length")),
+        "expected collection-length budget error, got {err:?}"
+    );
 }
 
 #[test]
@@ -475,6 +521,52 @@ data: [DONE]
     assert!(format!("{expr:?}").contains("hello world"));
     assert!(format!("{expr:?}").contains("raw-provider-response"));
     assert!(format!("{expr:?}").contains("output-tokens"));
+}
+
+#[test]
+fn openai_stream_honors_decode_input_limit() {
+    let err = decode_openai_stream_with_limits(
+        Symbol::new("remote"),
+        "gpt-5-mini",
+        br#"data: {"id":"chunk-1","choices":[{"delta":{"content":"hello"},"finish_reason":"stop"}]}
+
+data: [DONE]
+"#,
+        false,
+        DecodeLimits {
+            max_input_bytes: 8,
+            ..DecodeLimits::default()
+        },
+    )
+    .unwrap_err();
+
+    assert!(
+        matches!(err, Error::CodecError { ref message, .. } if message.contains("input bytes")),
+        "expected input-byte budget error, got {err:?}"
+    );
+}
+
+#[test]
+fn openai_stream_chunk_accumulation_honors_decode_collection_limit() {
+    let err = decode_openai_stream_with_limits(
+        Symbol::new("remote"),
+        "gpt-5-mini",
+        br#"data: {"id":"chunk-1","choices":[{"delta":{"content":"hello"},"finish_reason":"stop"}]}
+
+data: [DONE]
+"#,
+        false,
+        DecodeLimits {
+            max_collection_len: 0,
+            ..DecodeLimits::default()
+        },
+    )
+    .unwrap_err();
+
+    assert!(
+        matches!(err, Error::CodecError { ref message, .. } if message.contains("collection length")),
+        "expected collection-length budget error, got {err:?}"
+    );
 }
 
 #[test]

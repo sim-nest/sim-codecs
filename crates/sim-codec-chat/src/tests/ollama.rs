@@ -1,7 +1,9 @@
+use sim_codec::DecodeLimits;
 use sim_kernel::{Error, Expr, Symbol};
 
 use crate::{
-    OllamaRequestOptions, decode_ollama_response, decode_ollama_stream, encode_ollama_request,
+    OllamaRequestOptions, decode_ollama_response, decode_ollama_response_with_limits,
+    decode_ollama_stream, decode_ollama_stream_with_limits, encode_ollama_request,
 };
 
 use super::request_expr;
@@ -92,6 +94,26 @@ fn ollama_response_decoder_matches_chat_and_generate_shapes() {
 }
 
 #[test]
+fn ollama_response_raw_projection_honors_decode_collection_limit() {
+    let err = decode_ollama_response_with_limits(
+        Symbol::new("local"),
+        "qwen3.5:4b",
+        br#"{"model":"qwen3.5:4b","message":{"role":"assistant","content":"chat ok"},"done":true}"#,
+        true,
+        DecodeLimits {
+            max_collection_len: 0,
+            ..DecodeLimits::default()
+        },
+    )
+    .unwrap_err();
+
+    assert!(
+        matches!(err, Error::CodecError { ref message, .. } if message.contains("collection length")),
+        "expected collection-length budget error, got {err:?}"
+    );
+}
+
+#[test]
 fn ollama_stream_decoder_combines_buffered_chunks() {
     let expr = decode_ollama_stream(
         Symbol::new("local"),
@@ -106,6 +128,46 @@ fn ollama_stream_decoder_combines_buffered_chunks() {
     assert!(format!("{expr:?}").contains("hello world"));
     assert!(format!("{expr:?}").contains("raw-provider-response"));
     assert!(format!("{expr:?}").contains("output-tokens"));
+}
+
+#[test]
+fn ollama_stream_honors_decode_input_limit() {
+    let err = decode_ollama_stream_with_limits(
+        Symbol::new("local"),
+        "qwen3.5:4b",
+        br#"{"model":"qwen3.5:4b","message":{"role":"assistant","content":"hello"},"done":true}"#,
+        false,
+        DecodeLimits {
+            max_input_bytes: 8,
+            ..DecodeLimits::default()
+        },
+    )
+    .unwrap_err();
+
+    assert!(
+        matches!(err, Error::CodecError { ref message, .. } if message.contains("input bytes")),
+        "expected input-byte budget error, got {err:?}"
+    );
+}
+
+#[test]
+fn ollama_stream_chunk_accumulation_honors_decode_collection_limit() {
+    let err = decode_ollama_stream_with_limits(
+        Symbol::new("local"),
+        "qwen3.5:4b",
+        br#"{"model":"qwen3.5:4b","message":{"role":"assistant","content":"hello"},"done":true}"#,
+        false,
+        DecodeLimits {
+            max_collection_len: 0,
+            ..DecodeLimits::default()
+        },
+    )
+    .unwrap_err();
+
+    assert!(
+        matches!(err, Error::CodecError { ref message, .. } if message.contains("collection length")),
+        "expected collection-length budget error, got {err:?}"
+    );
 }
 
 #[test]

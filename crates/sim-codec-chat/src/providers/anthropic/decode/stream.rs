@@ -22,7 +22,13 @@ pub fn decode_anthropic_stream(
     body: &[u8],
     include_raw: bool,
 ) -> Result<Expr> {
-    let events = decode_anthropic_stream_events(runner, model, body, include_raw)?;
+    let events = decode_anthropic_stream_events_with_limits(
+        runner,
+        model,
+        body,
+        include_raw,
+        DecodeLimits::default(),
+    )?;
     events
         .iter()
         .rev()
@@ -42,7 +48,42 @@ pub fn decode_anthropic_stream_events(
     body: &[u8],
     include_raw: bool,
 ) -> Result<Vec<Expr>> {
-    let mut budget = DecodeBudget::new(DecodeLimits::default());
+    decode_anthropic_stream_events_with_limits(
+        runner,
+        model,
+        body,
+        include_raw,
+        DecodeLimits::default(),
+    )
+}
+
+/// Decodes an Anthropic Messages SSE body into the final response under limits.
+pub fn decode_anthropic_stream_with_limits(
+    runner: Symbol,
+    model: &str,
+    body: &[u8],
+    include_raw: bool,
+    limits: DecodeLimits,
+) -> Result<Expr> {
+    let events =
+        decode_anthropic_stream_events_with_limits(runner, model, body, include_raw, limits)?;
+    events
+        .iter()
+        .rev()
+        .find_map(event_response)
+        .cloned()
+        .ok_or_else(|| Error::Eval("anthropic stream did not produce a final response".to_owned()))
+}
+
+/// Decodes Anthropic Messages SSE events under caller-supplied limits.
+pub fn decode_anthropic_stream_events_with_limits(
+    runner: Symbol,
+    model: &str,
+    body: &[u8],
+    include_raw: bool,
+    limits: DecodeLimits,
+) -> Result<Vec<Expr>> {
+    let mut budget = DecodeBudget::new(limits);
     budget.check_input_bytes(ANTHROPIC_CODEC_ID, body.len())?;
     let text = std::str::from_utf8(body)
         .map_err(|err| Error::Eval(format!("anthropic stream is not valid utf-8: {err}")))?;
@@ -52,6 +93,7 @@ pub fn decode_anthropic_stream_events(
             "anthropic stream did not contain any response chunks".to_owned(),
         ));
     }
+    budget.check_collection_len(ANTHROPIC_CODEC_ID, sse_events.len())?;
     let mut events = Vec::new();
     let mut response_model = model.to_owned();
     let mut span_id = Expr::Symbol(Symbol::new("stream"));
@@ -134,7 +176,7 @@ pub fn decode_anthropic_stream_events(
                 let index = event_index(&value)?;
                 if let Some(tool_call) = blocks
                     .get_mut(&index)
-                    .map(StreamBlock::finish_tool_call)
+                    .map(|block| block.finish_tool_call(&mut budget))
                     .transpose()?
                     .flatten()
                 {
@@ -259,10 +301,10 @@ fn stream_response_expr(
     raw_chunks: Option<&[Value]>,
     budget: &mut DecodeBudget,
 ) -> Result<Expr> {
-    let content = blocks
-        .values()
-        .map(StreamBlock::content_part)
-        .collect::<Result<Vec<_>>>()?;
+    let mut content = Vec::new();
+    for block in blocks.values() {
+        content.push(block.content_part(budget)?);
+    }
     let mut entries = match model_response_expr(runner, model, content, stop_reason) {
         Expr::Map(entries) => entries,
         _ => unreachable!("model_response_expr always returns a map"),
@@ -338,7 +380,7 @@ impl StreamBlock {
         }
     }
 
-    fn finish_tool_call(&mut self) -> Result<Option<Expr>> {
+    fn finish_tool_call(&mut self, budget: &mut DecodeBudget) -> Result<Option<Expr>> {
         let Self::Tool {
             id,
             name,
@@ -370,14 +412,14 @@ impl StreamBlock {
                     input,
                     JsonProjectionMode::UntaggedInterop,
                     ANTHROPIC_CODEC_ID,
-                    &mut DecodeBudget::new(DecodeLimits::default()),
+                    budget,
                     0,
                 )?,
             ),
         ])))
     }
 
-    fn content_part(&self) -> Result<Expr> {
+    fn content_part(&self, budget: &mut DecodeBudget) -> Result<Expr> {
         match self {
             Self::Text(text) => Ok(text_part(text)),
             Self::Tool {
@@ -394,10 +436,13 @@ impl StreamBlock {
                 ),
                 (
                     Expr::Symbol(Symbol::new("arguments")),
-                    sim_codec_json::project_json_to_expr(
+                    project_json_to_expr_budgeted(
                         input,
                         JsonProjectionMode::UntaggedInterop,
-                    ),
+                        ANTHROPIC_CODEC_ID,
+                        budget,
+                        0,
+                    )?,
                 ),
             ])),
         }

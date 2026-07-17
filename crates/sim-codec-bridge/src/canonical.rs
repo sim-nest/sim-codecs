@@ -5,7 +5,9 @@ use sim_codec::{
 };
 use sim_kernel::{CodecId, Error, Expr, Lib, LibManifest, Linker, LoadCx, Result, Symbol, WriteCx};
 
-use crate::{BridgeBook, decode_bridge_text, encode_bridge_text, expr_to_packet, packet_to_expr};
+use crate::{
+    BridgeBook, decode_bridge_text_with_limits, encode_bridge_text, expr_to_packet, packet_to_expr,
+};
 
 /// The `codec:bridge` decoder/encoder.
 pub struct BridgeCodec;
@@ -15,12 +17,12 @@ impl Decoder for BridgeCodec {
         let source = domain_input_text(cx.codec, input)?;
         let budget = DecodeBudget::new(cx.limits);
         budget.check_input_bytes(cx.codec, source.len())?;
-        let packet = decode_bridge_text(&source, &BridgeBook::standard()).map_err(|err| {
-            Error::CodecError {
+        let packet =
+            decode_bridge_text_with_limits(&source, &BridgeBook::standard(), cx.codec, cx.limits)
+                .map_err(|err| Error::CodecError {
                 codec: cx.codec,
                 message: err.to_string(),
-            }
-        })?;
+            })?;
         Ok(packet_to_expr(&packet))
     }
 }

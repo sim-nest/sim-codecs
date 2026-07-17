@@ -10,8 +10,9 @@ mod encode;
 mod runtime;
 
 pub use decode::{
-    decode_anthropic_request, decode_anthropic_response, decode_anthropic_stream,
-    decode_anthropic_stream_events,
+    decode_anthropic_request, decode_anthropic_request_with_limits, decode_anthropic_response,
+    decode_anthropic_response_with_limits, decode_anthropic_stream, decode_anthropic_stream_events,
+    decode_anthropic_stream_events_with_limits, decode_anthropic_stream_with_limits,
 };
 pub use encode::{encode_anthropic_request, encode_anthropic_response};
 pub use runtime::{AnthropicCodec, AnthropicCodecLib};

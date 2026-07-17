@@ -12,15 +12,21 @@ use super::common::{codec_error, codec_eval_to_codec, map_field};
 
 /// Decodes OpenAI request JSON into a validated chat-transcript expression.
 pub fn decode_openai_request(input: Input) -> Result<Expr> {
-    decode_openai_request_for_codec(OPENAI_CODEC_ID, input)
+    decode_openai_request_with_limits(input, DecodeLimits::default())
 }
 
-pub(in crate::providers) fn decode_openai_request_for_codec(
+/// Decodes OpenAI request JSON under caller-supplied decode limits.
+pub fn decode_openai_request_with_limits(input: Input, limits: DecodeLimits) -> Result<Expr> {
+    decode_openai_request_for_codec_with_limits(OPENAI_CODEC_ID, input, limits)
+}
+
+pub(in crate::providers) fn decode_openai_request_for_codec_with_limits(
     codec: CodecId,
     input: Input,
+    limits: DecodeLimits,
 ) -> Result<Expr> {
     let source = domain_input_text(codec, input)?;
-    let mut budget = DecodeBudget::new(DecodeLimits::default());
+    let mut budget = DecodeBudget::new(limits);
     budget.check_input_bytes(codec, source.len())?;
     let value = serde_json::from_str::<Value>(&source).map_err(|err| codec_error(codec, err))?;
     let request = value
@@ -81,11 +87,40 @@ pub fn decode_openai_response(
     body: &[u8],
     include_raw: bool,
 ) -> Result<Expr> {
-    let mut budget = DecodeBudget::new(DecodeLimits::default());
-    budget.check_input_bytes(OPENAI_CODEC_ID, body.len())?;
+    decode_openai_response_with_limits(runner, model, body, include_raw, DecodeLimits::default())
+}
+
+/// Decodes an OpenAI chat-completion response under caller-supplied limits.
+pub fn decode_openai_response_with_limits(
+    runner: Symbol,
+    model: &str,
+    body: &[u8],
+    include_raw: bool,
+    limits: DecodeLimits,
+) -> Result<Expr> {
+    decode_openai_response_for_codec_with_limits(
+        OPENAI_CODEC_ID,
+        runner,
+        model,
+        body,
+        include_raw,
+        limits,
+    )
+}
+
+pub(in crate::providers) fn decode_openai_response_for_codec_with_limits(
+    codec: CodecId,
+    runner: Symbol,
+    model: &str,
+    body: &[u8],
+    include_raw: bool,
+    limits: DecodeLimits,
+) -> Result<Expr> {
+    let mut budget = DecodeBudget::new(limits);
+    budget.check_input_bytes(codec, body.len())?;
     let value: Value = serde_json::from_slice(body)
         .map_err(|err| Error::Eval(format!("openai codec returned invalid json: {err}")))?;
-    response_expr_from_json(runner, model, &value, include_raw, &mut budget)
+    response_expr_from_json(codec, runner, model, &value, include_raw, &mut budget)
 }
 
 /// Decodes an OpenAI chat-completion SSE body into a single model-response
@@ -96,8 +131,37 @@ pub fn decode_openai_stream(
     body: &[u8],
     include_raw: bool,
 ) -> Result<Expr> {
-    let mut budget = DecodeBudget::new(DecodeLimits::default());
-    budget.check_input_bytes(OPENAI_CODEC_ID, body.len())?;
+    decode_openai_stream_with_limits(runner, model, body, include_raw, DecodeLimits::default())
+}
+
+/// Decodes OpenAI chat-completion SSE under caller-supplied limits.
+pub fn decode_openai_stream_with_limits(
+    runner: Symbol,
+    model: &str,
+    body: &[u8],
+    include_raw: bool,
+    limits: DecodeLimits,
+) -> Result<Expr> {
+    decode_openai_stream_for_codec_with_limits(
+        OPENAI_CODEC_ID,
+        runner,
+        model,
+        body,
+        include_raw,
+        limits,
+    )
+}
+
+pub(in crate::providers) fn decode_openai_stream_for_codec_with_limits(
+    codec: CodecId,
+    runner: Symbol,
+    model: &str,
+    body: &[u8],
+    include_raw: bool,
+    limits: DecodeLimits,
+) -> Result<Expr> {
+    let mut budget = DecodeBudget::new(limits);
+    budget.check_input_bytes(codec, body.len())?;
     let text = std::str::from_utf8(body)
         .map_err(|err| Error::Eval(format!("openai stream is not valid utf-8: {err}")))?;
     let mut chunks = Vec::new();
@@ -120,6 +184,7 @@ pub fn decode_openai_stream(
             .map_err(|err| Error::Eval(format!("openai stream returned invalid json: {err}")))?;
         if let Some(error) = error_message(value.as_object()) {
             return error_response_expr(
+                codec,
                 runner,
                 model,
                 error,
@@ -143,6 +208,7 @@ pub fn decode_openai_stream(
         if let Some(reason) = stream_finish_reason(&value) {
             stop_reason = Symbol::new(reason);
         }
+        budget.check_collection_len(codec, chunks.len() + 1)?;
         chunks.push(value);
     }
     if chunks.is_empty() {
@@ -168,7 +234,7 @@ pub fn decode_openai_stream(
                 project_json_to_expr_budgeted(
                     chunk,
                     JsonProjectionMode::UntaggedInterop,
-                    OPENAI_CODEC_ID,
+                    codec,
                     &mut budget,
                     0,
                 )
@@ -210,6 +276,7 @@ fn push_projected_field(
 }
 
 fn response_expr_from_json(
+    codec: CodecId,
     runner: Symbol,
     model: &str,
     value: &Value,
@@ -220,7 +287,15 @@ fn response_expr_from_json(
         .as_object()
         .ok_or_else(|| Error::Eval("openai response must be a json object".to_owned()))?;
     if let Some(error) = error_message(Some(response)) {
-        return error_response_expr(runner, model, error, include_raw, Some(value), budget);
+        return error_response_expr(
+            codec,
+            runner,
+            model,
+            error,
+            include_raw,
+            Some(value),
+            budget,
+        );
     }
     let choice = response
         .get("choices")
@@ -239,7 +314,7 @@ fn response_expr_from_json(
     let mut entries = match model_response_expr(
         runner,
         model,
-        message_content(message, budget)?,
+        message_content(codec, message, budget)?,
         Symbol::new(stop_reason),
     ) {
         Expr::Map(entries) => entries,
@@ -254,7 +329,7 @@ fn response_expr_from_json(
             project_json_to_expr_budgeted(
                 value,
                 JsonProjectionMode::UntaggedInterop,
-                OPENAI_CODEC_ID,
+                codec,
                 budget,
                 0,
             )?,
@@ -264,6 +339,7 @@ fn response_expr_from_json(
 }
 
 fn error_response_expr(
+    codec: CodecId,
     runner: Symbol,
     model: &str,
     message: String,
@@ -281,7 +357,7 @@ fn error_response_expr(
             project_json_to_expr_budgeted(
                 raw,
                 JsonProjectionMode::UntaggedInterop,
-                OPENAI_CODEC_ID,
+                codec,
                 budget,
                 0,
             )?,
@@ -407,7 +483,11 @@ fn request_part_from_json(codec: CodecId, value: &Value) -> Result<Expr> {
     }
 }
 
-fn message_content(message: &Map<String, Value>, budget: &mut DecodeBudget) -> Result<Vec<Expr>> {
+fn message_content(
+    codec: CodecId,
+    message: &Map<String, Value>,
+    budget: &mut DecodeBudget,
+) -> Result<Vec<Expr>> {
     let mut parts = match message.get("content") {
         Some(Value::String(text)) => Ok(vec![text_part(text)]),
         Some(Value::Array(parts)) => parts
@@ -423,7 +503,7 @@ fn message_content(message: &Map<String, Value>, budget: &mut DecodeBudget) -> R
         parts.extend(
             tool_calls
                 .iter()
-                .map(|call| response_tool_call_part(call, budget))
+                .map(|call| response_tool_call_part(codec, call, budget))
                 .collect::<Result<Vec<_>>>()?,
         );
     }
@@ -448,7 +528,11 @@ fn response_part_from_json(value: &Value) -> Result<Expr> {
     }
 }
 
-fn response_tool_call_part(value: &Value, budget: &mut DecodeBudget) -> Result<Expr> {
+fn response_tool_call_part(
+    codec: CodecId,
+    value: &Value,
+    budget: &mut DecodeBudget,
+) -> Result<Expr> {
     let object = value
         .as_object()
         .ok_or_else(|| Error::Eval("openai tool call must be an object".to_owned()))?;
@@ -476,12 +560,13 @@ fn response_tool_call_part(value: &Value, budget: &mut DecodeBudget) -> Result<E
         ),
         (
             Expr::Symbol(Symbol::new("arguments")),
-            openai_tool_arguments_expr(function.get("arguments"), budget)?,
+            openai_tool_arguments_expr(codec, function.get("arguments"), budget)?,
         ),
     ]))
 }
 
 fn openai_tool_arguments_expr(
+    codec: CodecId,
     arguments: Option<&Value>,
     budget: &mut DecodeBudget,
 ) -> Result<Expr> {
@@ -497,13 +582,7 @@ fn openai_tool_arguments_expr(
         Some(Value::String(_)) | Some(Value::Null) | None => &empty,
         Some(value) => value,
     };
-    project_json_to_expr_budgeted(
-        value,
-        JsonProjectionMode::UntaggedInterop,
-        OPENAI_CODEC_ID,
-        budget,
-        0,
-    )
+    project_json_to_expr_budgeted(value, JsonProjectionMode::UntaggedInterop, codec, budget, 0)
 }
 
 fn usage_expr(response: &Map<String, Value>) -> Result<Option<Expr>> {

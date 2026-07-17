@@ -11,15 +11,21 @@ use super::shared::{raw_content_part, string_member, tool_call_part, tool_result
 
 /// Decodes Anthropic request JSON into a validated chat-transcript expression.
 pub fn decode_anthropic_request(input: Input) -> Result<Expr> {
-    decode_anthropic_request_for_codec(ANTHROPIC_CODEC_ID, input)
+    decode_anthropic_request_with_limits(input, DecodeLimits::default())
 }
 
-pub(in crate::providers::anthropic) fn decode_anthropic_request_for_codec(
+/// Decodes Anthropic request JSON under caller-supplied decode limits.
+pub fn decode_anthropic_request_with_limits(input: Input, limits: DecodeLimits) -> Result<Expr> {
+    decode_anthropic_request_for_codec_with_limits(ANTHROPIC_CODEC_ID, input, limits)
+}
+
+pub(in crate::providers::anthropic) fn decode_anthropic_request_for_codec_with_limits(
     codec: CodecId,
     input: Input,
+    limits: DecodeLimits,
 ) -> Result<Expr> {
     let source = domain_input_text(codec, input)?;
-    let mut budget = DecodeBudget::new(DecodeLimits::default());
+    let mut budget = DecodeBudget::new(limits);
     budget.check_input_bytes(codec, source.len())?;
     let value = serde_json::from_str::<Value>(&source).map_err(|err| codec_error(codec, err))?;
     let request = value

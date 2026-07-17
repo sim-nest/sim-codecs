@@ -49,9 +49,23 @@ impl Decoder for OllamaCodec {
             .count()
             > 1
         {
-            decode_ollama_stream(Symbol::qualified("runner", "ollama"), &model, body, false)
+            decode_ollama_stream_for_codec_with_limits(
+                cx.codec,
+                Symbol::qualified("runner", "ollama"),
+                &model,
+                body,
+                false,
+                cx.limits,
+            )
         } else {
-            decode_ollama_response(Symbol::qualified("runner", "ollama"), &model, body, false)
+            decode_ollama_response_for_codec_with_limits(
+                cx.codec,
+                Symbol::qualified("runner", "ollama"),
+                &model,
+                body,
+                false,
+                cx.limits,
+            )
         }
     }
 }
@@ -169,11 +183,40 @@ pub fn decode_ollama_response(
     body: &[u8],
     include_raw: bool,
 ) -> Result<Expr> {
-    let mut budget = DecodeBudget::new(DecodeLimits::default());
-    budget.check_input_bytes(OLLAMA_CODEC_ID, body.len())?;
+    decode_ollama_response_with_limits(runner, model, body, include_raw, DecodeLimits::default())
+}
+
+/// Decodes a non-streamed Ollama JSON response under caller-supplied limits.
+pub fn decode_ollama_response_with_limits(
+    runner: Symbol,
+    model: &str,
+    body: &[u8],
+    include_raw: bool,
+    limits: DecodeLimits,
+) -> Result<Expr> {
+    decode_ollama_response_for_codec_with_limits(
+        OLLAMA_CODEC_ID,
+        runner,
+        model,
+        body,
+        include_raw,
+        limits,
+    )
+}
+
+fn decode_ollama_response_for_codec_with_limits(
+    codec: CodecId,
+    runner: Symbol,
+    model: &str,
+    body: &[u8],
+    include_raw: bool,
+    limits: DecodeLimits,
+) -> Result<Expr> {
+    let mut budget = DecodeBudget::new(limits);
+    budget.check_input_bytes(codec, body.len())?;
     let value: Value = serde_json::from_slice(body)
         .map_err(|err| Error::Eval(format!("ollama codec returned invalid json: {err}")))?;
-    response_expr_from_json(runner, model, &value, include_raw, &mut budget)
+    response_expr_from_json(codec, runner, model, &value, include_raw, &mut budget)
 }
 
 /// Decodes a newline-delimited Ollama streaming response `body` into a single
@@ -189,8 +232,37 @@ pub fn decode_ollama_stream(
     body: &[u8],
     include_raw: bool,
 ) -> Result<Expr> {
-    let mut budget = DecodeBudget::new(DecodeLimits::default());
-    budget.check_input_bytes(OLLAMA_CODEC_ID, body.len())?;
+    decode_ollama_stream_with_limits(runner, model, body, include_raw, DecodeLimits::default())
+}
+
+/// Decodes a newline-delimited Ollama stream under caller-supplied limits.
+pub fn decode_ollama_stream_with_limits(
+    runner: Symbol,
+    model: &str,
+    body: &[u8],
+    include_raw: bool,
+    limits: DecodeLimits,
+) -> Result<Expr> {
+    decode_ollama_stream_for_codec_with_limits(
+        OLLAMA_CODEC_ID,
+        runner,
+        model,
+        body,
+        include_raw,
+        limits,
+    )
+}
+
+fn decode_ollama_stream_for_codec_with_limits(
+    codec: CodecId,
+    runner: Symbol,
+    model: &str,
+    body: &[u8],
+    include_raw: bool,
+    limits: DecodeLimits,
+) -> Result<Expr> {
+    let mut budget = DecodeBudget::new(limits);
+    budget.check_input_bytes(codec, body.len())?;
     let text = std::str::from_utf8(body)
         .map_err(|err| Error::Eval(format!("ollama stream is not valid utf-8: {err}")))?;
     let mut chunks = Vec::new();
@@ -213,6 +285,7 @@ pub fn decode_ollama_stream(
         } else if value.get("done").and_then(Value::as_bool).unwrap_or(false) {
             stop_reason = Symbol::new("stop");
         }
+        budget.check_collection_len(codec, chunks.len() + 1)?;
         chunks.push(value);
     }
     if chunks.is_empty() {
@@ -237,7 +310,7 @@ pub fn decode_ollama_stream(
                 project_json_to_expr_budgeted(
                     chunk,
                     JsonProjectionMode::UntaggedInterop,
-                    OLLAMA_CODEC_ID,
+                    codec,
                     &mut budget,
                     0,
                 )
@@ -252,6 +325,7 @@ pub fn decode_ollama_stream(
 }
 
 fn response_expr_from_json(
+    codec: CodecId,
     runner: Symbol,
     model: &str,
     value: &Value,
@@ -284,7 +358,7 @@ fn response_expr_from_json(
             project_json_to_expr_budgeted(
                 value,
                 JsonProjectionMode::UntaggedInterop,
-                OLLAMA_CODEC_ID,
+                codec,
                 budget,
                 0,
             )?,

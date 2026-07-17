@@ -1,12 +1,14 @@
 use std::sync::Arc;
 
-use sim_codec::encode_with_codec;
+use sim_codec::{DecodeLimits, Input, decode_with_codec_and_limits, encode_with_codec};
+use sim_kernel::{CodecId, ReadPolicy};
 use sim_kernel::{DefaultFactory, EagerPolicy, EncodeOptions, Expr, Symbol};
 
 use crate::{
     BridgeBook, BridgeCodecLib, BridgeFramePayload, BridgeHeader, BridgePacket, BridgePart,
     BridgeProvenance, BridgeReceiptPayload, BridgeWarrantPolicy, decode_bridge_text,
-    encode_bridge_text, frame_book_content_id, packet_to_expr, warrant_for_packet,
+    decode_bridge_text_with_limits, encode_bridge_text, frame_book_content_id, packet_to_expr,
+    warrant_for_packet,
 };
 
 fn brief_packet() -> BridgePacket {
@@ -59,6 +61,37 @@ fn bridge_book_accepts_standard_packet() {
     let decoded = decode_bridge_text(&text, &book).unwrap();
 
     assert_eq!(decoded, packet);
+}
+
+#[test]
+fn bridge_payload_json_honors_decode_collection_limit() {
+    let book = BridgeBook::standard();
+    let packet = brief_packet();
+    let text = encode_bridge_text(&packet, &book).unwrap();
+    let limits = DecodeLimits {
+        max_collection_len: 0,
+        ..DecodeLimits::default()
+    };
+
+    let line_err = decode_bridge_text_with_limits(&text, &book, CodecId(0), limits).unwrap_err();
+    assert!(
+        line_err.to_string().contains("collection length"),
+        "expected collection-length budget error, got {line_err:?}"
+    );
+
+    let mut cx = cx();
+    let codec_err = decode_with_codec_and_limits(
+        &mut cx,
+        &Symbol::qualified("codec", "bridge"),
+        Input::Text(text),
+        ReadPolicy::default(),
+        limits,
+    )
+    .unwrap_err();
+    assert!(
+        codec_err.to_string().contains("collection length"),
+        "expected collection-length budget error, got {codec_err:?}"
+    );
 }
 
 #[test]

@@ -6,7 +6,7 @@
 
 use std::sync::Arc;
 
-use sim_codec::{Decoder, DomainCodecLib, Encoder, Input, Output, ReadCx};
+use sim_codec::{DecodeLimits, Decoder, DomainCodecLib, Encoder, Input, Output, ReadCx};
 use sim_kernel::{CodecId, Expr, Lib, LibManifest, Linker, LoadCx, Result, Symbol, WriteCx};
 
 use super::openai::OpenAiCodecOptions;
@@ -29,7 +29,7 @@ pub struct LemonadeCodec;
 
 impl Decoder for LemonadeCodec {
     fn decode(&self, cx: &mut ReadCx<'_>, input: Input) -> Result<Expr> {
-        decode_request_for_provider(cx.codec, input, PROVIDER)
+        decode_request_for_provider(cx.codec, input, PROVIDER, cx.limits)
     }
 }
 
@@ -82,7 +82,12 @@ pub fn lemonade_codec_symbol() -> Symbol {
 
 /// Decodes a Lemonade OpenAI-compatible request body.
 pub fn decode_lemonade_request(input: Input) -> Result<Expr> {
-    decode_request_for_provider(LEMONADE_CODEC_ID, input, PROVIDER)
+    decode_lemonade_request_with_limits(input, DecodeLimits::default())
+}
+
+/// Decodes a Lemonade OpenAI-compatible request body under explicit limits.
+pub fn decode_lemonade_request_with_limits(input: Input, limits: DecodeLimits) -> Result<Expr> {
+    decode_request_for_provider(LEMONADE_CODEC_ID, input, PROVIDER, limits)
 }
 
 /// Encodes a model-request transcript into a Lemonade request body.
@@ -97,7 +102,26 @@ pub fn decode_lemonade_response(
     body: &[u8],
     include_raw: bool,
 ) -> Result<Expr> {
-    decode_response_for_provider(runner, model, body, include_raw, PROVIDER)
+    decode_lemonade_response_with_limits(runner, model, body, include_raw, DecodeLimits::default())
+}
+
+/// Decodes a Lemonade OpenAI-compatible response body under explicit limits.
+pub fn decode_lemonade_response_with_limits(
+    runner: Symbol,
+    model: &str,
+    body: &[u8],
+    include_raw: bool,
+    limits: DecodeLimits,
+) -> Result<Expr> {
+    decode_response_for_provider(
+        LEMONADE_CODEC_ID,
+        runner,
+        model,
+        body,
+        include_raw,
+        PROVIDER,
+        limits,
+    )
 }
 
 /// Decodes Lemonade OpenAI-compatible SSE chunks into a response transcript.
@@ -107,7 +131,26 @@ pub fn decode_lemonade_stream(
     body: &[u8],
     include_raw: bool,
 ) -> Result<Expr> {
-    decode_stream_for_provider(runner, model, body, include_raw, PROVIDER)
+    decode_lemonade_stream_with_limits(runner, model, body, include_raw, DecodeLimits::default())
+}
+
+/// Decodes Lemonade OpenAI-compatible SSE chunks under explicit limits.
+pub fn decode_lemonade_stream_with_limits(
+    runner: Symbol,
+    model: &str,
+    body: &[u8],
+    include_raw: bool,
+    limits: DecodeLimits,
+) -> Result<Expr> {
+    decode_stream_for_provider(
+        LEMONADE_CODEC_ID,
+        runner,
+        model,
+        body,
+        include_raw,
+        PROVIDER,
+        limits,
+    )
 }
 
 /// Encodes a model-response transcript into a Lemonade response body.

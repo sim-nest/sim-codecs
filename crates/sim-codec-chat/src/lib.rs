@@ -26,29 +26,36 @@ pub use helpers::{
 };
 pub use ollama::{
     OllamaCodec, OllamaCodecLib, OllamaRequestOptions, decode_ollama_response,
-    decode_ollama_stream, encode_ollama_request,
+    decode_ollama_response_with_limits, decode_ollama_stream, decode_ollama_stream_with_limits,
+    encode_ollama_request,
 };
 pub use parts::{number_field, text_part, usage_record};
 pub use providers::anthropic::{
     AnthropicCodec, AnthropicCodecLib, AnthropicCodecOptions, AnthropicRequestOptions,
-    anthropic_codec_symbol, decode_anthropic_request, decode_anthropic_response,
-    decode_anthropic_stream, decode_anthropic_stream_events, encode_anthropic_request,
-    encode_anthropic_response,
+    anthropic_codec_symbol, decode_anthropic_request, decode_anthropic_request_with_limits,
+    decode_anthropic_response, decode_anthropic_response_with_limits, decode_anthropic_stream,
+    decode_anthropic_stream_events, decode_anthropic_stream_events_with_limits,
+    decode_anthropic_stream_with_limits, encode_anthropic_request, encode_anthropic_response,
 };
 pub use providers::lemonade::{
     LemonadeCodec, LemonadeCodecLib, LemonadeCodecOptions, LemonadeRequestOptions,
-    decode_lemonade_request, decode_lemonade_response, decode_lemonade_stream,
-    encode_lemonade_request, encode_lemonade_response, lemonade_codec_symbol,
+    decode_lemonade_request, decode_lemonade_request_with_limits, decode_lemonade_response,
+    decode_lemonade_response_with_limits, decode_lemonade_stream,
+    decode_lemonade_stream_with_limits, encode_lemonade_request, encode_lemonade_response,
+    lemonade_codec_symbol,
 };
 pub use providers::lm_studio::{
     LmStudioCodec, LmStudioCodecLib, LmStudioCodecOptions, LmStudioRequestOptions,
-    decode_lm_studio_request, decode_lm_studio_response, decode_lm_studio_stream,
-    encode_lm_studio_request, encode_lm_studio_response, lm_studio_codec_symbol,
+    decode_lm_studio_request, decode_lm_studio_request_with_limits, decode_lm_studio_response,
+    decode_lm_studio_response_with_limits, decode_lm_studio_stream,
+    decode_lm_studio_stream_with_limits, encode_lm_studio_request, encode_lm_studio_response,
+    lm_studio_codec_symbol,
 };
 pub use providers::openai::{
     OpenAiCodec, OpenAiCodecLib, OpenAiCodecOptions, OpenAiRequestOptions, decode_openai_request,
-    decode_openai_response, decode_openai_stream, encode_openai_request, encode_openai_response,
-    openai_codec_symbol,
+    decode_openai_request_with_limits, decode_openai_response, decode_openai_response_with_limits,
+    decode_openai_stream, decode_openai_stream_with_limits, encode_openai_request,
+    encode_openai_response, openai_codec_symbol,
 };
 pub use providers::profile::{
     CodecProfile, RequestWire, StreamWire, anthropic_profile, lemonade_profile, lm_studio_profile,

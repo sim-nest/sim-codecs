@@ -21,6 +21,7 @@ pub mod profile;
 pub mod ollama {
     pub use crate::ollama::{
         OllamaCodec, OllamaCodecLib, OllamaRequestOptions, decode_ollama_response,
-        decode_ollama_stream, encode_ollama_request,
+        decode_ollama_response_with_limits, decode_ollama_stream, decode_ollama_stream_with_limits,
+        encode_ollama_request,
     };
 }

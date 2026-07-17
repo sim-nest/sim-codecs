@@ -4,7 +4,7 @@ use sim_codec::{Decoder, DomainCodecLib, Encoder, Input, Output, ReadCx};
 use sim_kernel::{CodecId, Expr, Lib, LibManifest, Linker, LoadCx, Result, Symbol, WriteCx};
 
 use super::{
-    decode::decode_openai_request_for_codec, encode::encode_openai_response_for_codec,
+    decode::decode_openai_request_for_codec_with_limits, encode::encode_openai_response_for_codec,
     openai_codec_symbol,
 };
 
@@ -13,7 +13,7 @@ pub struct OpenAiCodec;
 
 impl Decoder for OpenAiCodec {
     fn decode(&self, cx: &mut ReadCx<'_>, input: Input) -> Result<Expr> {
-        decode_openai_request_for_codec(cx.codec, input)
+        decode_openai_request_for_codec_with_limits(cx.codec, input, cx.limits)
     }
 }
 

@@ -4,7 +4,7 @@ use sim_codec::{Decoder, DomainCodecLib, Encoder, Input, Output, ReadCx};
 use sim_kernel::{CodecId, Expr, Lib, LibManifest, Linker, LoadCx, Result, Symbol, WriteCx};
 
 use super::{
-    anthropic_codec_symbol, decode::decode_anthropic_request_for_codec,
+    anthropic_codec_symbol, decode::decode_anthropic_request_for_codec_with_limits,
     encode::encode_anthropic_response_for_codec,
 };
 
@@ -13,7 +13,7 @@ pub struct AnthropicCodec;
 
 impl Decoder for AnthropicCodec {
     fn decode(&self, cx: &mut ReadCx<'_>, input: Input) -> Result<Expr> {
-        decode_anthropic_request_for_codec(cx.codec, input)
+        decode_anthropic_request_for_codec_with_limits(cx.codec, input, cx.limits)
     }
 }
 

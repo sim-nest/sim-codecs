@@ -19,7 +19,18 @@ pub fn decode_anthropic_response(
     body: &[u8],
     include_raw: bool,
 ) -> Result<Expr> {
-    let mut budget = DecodeBudget::new(DecodeLimits::default());
+    decode_anthropic_response_with_limits(runner, model, body, include_raw, DecodeLimits::default())
+}
+
+/// Decodes an Anthropic Messages response body under caller-supplied limits.
+pub fn decode_anthropic_response_with_limits(
+    runner: Symbol,
+    model: &str,
+    body: &[u8],
+    include_raw: bool,
+    limits: DecodeLimits,
+) -> Result<Expr> {
+    let mut budget = DecodeBudget::new(limits);
     budget.check_input_bytes(ANTHROPIC_CODEC_ID, body.len())?;
     let value: Value = serde_json::from_slice(body)
         .map_err(|err| Error::Eval(format!("anthropic codec returned invalid json: {err}")))?;
