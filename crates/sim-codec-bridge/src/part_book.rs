@@ -195,6 +195,79 @@ impl BridgeBook {
         self.warrant_policy = policy;
         self
     }
+
+    /// Validates a packet against parts, moves, profiles, and warrant policy.
+    pub fn validate_packet(&self, packet: &crate::BridgePacket) -> Result<()> {
+        let part_kinds = packet
+            .body
+            .iter()
+            .map(|part| part.kind.clone())
+            .collect::<Vec<_>>();
+        for part in &packet.body {
+            self.validate_part(part)?;
+        }
+        let parent_moves = parent_move_evidence(&packet.header.parents)?;
+        self.moves
+            .check_move(&packet.header.move_kind, &parent_moves, &part_kinds)?;
+        self.validate_profile(packet)?;
+        self.validate_warrant(packet)
+    }
+
+    fn validate_part(&self, part: &crate::BridgePart) -> Result<()> {
+        self.parts.require_registered(&part.kind)?;
+        match &part.kind {
+            kind if *kind == Symbol::qualified("bridge", "Frame") => {
+                self.frames.validate_payload(&part.payload)?;
+            }
+            kind if *kind == Symbol::qualified("bridge", "Call") => {
+                crate::validate_call_payload(&part.payload)?;
+            }
+            kind if *kind == Symbol::qualified("bridge", "Weave") => {
+                crate::validate_weave_payload(&part.payload)?;
+            }
+            kind if collab_part(kind) => {
+                crate::validate_collab_payload(kind, &part.payload)?;
+            }
+            _ => {}
+        }
+        Ok(())
+    }
+
+    fn validate_profile(&self, packet: &crate::BridgePacket) -> Result<()> {
+        let matches = self.profiles.matching_profiles(packet);
+        match matches.as_slice() {
+            [_profile] => Ok(()),
+            [] => Err(Error::Eval(
+                "BRIDGE packet body matches no standard profile".to_owned(),
+            )),
+            many => Err(Error::Eval(format!(
+                "BRIDGE packet body matches multiple profiles: {}",
+                many.iter()
+                    .map(Symbol::as_qualified_str)
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            ))),
+        }
+    }
+
+    fn validate_warrant(&self, packet: &crate::BridgePacket) -> Result<()> {
+        match (self.warrant_policy, &packet.warrant) {
+            (crate::BridgeWarrantPolicy::SharedTrust, _) => Ok(()),
+            (crate::BridgeWarrantPolicy::Verify, Some(warrant)) => {
+                let expected = crate::warrant_for_packet(self, packet)?;
+                if warrant == &expected {
+                    Ok(())
+                } else {
+                    Err(Error::Eval(
+                        "BRIDGE warrant does not match local books".to_owned(),
+                    ))
+                }
+            }
+            (crate::BridgeWarrantPolicy::Verify, None) => Err(Error::Eval(
+                "BRIDGE warrant is required by verify policy".to_owned(),
+            )),
+        }
+    }
 }
 
 /// Builds the standard BRIDGE part book.
@@ -230,4 +303,39 @@ fn spec(name: &str, render_class: RenderClass, authority_class: AuthorityClass) 
         authority_class,
         UnknownPolicy::Reject,
     )
+}
+
+fn collab_part(kind: &Symbol) -> bool {
+    matches!(
+        kind.name.as_ref(),
+        "Evidence" | "Review" | "Vote" | "Patch" | "Receipt" | "Attest"
+    )
+}
+
+fn parent_move_evidence(parents: &[String]) -> Result<Vec<Symbol>> {
+    parents
+        .iter()
+        .map(|parent| {
+            let (_cid, move_text) = parent.split_once("#move=").ok_or_else(|| {
+                Error::Eval(format!(
+                    "BRIDGE parent {parent} is missing #move=<intent> evidence"
+                ))
+            })?;
+            if move_text.is_empty() {
+                return Err(Error::Eval(format!(
+                    "BRIDGE parent {parent} has empty move evidence"
+                )));
+            }
+            Ok(parse_symbol(move_text))
+        })
+        .collect()
+}
+
+fn parse_symbol(text: &str) -> Symbol {
+    match text.split_once('/') {
+        Some((namespace, name)) if !namespace.is_empty() && !name.is_empty() => {
+            Symbol::qualified(namespace.to_owned(), name.to_owned())
+        }
+        _ => Symbol::new(text.to_owned()),
+    }
 }

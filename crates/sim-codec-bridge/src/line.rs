@@ -10,24 +10,7 @@ use crate::{BridgeBook, BridgeHeader, BridgePacket, BridgePart, BridgeProvenance
 
 /// Encodes a BRIDGE packet to the strict `BRIDGE/1` line face.
 pub fn encode_bridge_text(packet: &BridgePacket, book: &BridgeBook) -> Result<String> {
-    for part in &packet.body {
-        book.parts.require_registered(&part.kind)?;
-        match &part.kind {
-            kind if *kind == Symbol::qualified("bridge", "Frame") => {
-                book.frames.validate_payload(&part.payload)?;
-            }
-            kind if *kind == Symbol::qualified("bridge", "Call") => {
-                crate::validate_call_payload(&part.payload)?;
-            }
-            kind if *kind == Symbol::qualified("bridge", "Weave") => {
-                crate::validate_weave_payload(&part.payload)?;
-            }
-            kind if collab_part(kind) => {
-                crate::validate_collab_payload(kind, &part.payload)?;
-            }
-            _ => {}
-        }
-    }
+    book.validate_packet(packet)?;
     let mut lines = vec![
         "BRIDGE/1".to_owned(),
         format!("CID {}", packet.header.cid.as_deref().unwrap_or("nil")),
@@ -137,6 +120,7 @@ pub fn decode_bridge_text(text: &str, book: &BridgeBook) -> Result<BridgePacket>
             None => None,
         },
     };
+    book.validate_packet(&packet)?;
     Ok(packet)
 }
 

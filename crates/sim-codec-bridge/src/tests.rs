@@ -6,14 +6,14 @@ use sim_kernel::{DefaultFactory, EagerPolicy, EncodeOptions, Expr, NumberLiteral
 use crate::{
     AuthorityClass, BridgeBook, BridgeCallArgument, BridgeCallPayload, BridgeCodecLib,
     BridgeEvidencePayload, BridgeFramePayload, BridgeHeader, BridgePacket, BridgePart,
-    BridgePartSpec, BridgePatchPayload, BridgeProvenance, BridgeReceiptPayload,
+    BridgePartSpec, BridgePatchPayload, BridgeProfileSpec, BridgeProvenance, BridgeReceiptPayload,
     BridgeReviewPayload, BridgeScore, BridgeVotePayload, BridgeWarrantPolicy, BridgeWeavePayload,
     BridgeWeaveRow, CallArgumentMedia, FrameHoleKind, FrameHoleSpec, FrameKind, FrameSpec,
-    RenderClass, UnknownPolicy, ask_profile_symbol, assert_roundtrip, assert_total_ownership,
-    bridge_profile_shape_expr, brief_profile_symbol, collab_profile_symbol, decode_bridge_text,
-    encode_bridge_text, expr_to_packet, frame_book_content_id, loom_profile_symbol,
-    packet_content_id, packet_to_expr, render_frame_part, stamp_packet_cid, verify_packet_cid,
-    warrant_for_packet,
+    ProfilePartCount, ProfilePartRule, RenderClass, UnknownPolicy, ask_profile_symbol,
+    assert_roundtrip, assert_total_ownership, bridge_profile_shape_expr, brief_profile_symbol,
+    collab_profile_symbol, decode_bridge_text, encode_bridge_text, expr_to_packet,
+    frame_book_content_id, loom_profile_symbol, packet_content_id, packet_to_expr,
+    render_frame_part, stamp_packet_cid, verify_packet_cid, warrant_for_packet,
 };
 
 fn packet() -> BridgePacket {
@@ -149,7 +149,7 @@ fn collab_packet() -> BridgePacket {
             from: "human:reviewer".to_owned(),
             to: vec!["model:drafter".to_owned()],
             role: Symbol::new("reviewer"),
-            parents: vec!["core/sha256-bridge-v1:parent".to_owned()],
+            parents: vec!["core/sha256-bridge-v1:parent#move=patch".to_owned()],
             task: Symbol::new("P1"),
             output: Symbol::new("Rc1"),
             ceiling: vec![Symbol::qualified("review", "comment")],
@@ -319,18 +319,43 @@ fn unknown_header_rejects() {
 #[test]
 fn unknown_normative_part_rejects() {
     let book = BridgeBook::standard();
-    let text = "BRIDGE/1\nCID nil\nMOVE request\nFROM sim\nTO [model:drafter]\nROLE implementer\nPARENTS []\nTASK T1\nOUTPUT O1\nCEIL [ai/run]\nCONTEXT []\nPROV author=sim card=nil\nBODY\nCUSTOM X1 payload={\"$expr\":\"nil\"}\nEND\n";
+    let custom_kind = Symbol::qualified("bridge", "Custom");
+    let custom_profile = Symbol::qualified("bridge", "BRIEF-CUSTOM");
+    let mut packet = packet();
+    packet.body.push(BridgePart {
+        id: Symbol::new("X1"),
+        kind: custom_kind.clone(),
+        payload: Expr::Nil,
+    });
 
-    assert!(decode_bridge_text(text, &book).is_err());
+    assert!(encode_bridge_text(&packet, &book).is_err());
 
-    let book = book.with_part(BridgePartSpec::new(
-        Symbol::qualified("bridge", "Custom"),
-        Expr::Symbol(Symbol::qualified("bridge", "Custom")),
-        RenderClass::Extension,
-        AuthorityClass::Data,
-        UnknownPolicy::PreserveDataOnly,
-    ));
-    assert!(decode_bridge_text(text, &book).is_ok());
+    let book = book
+        .with_part(BridgePartSpec::new(
+            custom_kind.clone(),
+            Expr::Symbol(custom_kind.clone()),
+            RenderClass::Extension,
+            AuthorityClass::Data,
+            UnknownPolicy::PreserveDataOnly,
+        ))
+        .with_profile(BridgeProfileSpec::new(
+            custom_profile,
+            vec![
+                ProfilePartRule::new(
+                    Symbol::qualified("bridge", "Frame"),
+                    ProfilePartCount::OneOrMore,
+                ),
+                ProfilePartRule::new(
+                    Symbol::qualified("bridge", "Return"),
+                    ProfilePartCount::Optional,
+                ),
+                ProfilePartRule::new(custom_kind, ProfilePartCount::Optional),
+            ],
+        ));
+    let text = encode_bridge_text(&packet, &book).unwrap();
+    let decoded = decode_bridge_text(&text, &book).unwrap();
+
+    assert_eq!(decoded, packet);
 }
 
 #[test]

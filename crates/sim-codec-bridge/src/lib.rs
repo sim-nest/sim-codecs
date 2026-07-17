@@ -19,8 +19,8 @@
 //!
 //! BRIEF, ASK, LOOM, and COLLAB are not separate protocols -- they are
 //! `BridgeProfileSpec` shapes over the body (frame-led, call-led, weave-led, and
-//! review/vote/patch-led). A packet claims one profile; there is one codec and
-//! one checker for all four (`standard_profile_book`).
+//! review/vote/patch-led). A packet body must derive exactly one profile; there
+//! is one codec and one checker for all four (`standard_profile_book`).
 //!
 //! # What this crate guarantees
 //!
@@ -28,8 +28,12 @@
 //!   `verify_packet_cid` give a packet a content-addressed cid, and
 //!   `assert_roundtrip` proves the line form (`encode_bridge_text` /
 //!   `decode_bridge_text`) decodes back to the identical record.
-//! - **Move and part legality.** `BridgeMoveBook` / `standard_move_book` say which
-//!   move may answer which (a `vote` may not answer a `request`);
+//! - **Move, profile, and part legality.** `BridgeBook::validate_packet` checks
+//!   every packet before text decode or expression encode returns canonical
+//!   data. `BridgeMoveBook` / `standard_move_book` say which move may answer
+//!   which explicit parent `#move=<intent>` evidence (a `vote` may not answer a
+//!   `request`); `BridgeProfileBook` / `standard_profile_book` require BRIEF,
+//!   ASK, LOOM, or COLLAB to be the single body match; and
 //!   `BridgePartBook` / `standard_part_book` say which typed parts are legal and
 //!   whether an unknown part is rejected or preserved as inert data
 //!   (`UnknownPolicy`, `AuthorityClass`).
@@ -40,7 +44,9 @@
 //!   record and a fluent cited sentence.
 //! - **Warrants.** `warrant_for_packet` records the move/frame/part-spec content
 //!   ids so a receiver can validate a packet against its *own* books across a
-//!   trust or version boundary.
+//!   trust or version boundary. The standard codec accepts missing warrants
+//!   under shared trust; a book configured with `BridgeWarrantPolicy::Verify`
+//!   requires and checks a matching warrant.
 //!
 //! The runtime side -- send/receive checking, capability ceilings, model
 //! requests, the frontier engine, and the profile helpers -- lives in
@@ -68,6 +74,8 @@ mod weave;
 
 #[cfg(test)]
 mod tests;
+#[cfg(test)]
+mod validation_tests;
 
 pub use call::{BridgeCallArgument, BridgeCallPayload, CallArgumentMedia, validate_call_payload};
 pub use canonical::{BridgeCodec, BridgeCodecLib};
