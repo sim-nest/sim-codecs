@@ -2,6 +2,8 @@
 //! request, response, error, and card maps) plus the shared
 //! `validate_chat_transcript` shape check used by the codec.
 
+use std::collections::BTreeSet;
+
 use sim_kernel::{Error, Expr, Result, Symbol};
 
 /// Returns `true` when `expr` is a chat transcript map carrying a true
@@ -13,8 +15,11 @@ pub fn is_model_request_expr(expr: &Expr) -> bool {
 /// Returns the `messages` list of a model-request transcript, erroring if
 /// `expr` is not a valid request or its `messages` field is not a list.
 pub fn model_request_messages_expr(expr: &Expr) -> Result<&[Expr]> {
-    validate_request(expr)?;
-    match field(expr, "messages") {
+    validate_chat_transcript(expr)?;
+    if !is_model_request_expr(expr) {
+        return Err(chat_eval("expr must be a model-request transcript"));
+    }
+    match expr_field(expr, "messages") {
         Some(Expr::List(messages)) => Ok(messages),
         _ => Err(chat_eval("model request messages field must be a list")),
     }
@@ -116,6 +121,13 @@ pub fn model_card_expr(
 /// matching variant's required fields are then checked. This is the domain
 /// gate the codec runs on both decode and encode.
 ///
+/// The validator owns a finite field set for each transcript variant and
+/// rejects duplicates in that set. Nested canonical records such as messages,
+/// content parts, tool-call arguments, usage, and provider raw projections are
+/// strict over their bare-symbol keys. Qualified symbols, non-symbol keys, and
+/// model-card advisory fields beyond runner/model/provider/locality stay open
+/// extension space.
+///
 /// # Examples
 ///
 /// ```
@@ -131,11 +143,22 @@ pub fn model_card_expr(
 /// assert!(validate_chat_transcript(&response).is_ok());
 /// ```
 pub fn validate_chat_transcript(expr: &Expr) -> Result<()> {
+    let entries = require_map(expr, "chat transcript")?;
+    reject_duplicate_bare_fields(
+        entries,
+        "chat transcript",
+        &[
+            "model-request",
+            "model-response",
+            "model-event",
+            "model-card",
+        ],
+    )?;
     let markers = [
-        marker_is_true(expr, "model-request"),
-        marker_is_true(expr, "model-response"),
-        marker_is_true(expr, "model-event"),
-        marker_is_true(expr, "model-card"),
+        marker_is_true_in(entries, "model-request"),
+        marker_is_true_in(entries, "model-response"),
+        marker_is_true_in(entries, "model-event"),
+        marker_is_true_in(entries, "model-card"),
     ]
     .into_iter()
     .filter(|value| *value)
@@ -147,78 +170,259 @@ pub fn validate_chat_transcript(expr: &Expr) -> Result<()> {
         ));
     }
 
-    if marker_is_true(expr, "model-request") {
-        validate_request(expr)
-    } else if marker_is_true(expr, "model-response") {
-        validate_response(expr)
-    } else if marker_is_true(expr, "model-event") {
-        validate_event(expr)
+    if marker_is_true_in(entries, "model-request") {
+        validate_request(entries)
+    } else if marker_is_true_in(entries, "model-response") {
+        validate_response(entries)
+    } else if marker_is_true_in(entries, "model-event") {
+        validate_event(entries)
     } else {
-        validate_card(expr)
+        validate_card(entries)
     }
 }
 
-fn validate_request(expr: &Expr) -> Result<()> {
-    require_map(expr)?;
-    require_field(expr, "task")?;
-    require_list_field(expr, "messages")?;
-    if let Some(Expr::List(messages)) = field(expr, "messages") {
-        for message in messages {
-            validate_message(message)?;
+fn validate_request(entries: &[(Expr, Expr)]) -> Result<()> {
+    reject_duplicate_bare_fields(
+        entries,
+        "chat transcript",
+        &[
+            "model-request",
+            "task",
+            "messages",
+            "budget",
+            "max-tokens",
+            "tools",
+            "tool-choice",
+        ],
+    )?;
+    require_field(entries, "task")?;
+    for message in require_list_field(entries, "messages")? {
+        validate_message(message)?;
+    }
+    validate_optional_projected_field(entries, "budget")?;
+    validate_optional_projected_field(entries, "max-tokens")?;
+    validate_optional_projected_field(entries, "tools")?;
+    validate_optional_projected_field(entries, "tool-choice")?;
+    Ok(())
+}
+
+fn validate_response(entries: &[(Expr, Expr)]) -> Result<()> {
+    reject_duplicate_bare_fields(
+        entries,
+        "chat transcript",
+        &[
+            "model-response",
+            "runner",
+            "model",
+            "stop-reason",
+            "content",
+            "usage",
+            "raw-provider-response",
+        ],
+    )?;
+    require_symbol_field(entries, "runner")?;
+    require_string_field(entries, "model")?;
+    require_symbol_field(entries, "stop-reason")?;
+    validate_content_list(entries, "content")?;
+    validate_optional_usage(entries)?;
+    validate_optional_projected_field(entries, "raw-provider-response")
+}
+
+fn validate_event(entries: &[(Expr, Expr)]) -> Result<()> {
+    reject_duplicate_bare_fields(
+        entries,
+        "chat transcript",
+        &[
+            "model-event",
+            "event",
+            "runner",
+            "model",
+            "span-id",
+            "tool-call",
+            "tool-result",
+            "usage",
+            "response",
+            "raw-provider-response",
+        ],
+    )?;
+    require_symbol_field(entries, "event")?;
+    require_symbol_field(entries, "runner")?;
+    require_string_field(entries, "model")?;
+    require_field(entries, "span-id")?;
+    if let Some(tool_call) = field(entries, "tool-call") {
+        validate_projected_expr(tool_call, "chat tool-call event")?;
+    }
+    if let Some(tool_result) = field(entries, "tool-result") {
+        validate_projected_expr(tool_result, "chat tool-result event")?;
+    }
+    validate_optional_usage(entries)?;
+    if let Some(response) = field(entries, "response") {
+        validate_chat_transcript(response)?;
+    }
+    validate_optional_projected_field(entries, "raw-provider-response")?;
+    Ok(())
+}
+
+fn validate_card(entries: &[(Expr, Expr)]) -> Result<()> {
+    reject_duplicate_bare_fields(
+        entries,
+        "chat transcript",
+        &["model-card", "runner", "model", "provider", "locality"],
+    )?;
+    require_symbol_field(entries, "runner")?;
+    require_string_field(entries, "model")?;
+    require_symbol_field(entries, "provider")?;
+    require_symbol_field(entries, "locality")?;
+    Ok(())
+}
+
+fn validate_message(expr: &Expr) -> Result<()> {
+    let entries = require_strict_map(expr, "chat message")?;
+    require_symbol_field(entries, "role")?;
+    validate_content_list(entries, "content")
+}
+
+fn validate_content_list(entries: &[(Expr, Expr)], field_name: &'static str) -> Result<()> {
+    let content = require_list_field(entries, field_name)?;
+    for part in content {
+        validate_content_part(part)?;
+    }
+    Ok(())
+}
+
+fn validate_content_part(expr: &Expr) -> Result<()> {
+    let entries = require_strict_map(expr, "chat content part")?;
+    let kind = require_symbol_field_any(entries, "type")?;
+    if kind.namespace.is_some() {
+        validate_optional_projected_field(entries, "raw-provider-part")
+    } else {
+        match kind.name.as_ref() {
+            "text" => {
+                require_string_field_any(entries, "text")?;
+                Ok(())
+            }
+            "tool-call" => validate_tool_call(entries),
+            "tool-result" => validate_tool_result(entries),
+            _ => validate_optional_projected_field(entries, "raw-provider-part"),
+        }
+    }
+}
+
+fn validate_tool_call(entries: &[(Expr, Expr)]) -> Result<()> {
+    require_string_field_any(entries, "id")?;
+    require_string_field_any(entries, "name")?;
+    validate_projected_expr(
+        require_field_any(entries, "arguments")?,
+        "chat tool-call arguments",
+    )
+}
+
+fn validate_tool_result(entries: &[(Expr, Expr)]) -> Result<()> {
+    require_string_field_any(entries, "tool-call-id")?;
+    require_symbol_field_any(entries, "status")?;
+    validate_projected_expr(
+        require_field_any(entries, "output")?,
+        "chat tool-result output",
+    )
+}
+
+fn validate_optional_usage(entries: &[(Expr, Expr)]) -> Result<()> {
+    if let Some(usage) = field(entries, "usage") {
+        validate_projected_expr(usage, "chat usage")?;
+    }
+    Ok(())
+}
+
+fn validate_optional_projected_field(entries: &[(Expr, Expr)], name: &'static str) -> Result<()> {
+    if let Some(value) = field(entries, name) {
+        validate_projected_expr(value, name)?;
+    }
+    Ok(())
+}
+
+fn validate_projected_expr(expr: &Expr, context: &str) -> Result<()> {
+    match expr {
+        Expr::Map(entries) => {
+            reject_duplicate_bare_keys(entries, context)?;
+            for (_, value) in entries {
+                validate_projected_expr(value, context)?;
+            }
+        }
+        Expr::List(items) | Expr::Vector(items) | Expr::Set(items) | Expr::Block(items) => {
+            for item in items {
+                validate_projected_expr(item, context)?;
+            }
+        }
+        _ => {}
+    }
+    Ok(())
+}
+
+fn require_map<'a>(expr: &'a Expr, context: &str) -> Result<&'a [(Expr, Expr)]> {
+    match expr {
+        Expr::Map(entries) => Ok(entries),
+        _ => Err(chat_eval(format!("{context} must be an Expr::Map"))),
+    }
+}
+
+fn require_strict_map<'a>(expr: &'a Expr, context: &str) -> Result<&'a [(Expr, Expr)]> {
+    match expr {
+        Expr::Map(entries) => {
+            reject_duplicate_bare_keys(entries, context)?;
+            Ok(entries)
+        }
+        _ => Err(chat_eval(format!("{context} must be an Expr::Map"))),
+    }
+}
+
+fn reject_duplicate_bare_fields(
+    entries: &[(Expr, Expr)],
+    context: &str,
+    owned: &[&str],
+) -> Result<()> {
+    let mut seen = BTreeSet::new();
+    for (key, _) in entries {
+        if let Expr::Symbol(symbol) = key
+            && symbol.namespace.is_none()
+            && owned.contains(&symbol.name.as_ref())
+            && !seen.insert(symbol.name.as_ref())
+        {
+            return Err(chat_eval(format!(
+                "{context} duplicate {} field",
+                symbol.name.as_ref()
+            )));
         }
     }
     Ok(())
 }
 
-fn validate_response(expr: &Expr) -> Result<()> {
-    require_symbol_field(expr, "runner")?;
-    require_string_field(expr, "model")?;
-    require_symbol_field(expr, "stop-reason")?;
-    validate_content_list(expr, "content")
-}
-
-fn validate_event(expr: &Expr) -> Result<()> {
-    require_symbol_field(expr, "event")?;
-    require_symbol_field(expr, "runner")?;
-    require_string_field(expr, "model")?;
-    require_field(expr, "span-id")?;
-    Ok(())
-}
-
-fn validate_card(expr: &Expr) -> Result<()> {
-    require_symbol_field(expr, "runner")?;
-    require_string_field(expr, "model")?;
-    require_symbol_field(expr, "provider")?;
-    require_symbol_field(expr, "locality")?;
-    Ok(())
-}
-
-fn validate_message(expr: &Expr) -> Result<()> {
-    require_symbol_field(expr, "role")?;
-    validate_content_list(expr, "content")
-}
-
-fn validate_content_list(expr: &Expr, field_name: &'static str) -> Result<()> {
-    let content = require_list_field(expr, field_name)?;
-    for part in content {
-        require_symbol_field(part, "type")?;
+fn reject_duplicate_bare_keys(entries: &[(Expr, Expr)], context: &str) -> Result<()> {
+    let mut seen = BTreeSet::new();
+    for (key, _) in entries {
+        if let Expr::Symbol(symbol) = key
+            && symbol.namespace.is_none()
+            && !seen.insert(symbol.name.as_ref())
+        {
+            return Err(chat_eval(format!(
+                "{context} duplicate {} field",
+                symbol.name.as_ref()
+            )));
+        }
     }
     Ok(())
 }
 
-fn require_map(expr: &Expr) -> Result<&[(Expr, Expr)]> {
-    match expr {
-        Expr::Map(entries) => Ok(entries),
-        _ => Err(chat_eval("chat transcript must be an Expr::Map")),
-    }
+fn require_field<'a>(entries: &'a [(Expr, Expr)], name: &'static str) -> Result<&'a Expr> {
+    field(entries, name).ok_or_else(|| chat_eval(format!("chat transcript missing {name} field")))
 }
 
-fn require_field<'a>(expr: &'a Expr, name: &'static str) -> Result<&'a Expr> {
-    field(expr, name).ok_or_else(|| chat_eval(format!("chat transcript missing {name} field")))
+fn require_field_any<'a>(entries: &'a [(Expr, Expr)], name: &'static str) -> Result<&'a Expr> {
+    field_any(entries, name)
+        .ok_or_else(|| chat_eval(format!("chat transcript missing {name} field")))
 }
 
-fn require_symbol_field<'a>(expr: &'a Expr, name: &'static str) -> Result<&'a Symbol> {
-    match require_field(expr, name)? {
+fn require_symbol_field<'a>(entries: &'a [(Expr, Expr)], name: &'static str) -> Result<&'a Symbol> {
+    match require_field(entries, name)? {
         Expr::Symbol(symbol) => Ok(symbol),
         _ => Err(chat_eval(format!(
             "chat transcript {name} field must be a symbol"
@@ -226,8 +430,20 @@ fn require_symbol_field<'a>(expr: &'a Expr, name: &'static str) -> Result<&'a Sy
     }
 }
 
-fn require_string_field<'a>(expr: &'a Expr, name: &'static str) -> Result<&'a str> {
-    match require_field(expr, name)? {
+fn require_symbol_field_any<'a>(
+    entries: &'a [(Expr, Expr)],
+    name: &'static str,
+) -> Result<&'a Symbol> {
+    match require_field_any(entries, name)? {
+        Expr::Symbol(symbol) => Ok(symbol),
+        _ => Err(chat_eval(format!(
+            "chat transcript {name} field must be a symbol"
+        ))),
+    }
+}
+
+fn require_string_field<'a>(entries: &'a [(Expr, Expr)], name: &'static str) -> Result<&'a str> {
+    match require_field(entries, name)? {
         Expr::String(text) => Ok(text),
         _ => Err(chat_eval(format!(
             "chat transcript {name} field must be a string"
@@ -235,8 +451,20 @@ fn require_string_field<'a>(expr: &'a Expr, name: &'static str) -> Result<&'a st
     }
 }
 
-fn require_list_field<'a>(expr: &'a Expr, name: &'static str) -> Result<&'a [Expr]> {
-    match require_field(expr, name)? {
+fn require_string_field_any<'a>(
+    entries: &'a [(Expr, Expr)],
+    name: &'static str,
+) -> Result<&'a str> {
+    match require_field_any(entries, name)? {
+        Expr::String(text) => Ok(text),
+        _ => Err(chat_eval(format!(
+            "chat transcript {name} field must be a string"
+        ))),
+    }
+}
+
+fn require_list_field<'a>(entries: &'a [(Expr, Expr)], name: &'static str) -> Result<&'a [Expr]> {
+    match require_field(entries, name)? {
         Expr::List(items) => Ok(items),
         _ => Err(chat_eval(format!(
             "chat transcript {name} field must be a list"
@@ -244,10 +472,38 @@ fn require_list_field<'a>(expr: &'a Expr, name: &'static str) -> Result<&'a [Exp
     }
 }
 
-use sim_value::access::field;
+fn expr_field<'a>(expr: &'a Expr, name: &str) -> Option<&'a Expr> {
+    let Expr::Map(entries) = expr else {
+        return None;
+    };
+    field(entries, name)
+}
+
+fn field<'a>(entries: &'a [(Expr, Expr)], name: &str) -> Option<&'a Expr> {
+    entries.iter().find_map(|(key, value)| match key {
+        Expr::Symbol(symbol) if symbol.namespace.is_none() && symbol.name.as_ref() == name => {
+            Some(value)
+        }
+        _ => None,
+    })
+}
+
+fn field_any<'a>(entries: &'a [(Expr, Expr)], name: &str) -> Option<&'a Expr> {
+    entries.iter().find_map(|(key, value)| match key {
+        Expr::Symbol(symbol) if symbol.namespace.is_none() && symbol.name.as_ref() == name => {
+            Some(value)
+        }
+        Expr::String(text) if text == name => Some(value),
+        _ => None,
+    })
+}
 
 fn marker_is_true(expr: &Expr, name: &str) -> bool {
-    matches!(field(expr, name), Some(Expr::Bool(true)))
+    matches!(expr_field(expr, name), Some(Expr::Bool(true)))
+}
+
+fn marker_is_true_in(entries: &[(Expr, Expr)], name: &str) -> bool {
+    matches!(field(entries, name), Some(Expr::Bool(true)))
 }
 
 fn key_bool(name: &str, value: bool) -> (Expr, Expr) {

@@ -18,6 +18,7 @@ use crate::{
 mod anthropic;
 mod ollama;
 mod openai_compat;
+mod strict;
 
 fn cx() -> sim_kernel::Cx {
     let mut cx = sim_kernel::Cx::new(Arc::new(EagerPolicy), Arc::new(DefaultFactory));

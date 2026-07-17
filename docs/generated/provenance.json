@@ -3,10 +3,10 @@
   "generated_by": "cargo run -p xtask -- simdoc",
   "generation_timestamp": "2026-07-16T02:55:26+02:00",
   "generator": "xtask repo-contract v1",
-  "git_commit": "dff9f48ac36b2b6cfb672954e5c0f87ad931b503",
+  "git_commit": "62e22da83b51465fbed46d080228969315c91c75",
   "repo": "sim-codecs",
   "schema": "sim.provenance.v1",
-  "source_commit": "dff9f48ac36b2b6cfb672954e5c0f87ad931b503",
+  "source_commit": "62e22da83b51465fbed46d080228969315c91c75",
   "source_remote": "https://github.com/sim-nest/sim-codecs",
   "validation_commands": [
     "cargo fmt --all --check",
@@ -19,9 +19,9 @@
     "cargo run -p xtask -- validation-matrix --check --repo .",
     "cargo run -p xtask -- crate-catalog --check --repo ."
   ],
-  "workspace_hash": "53bd6b6343c7ec9f",
+  "workspace_hash": "f0b3186ee823d13e",
   "workspace_hash_algorithm": "fnv1a64",
-  "workspace_hash_input_count": 259,
+  "workspace_hash_input_count": 260,
   "workspace_hash_inputs": [
     "Cargo.toml",
     "crates/sim-codec/Cargo.toml",
@@ -167,6 +167,7 @@
     "crates/sim-codec-chat/src/tests/anthropic.rs",
     "crates/sim-codec-chat/src/tests/ollama.rs",
     "crates/sim-codec-chat/src/tests/openai_compat.rs",
+    "crates/sim-codec-chat/src/tests/strict.rs",
     "crates/sim-codec-chat/src/tests.rs",
     "crates/sim-codec-compare/Cargo.toml",
     "crates/sim-codec-compare/build.rs",
