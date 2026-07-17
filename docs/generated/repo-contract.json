@@ -897,6 +897,7 @@
         {
           "edges": [
             "dep:sim-codec-binary",
+            "dep:sim-lib-numbers-f64",
             "dep:sim-macros"
           ],
           "name": "native-export",
@@ -1123,10 +1124,10 @@
     "generated_by": "cargo run -p xtask -- simdoc",
     "generation_timestamp": "2026-07-16T02:55:26+02:00",
     "generator": "xtask repo-contract v1",
-    "git_commit": "fe036e3e39bb4f04d4d1ae9d105bb8e483516a12",
+    "git_commit": "f5ceb0af17a6ea94643788515aa35882d40514c5",
     "repo": "sim-codecs",
     "schema": "sim.provenance.v1",
-    "source_commit": "fe036e3e39bb4f04d4d1ae9d105bb8e483516a12",
+    "source_commit": "f5ceb0af17a6ea94643788515aa35882d40514c5",
     "source_remote": "https://github.com/sim-nest/sim-codecs",
     "validation_commands": [
       "cargo fmt --all --check",
@@ -1139,7 +1140,7 @@
       "cargo run -p xtask -- validation-matrix --check --repo .",
       "cargo run -p xtask -- crate-catalog --check --repo ."
     ],
-    "workspace_hash": "42a30114a706d3bc",
+    "workspace_hash": "d08cce521c61eaf3",
     "workspace_hash_algorithm": "fnv1a64",
     "workspace_hash_input_count": 257,
     "workspace_hash_inputs": [

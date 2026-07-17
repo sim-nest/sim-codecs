@@ -13,7 +13,11 @@ homepage = "https://github.com/sim-nest/sim-codecs"
 crate-type = ["rlib", "cdylib"]
 
 [features]
-native-export = ["dep:sim-codec-binary", "dep:sim-macros"]
+native-export = [
+    "dep:sim-codec-binary",
+    "dep:sim-lib-numbers-f64",
+    "dep:sim-macros",
+]
 
 [dependencies]
 proc-macro2 = { version = "1", features = ["span-locations"] }
@@ -21,6 +25,7 @@ sim-codec = { version = "0.1.0", path = "../sim-codec" }
 sim-codec-binary = { version = "0.1.0", path = "../sim-codec-binary", optional = true }
 sim-cookbook = { version = "0.1.0" }
 sim-kernel = { version = "0.1.0" }
+sim-lib-numbers-f64 = { version = "0.1.0", optional = true }
 sim-macros = { version = "0.1.0", optional = true }
 
 [dev-dependencies]

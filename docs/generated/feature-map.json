@@ -66,6 +66,7 @@
         {
           "edges": [
             "dep:sim-codec-binary",
+            "dep:sim-lib-numbers-f64",
             "dep:sim-macros"
           ],
           "name": "native-export",
