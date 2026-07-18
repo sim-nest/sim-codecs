@@ -350,12 +350,20 @@ is stronger than a compile-only claim and weaker than a byte-exact source claim.
 
 ## Validation
 
-These commands run in the constellation workspace; only `sim-kernel` builds from a lone clone today (see `DEVELOPING.md` in `sim-sdk`). A single-repo build lands with the first crates.io publish.
+This repo builds standalone against the published SIM crates on crates.io.
+The validation gates are:
 
 ```bash
-cargo fmt --check && cargo test --workspace && cargo clippy --workspace -- -D warnings && cargo doc --workspace --no-deps
+cargo fmt --all --check
+cargo test --workspace
+cargo clippy --workspace --all-targets -- -D warnings
+RUSTDOCFLAGS="-D warnings" cargo doc --workspace --no-deps
 cargo run -p xtask -- simdoc --check
 ```
+
+The simdoc launcher uses `../sim-tooling` in a constellation checkout. In a
+lone checkout, set `SIMDOC_TOOLING_MANIFEST` to the checked-out
+`sim-tooling/Cargo.toml`; CI checks out `sim-tooling` and sets that variable.
 
 ## Documentation lanes
 
