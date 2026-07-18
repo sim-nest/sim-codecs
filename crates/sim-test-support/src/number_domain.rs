@@ -1,5 +1,5 @@
-//! A test-only `numbers/f64` number-domain fixture and its registration helper,
-//! used to exercise codec number-literal handling at the codec boundary.
+//! A test-only `numbers/f64` number-domain fixture and registration helper for
+//! codec number-literal handling at the codec boundary.
 
 use std::sync::Arc;
 

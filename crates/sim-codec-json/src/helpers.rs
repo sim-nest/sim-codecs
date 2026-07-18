@@ -61,8 +61,8 @@ pub(crate) fn json_to_symbol(codec: sim_kernel::CodecId, value: &JsonValue) -> R
 /// Accepts the structured `{ "namespace": ..., "name": ... }` form (the same
 /// shape [`symbol_to_json`] emits) so that symbols containing `/` -- the
 /// division operator, for one -- round-trip exactly. A bare JSON string is also
-/// accepted and parsed with [`parse_symbol`] for backward compatibility with
-/// the legacy `to_string()`-flattened encoding.
+/// accepted and parsed with [`parse_symbol`] for compatibility with flattened
+/// symbol encodings.
 pub(crate) fn symbol_from_json(codec: sim_kernel::CodecId, value: &JsonValue) -> Result<Symbol> {
     if let Some(text) = value.as_str() {
         return Ok(parse_symbol(text));
@@ -77,8 +77,8 @@ pub(crate) fn symbol_from_json(codec: sim_kernel::CodecId, value: &JsonValue) ->
 
 /// Encodes an [`Expr::Local`] symbol as a `$expr: "local"` object that carries
 /// the namespace and name as structured fields, so locals named with reserved
-/// characters round-trip exactly. A namespace-less local encodes identically to
-/// the legacy `{ "$expr": "local", "name": ... }` form.
+/// characters round-trip exactly. A namespace-less local encodes as
+/// `{ "$expr": "local", "name": ... }`.
 pub(crate) fn local_to_json(symbol: &Symbol) -> JsonValue {
     let mut object = Map::new();
     object.insert("$expr".to_owned(), JsonValue::String("local".to_owned()));

@@ -16,7 +16,7 @@ pub enum BridgeWarrantPolicy {
     Verify,
 }
 
-/// Content ids of protocol books and part specs used to build a packet.
+/// Content ids of protocol books and part specs that build a packet.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct BridgeWarrant {
     /// Content id of the dialogue move book.

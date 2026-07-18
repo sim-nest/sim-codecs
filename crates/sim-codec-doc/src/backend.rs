@@ -152,7 +152,7 @@ impl BackendRegistry {
         }
     }
 
-    /// Register `backend`, returning any backend previously registered with
+    /// Register `backend`, returning any backend replaced for
     /// the same id.
     pub fn register<B: MarkupBackend + 'static>(
         &mut self,

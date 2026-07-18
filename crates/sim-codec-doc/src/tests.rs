@@ -1,28 +1,18 @@
 use sim_codec::{Input, decode_with_codec, encode_with_codec};
-use sim_kernel::{Args, EncodeOptions, Expr, NumberLiteral, ReadPolicy, Symbol};
+use sim_kernel::{EncodeOptions, Expr, ReadPolicy, Symbol};
 
 use crate::{
-    BackendId, BackendRegistry, ChunkOp, DocValue, Inline, MarkdownBackend, MarkupBackend,
-    MarkupBlock, MarkupDecodeOptions, MarkupDoc, MarkupEncodeOptions, MarkupError, MarkupFidelity,
-    MathSource, SourceDoc, Span, TypstBackend, chunk, decode_document, decode_markup_doc,
-    install_doc_codec, install_markup_codecs, markup_codec_symbol,
+    BackendId, BackendRegistry, Inline, MarkdownBackend, MarkupBackend, MarkupBlock,
+    MarkupDecodeOptions, MarkupDoc, MarkupEncodeOptions, MarkupError, MathSource, SourceDoc, Span,
+    TypstBackend, install_markup_codecs, markup_codec_symbol,
 };
 
-fn cx() -> sim_kernel::Cx {
-    let mut cx = sim_test_support::core_cx();
-    sim_test_support::register_f64_number_domain(&mut cx);
-    install_doc_codec(&mut cx).unwrap();
-    cx
-}
+mod chunk;
+mod support;
 
-fn cx_with_general_codecs() -> sim_kernel::Cx {
-    let mut cx = cx();
-    let json = sim_codec_json::JsonCodecLib::new(cx.registry_mut().fresh_codec_id());
-    cx.load_lib(&json).unwrap();
-    let lisp = sim_codec_lisp::LispCodecLib::new(cx.registry_mut().fresh_codec_id()).unwrap();
-    cx.load_lib(&lisp).unwrap();
-    cx
-}
+use support::{
+    TestBackend, blocks_without_spans, call_report, cx, map_field, map_string, map_symbol,
+};
 
 #[test]
 fn doc_codec_registers_codec_and_chunk_functions() {
@@ -93,13 +83,6 @@ fn backend_registry_is_deterministic() {
             BackendId::new("zeta"),
         ]
     );
-}
-
-fn call_report(cx: &mut sim_kernel::Cx, symbol: Symbol) -> Expr {
-    let value = cx.registry().function_by_symbol(&symbol).unwrap().clone();
-    let callable = value.object().as_callable().unwrap();
-    let value = callable.call(cx, Args::new(Vec::new())).unwrap();
-    value.object().as_expr(cx).unwrap()
 }
 
 #[test]
@@ -359,20 +342,6 @@ fn typst_functions_are_not_executed() {
 }
 
 #[test]
-fn decode_document_still_chunks_headings() {
-    let doc = decode_document("# Guide\n\nAlpha beta.\n\n## Detail\n\nGamma.\n");
-    assert_eq!(doc.blocks.len(), 4);
-    assert_eq!(doc.blocks[0].text, "Guide");
-    assert_eq!(doc.blocks[0].start, 0);
-    assert_eq!(doc.blocks[0].end, 7);
-    assert_eq!(doc.blocks[1].text, "Alpha beta.");
-    assert_eq!(doc.blocks[1].start, 9);
-    assert_eq!(doc.blocks[1].end, 20);
-    assert_eq!(doc.blocks[1].heading_path, vec!["Guide"]);
-    assert_eq!(doc.blocks[3].heading_path, vec!["Guide", "Detail"]);
-}
-
-#[test]
 fn markup_doc_roundtrips_as_expr() {
     let mut attrs = std::collections::BTreeMap::new();
     attrs.insert("audience".to_owned(), Expr::String("builder".to_owned()));
@@ -455,237 +424,4 @@ fn codec_decodes_text_to_markup_doc_expr_and_encodes_source_text() {
     )
     .unwrap();
     assert_eq!(output.into_text().unwrap(), source);
-}
-
-#[test]
-fn fixed_chunks_preserve_source_offsets() {
-    let doc = decode_document("abcdef");
-    let chunks = chunk(&doc, ChunkOp::Fixed(2));
-    assert_eq!(
-        chunks
-            .iter()
-            .map(|chunk| (chunk.text.as_str(), chunk.start, chunk.end))
-            .collect::<Vec<_>>(),
-        vec![("ab", 0, 2), ("cd", 2, 4), ("ef", 4, 6)]
-    );
-}
-
-#[test]
-fn recursive_chunks_prefer_paragraphs_and_split_large_blocks() {
-    let doc = decode_document("short\n\nlonger-block");
-    let chunks = chunk(&doc, ChunkOp::Recursive { max: 6 });
-    assert_eq!(
-        chunks
-            .iter()
-            .map(|chunk| (chunk.text.as_str(), chunk.start, chunk.end))
-            .collect::<Vec<_>>(),
-        vec![("short", 0, 5), ("longer", 7, 13), ("-block", 13, 19)]
-    );
-}
-
-#[test]
-fn heading_chunks_attach_current_heading_path() {
-    let doc = decode_document("# Guide\n\nAlpha beta.\n\n## Detail\n\nGamma.\n");
-    let chunks = chunk(&doc, ChunkOp::Heading);
-    assert_eq!(chunks.len(), 2);
-    assert_eq!(chunks[0].text, "Alpha beta.");
-    assert_eq!(chunks[0].heading_path, vec!["Guide"]);
-    assert_eq!(chunks[1].text, "Gamma.");
-    assert_eq!(chunks[1].heading_path, vec!["Guide", "Detail"]);
-}
-
-#[test]
-fn chunk_functions_return_chunk_maps() {
-    let mut cx = cx();
-    let decoded = decode_with_codec(
-        &mut cx,
-        &Symbol::qualified("codec", "doc"),
-        Input::Text("abcdef".to_owned()),
-        ReadPolicy::default(),
-    )
-    .unwrap();
-    let doc = cx.factory().expr(decoded).unwrap();
-    let size = cx
-        .factory()
-        .number_literal(Symbol::qualified("numbers", "f64"), "3".to_owned())
-        .unwrap();
-    let function = cx
-        .registry()
-        .function_by_symbol(&Symbol::qualified("doc", "chunk-fixed"))
-        .unwrap()
-        .clone();
-    let value = cx
-        .call_value(function, sim_kernel::Args::new(vec![doc, size]))
-        .unwrap();
-    let Expr::List(items) = value.object().as_expr(&mut cx).unwrap() else {
-        panic!("expected list");
-    };
-    assert_eq!(items.len(), 2);
-    assert_eq!(map_string(&items[0], "text"), Some("abc"));
-}
-
-#[test]
-fn chunk_values_roundtrip_through_lisp_and_json_codecs() {
-    let mut cx = cx_with_general_codecs();
-    let chunks = chunk(
-        &decode_document("# Guide\n\nAlpha beta.\n"),
-        ChunkOp::Heading,
-    );
-    let expr = Expr::List(chunks.into_iter().map(|chunk| chunk.as_expr()).collect());
-    for codec in [
-        Symbol::qualified("codec", "json"),
-        Symbol::qualified("codec", "lisp"),
-    ] {
-        let output = encode_with_codec(&mut cx, &codec, &expr, EncodeOptions::default()).unwrap();
-        let input = match output {
-            sim_codec::Output::Text(text) => Input::Text(text),
-            sim_codec::Output::Bytes(bytes) => Input::Bytes(bytes),
-        };
-        let decoded = decode_with_codec(&mut cx, &codec, input, ReadPolicy::default()).unwrap();
-        assert!(decoded.canonical_eq(&expr), "{codec} did not round-trip");
-    }
-}
-
-#[test]
-fn invalid_document_input_is_rejected() {
-    let err = DocValue::from_expr(&Expr::List(Vec::new())).unwrap_err();
-    assert!(err.to_string().contains("document"));
-}
-
-#[test]
-fn zero_size_function_input_is_rejected() {
-    let mut cx = cx();
-    let doc = cx.factory().expr(decode_document("abc").as_expr()).unwrap();
-    let size = cx
-        .factory()
-        .number_literal(Symbol::qualified("numbers", "f64"), "0".to_owned())
-        .unwrap();
-    let function = cx
-        .registry()
-        .function_by_symbol(&Symbol::qualified("doc", "chunk-recursive"))
-        .unwrap()
-        .clone();
-    let err = cx
-        .call_value(function, sim_kernel::Args::new(vec![doc, size]))
-        .unwrap_err();
-    assert!(err.to_string().contains("greater than zero"));
-}
-
-fn map_symbol(expr: &Expr, field: &str) -> Option<Symbol> {
-    match map_field(expr, field)? {
-        Expr::Symbol(symbol) => Some(symbol.clone()),
-        _ => None,
-    }
-}
-
-fn map_string<'a>(expr: &'a Expr, field: &str) -> Option<&'a str> {
-    match map_field(expr, field)? {
-        Expr::String(text) => Some(text),
-        _ => None,
-    }
-}
-
-fn map_field<'a>(expr: &'a Expr, field: &str) -> Option<&'a Expr> {
-    let Expr::Map(entries) = expr else {
-        return None;
-    };
-    entries.iter().find_map(|(key, value)| {
-        matches!(key, Expr::Symbol(symbol) if symbol.name.as_ref() == field).then_some(value)
-    })
-}
-
-fn blocks_without_spans(blocks: &[MarkupBlock]) -> Vec<MarkupBlock> {
-    blocks.iter().cloned().map(block_without_span).collect()
-}
-
-fn block_without_span(block: MarkupBlock) -> MarkupBlock {
-    match block {
-        MarkupBlock::Heading {
-            level, text, id, ..
-        } => MarkupBlock::Heading {
-            level,
-            text,
-            id,
-            span: None,
-        },
-        MarkupBlock::Paragraph { content, .. } => MarkupBlock::Paragraph {
-            content,
-            span: None,
-        },
-        MarkupBlock::CodeBlock { lang, code, .. } => MarkupBlock::CodeBlock {
-            lang,
-            code,
-            span: None,
-        },
-        MarkupBlock::MathBlock { source, .. } => MarkupBlock::MathBlock { source, span: None },
-        MarkupBlock::Quote { blocks, .. } => MarkupBlock::Quote {
-            blocks: blocks_without_spans(&blocks),
-            span: None,
-        },
-        MarkupBlock::List { ordered, items, .. } => MarkupBlock::List {
-            ordered,
-            items: items
-                .into_iter()
-                .map(|item| blocks_without_spans(&item))
-                .collect(),
-            span: None,
-        },
-        MarkupBlock::Table { header, rows, .. } => MarkupBlock::Table {
-            header,
-            rows,
-            span: None,
-        },
-        MarkupBlock::Figure { src, caption, .. } => MarkupBlock::Figure {
-            src,
-            caption,
-            span: None,
-        },
-        MarkupBlock::Raw { backend, text, .. } => MarkupBlock::Raw {
-            backend,
-            text,
-            span: None,
-        },
-    }
-}
-
-fn _number(value: usize) -> Expr {
-    Expr::Number(NumberLiteral {
-        domain: Symbol::qualified("numbers", "f64"),
-        canonical: value.to_string(),
-    })
-}
-
-#[derive(Clone)]
-struct TestBackend {
-    id: BackendId,
-}
-
-impl TestBackend {
-    fn new(id: &str) -> Self {
-        Self {
-            id: BackendId::new(id),
-        }
-    }
-}
-
-impl MarkupBackend for TestBackend {
-    fn id(&self) -> BackendId {
-        self.id.clone()
-    }
-
-    fn decode(
-        &self,
-        input: &str,
-        _opts: &MarkupDecodeOptions,
-    ) -> Result<(MarkupDoc, MarkupFidelity), MarkupError> {
-        Ok((decode_markup_doc(input), MarkupFidelity::exact(self.id())))
-    }
-
-    fn encode(
-        &self,
-        doc: &MarkupDoc,
-        _opts: &MarkupEncodeOptions,
-    ) -> Result<(String, MarkupFidelity), MarkupError> {
-        Ok((doc.to_source_text(), MarkupFidelity::exact(self.id())))
-    }
 }

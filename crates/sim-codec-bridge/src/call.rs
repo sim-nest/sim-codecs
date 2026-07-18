@@ -37,7 +37,7 @@ impl CallArgumentMedia {
 pub struct BridgeCallArgument {
     /// Argument name.
     pub name: Symbol,
-    /// Codec used to encode the original value at data position.
+    /// Codec for encoding the original value at data position.
     pub codec: Symbol,
     /// Encoded media kind.
     pub media: CallArgumentMedia,

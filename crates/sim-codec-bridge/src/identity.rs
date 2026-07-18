@@ -4,7 +4,7 @@ use sim_kernel::{ContentId, Datum, Expr, Result, Symbol};
 use crate::warrant::content_id_datum;
 use crate::{BridgePacket, BridgePart};
 
-/// Builds the canonical datum used to hash a packet with `cid` cleared.
+/// Builds the canonical datum for hashing a packet with `cid` cleared.
 pub fn canonical_packet_datum(packet: &BridgePacket) -> Datum {
     let packet = packet.canonicalized();
     Datum::Node {

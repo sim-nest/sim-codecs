@@ -23,6 +23,7 @@ Every PR runs these gates in CI, and they must be green before merge:
 - `cargo clippy --workspace --all-targets -- -D warnings`
 - `cargo test --workspace`
 - `cargo doc --workspace --no-deps`
+- `cargo run -p xtask -- check-file-sizes`
 - `cargo run -p xtask -- simdoc --check`
 
 Please keep source and Markdown ASCII-only, and add or update tests for behavior

@@ -358,6 +358,7 @@ cargo fmt --all --check
 cargo test --workspace
 cargo clippy --workspace --all-targets -- -D warnings
 RUSTDOCFLAGS="-D warnings" cargo doc --workspace --no-deps
+cargo run -p xtask -- check-file-sizes
 cargo run -p xtask -- simdoc --check
 ```
 

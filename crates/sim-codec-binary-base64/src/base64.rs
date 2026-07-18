@@ -1,7 +1,7 @@
 //! Standard base64 encode/decode for the text framing layer.
 //!
 //! A small, dependency-free base64 codec (standard `+/` alphabet with padding)
-//! used to wrap and unwrap binary frames as ASCII text.
+//! for wrapping and unwrapping binary frames as ASCII text.
 
 use sim_codec::{DecodeBudget, DecodeLimits};
 use sim_kernel::{CodecId, Error, Result};

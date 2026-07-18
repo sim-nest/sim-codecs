@@ -80,7 +80,7 @@ impl PrattParser {
         // unbalanced prefix-operator or open-paren chains (`- - - ...` or
         // `((((...`) fail closed on the depth limit instead of overflowing the
         // native stack: those paths recurse through `parse_expr_tree` without
-        // reaching a leaf arm, where the budget was previously the only check.
+        // reaching a leaf arm, where the budget check alone cannot bound depth.
         budget.enter_node(codec, depth)?;
         let mut left = self.parse_nud_tree(cx, codec, source_id, source, budget, depth)?;
 

@@ -255,10 +255,10 @@ fn slash_named_symbols_round_trip_structurally() {
 }
 
 #[test]
-fn legacy_string_operator_still_decodes() {
+fn compatibility_string_operator_still_decodes() {
     // Old payloads encoded operators/tags as bare strings; decode must remain
     // backward compatible with that flattened form.
-    let legacy = json!({
+    let compatibility_form = json!({
         "$expr": "infix",
         "operator": "+",
         "left": { "$expr": "symbol", "name": "a" },
@@ -266,7 +266,7 @@ fn legacy_string_operator_still_decodes() {
     });
     let decoded = json_to_expr(
         sim_kernel::CodecId(1),
-        &legacy,
+        &compatibility_form,
         &mut DecodeBudget::new(DecodeLimits::default()),
         0,
     )

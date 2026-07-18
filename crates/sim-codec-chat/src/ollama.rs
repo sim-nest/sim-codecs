@@ -17,7 +17,7 @@ use crate::{
     is_model_request_expr, model_response_expr, text_part, usage_record, validate_chat_transcript,
 };
 
-/// Codec id used to tag decode-budget errors raised while projecting an Ollama
+/// Codec id tagging decode-budget errors raised while projecting an Ollama
 /// provider response. The Ollama bridge is a set of free functions with no
 /// registered codec id of its own; the value only appears in budget-exceeded
 /// error messages on hostile input.
