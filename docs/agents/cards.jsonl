@@ -71,6 +71,8 @@
 {"kind":"recipe","path":"crates/sim-codec-lisp/recipes/02-loadable/native-script/recipe.toml"}
 {"kind":"recipe","path":"crates/sim-codec-lisp/recipes/02-loadable/native-script/setup.siml"}
 {"kind":"recipe","path":"crates/sim-codec-lisp/recipes/book.toml"}
+{"kind":"recipe","path":"crates/sim-codec-lua/recipes/01-basics/chapter.toml"}
+{"kind":"recipe","path":"crates/sim-codec-lua/recipes/book.toml"}
 {"kind":"recipe","path":"crates/sim-codec-mcp/recipes/01-basics/chapter.toml"}
 {"kind":"recipe","path":"crates/sim-codec-mcp/recipes/01-basics/envelope-descriptor/purpose.md"}
 {"kind":"recipe","path":"crates/sim-codec-mcp/recipes/01-basics/envelope-descriptor/recipe.toml"}

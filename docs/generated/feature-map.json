@@ -84,6 +84,11 @@
     {
       "features": [],
       "group": "workspace",
+      "package": "sim-codec-lua"
+    },
+    {
+      "features": [],
+      "group": "workspace",
       "package": "sim-codec-mcp"
     },
     {

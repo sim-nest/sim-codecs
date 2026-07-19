@@ -1,6 +1,6 @@
 {
   "generator": "xtask crate-catalog v1",
-  "package_count": 18,
+  "package_count": 19,
   "packages": [
     {
       "description": "SIM workspace package for sim codec algol.",
@@ -159,6 +159,19 @@
         "cdylib",
         "custom-build",
         "rlib"
+      ]
+    },
+    {
+      "description": "Lua expression lexer and parser for SIM codec surfaces.",
+      "generated_readme": true,
+      "manifest": "crates/sim-codec-lua/Cargo.toml",
+      "name": "sim-codec-lua",
+      "publish": "true",
+      "readme": "crates/sim-codec-lua/README.md",
+      "root": "crates/sim-codec-lua",
+      "target_kinds": [
+        "custom-build",
+        "lib"
       ]
     },
     {

@@ -1,5 +1,5 @@
 {
-  "card_count": 17,
+  "card_count": 18,
   "cards": [
     {
       "id": "browse/catalog",
@@ -84,6 +84,12 @@
       "kind": "cookbook-recipe",
       "owner": "sim-codec-lisp",
       "summary": "Lisp surface forms for SIM expressions."
+    },
+    {
+      "id": "cookbook/codec/lua",
+      "kind": "cookbook-recipe",
+      "owner": "sim-codec-lua",
+      "summary": "Lua expression parsing recipes for SIM codec surfaces."
     },
     {
       "id": "cookbook/codec/mcp",

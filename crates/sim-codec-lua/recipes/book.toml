@@ -1,0 +1,5 @@
+book = "codec/lua"
+title = "Lua Codec"
+summary = "Lua expression parsing recipes for SIM codec surfaces."
+order = 266
+chapters = ["01-basics"]

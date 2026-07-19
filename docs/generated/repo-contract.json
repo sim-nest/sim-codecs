@@ -1,5 +1,5 @@
 {
-  "card_count": 17,
+  "card_count": 18,
   "cards": [
     {
       "id": "browse/catalog",
@@ -86,6 +86,12 @@
       "summary": "Lisp surface forms for SIM expressions."
     },
     {
+      "id": "cookbook/codec/lua",
+      "kind": "cookbook-recipe",
+      "owner": "sim-codec-lua",
+      "summary": "Lua expression parsing recipes for SIM codec surfaces."
+    },
+    {
       "id": "cookbook/codec/mcp",
       "kind": "cookbook-recipe",
       "owner": "sim-codec-mcp",
@@ -126,6 +132,7 @@
       "sim-codec-doc",
       "sim-codec-json",
       "sim-codec-lisp",
+      "sim-codec-lua",
       "sim-codec-mcp",
       "sim-codec-pratt",
       "sim-test-support",
@@ -152,7 +159,7 @@
       "reason": "test-only f64 number-domain fixture for codec boundary tests"
     }
   ],
-  "package_count": 18,
+  "package_count": 19,
   "packages": [
     {
       "crate_name": "sim_codec",
@@ -960,6 +967,59 @@
       ]
     },
     {
+      "crate_name": "sim_codec_lua",
+      "dependencies": [
+        {
+          "kind": "normal",
+          "optional": false,
+          "package": "sim-codec",
+          "rename": null,
+          "target": null
+        },
+        {
+          "kind": "normal",
+          "optional": false,
+          "package": "sim-codec-pratt",
+          "rename": null,
+          "target": null
+        }
+      ],
+      "description": "Lua expression lexer and parser for SIM codec surfaces.",
+      "features": [],
+      "group": "workspace",
+      "manifest": "crates/sim-codec-lua/Cargo.toml",
+      "name": "sim-codec-lua",
+      "publish": "true",
+      "root": "crates/sim-codec-lua",
+      "rustdoc_summary": "Lua expression lexer and parser for SIM codec surfaces.",
+      "target_kinds": [
+        "custom-build",
+        "lib"
+      ],
+      "targets": [
+        {
+          "crate_types": [
+            "lib"
+          ],
+          "kind": [
+            "lib"
+          ],
+          "name": "sim_codec_lua",
+          "src": "crates/sim-codec-lua/src/lib.rs"
+        },
+        {
+          "crate_types": [
+            "bin"
+          ],
+          "kind": [
+            "custom-build"
+          ],
+          "name": "build-script-build",
+          "src": "crates/sim-codec-lua/build.rs"
+        }
+      ]
+    },
+    {
       "crate_name": "sim_codec_mcp",
       "dependencies": [
         {
@@ -1184,10 +1244,10 @@
     "generated_by": "cargo run -p xtask -- simdoc",
     "generation_timestamp": "2026-07-16T02:55:26+02:00",
     "generator": "xtask repo-contract v1",
-    "git_commit": "ea0b7434e97c7d50ddbb9c6b19b3a4082f5505d3",
+    "git_commit": "c2b42fa0e194a72b58df76ec34b789e180eb09bf",
     "repo": "sim-codecs",
     "schema": "sim.provenance.v1",
-    "source_commit": "ea0b7434e97c7d50ddbb9c6b19b3a4082f5505d3",
+    "source_commit": "c2b42fa0e194a72b58df76ec34b789e180eb09bf",
     "source_remote": "https://github.com/sim-nest/sim-codecs",
     "validation_commands": [
       "cargo fmt --all --check",
@@ -1200,9 +1260,9 @@
       "cargo run -p xtask -- validation-matrix --check --repo .",
       "cargo run -p xtask -- crate-catalog --check --repo ."
     ],
-    "workspace_hash": "c4c378d18f41ac64",
+    "workspace_hash": "beae7427ffb3a8ac",
     "workspace_hash_algorithm": "fnv1a64",
-    "workspace_hash_input_count": 275,
+    "workspace_hash_input_count": 284,
     "workspace_hash_inputs": [
       "Cargo.toml",
       "crates/sim-codec/Cargo.toml",
@@ -1444,6 +1504,15 @@
       "crates/sim-codec-lisp/src/lib.rs",
       "crates/sim-codec-lisp/src/loaders.rs",
       "crates/sim-codec-lisp/src/native.rs",
+      "crates/sim-codec-lua/Cargo.toml",
+      "crates/sim-codec-lua/build.rs",
+      "crates/sim-codec-lua/recipes/book.toml",
+      "crates/sim-codec-lua/src/ast.rs",
+      "crates/sim-codec-lua/src/lex.rs",
+      "crates/sim-codec-lua/src/lib.rs",
+      "crates/sim-codec-lua/src/parse_expr.rs",
+      "crates/sim-codec-lua/src/pratt.rs",
+      "crates/sim-codec-lua/src/tests.rs",
       "crates/sim-codec-mcp/Cargo.toml",
       "crates/sim-codec-mcp/build.rs",
       "crates/sim-codec-mcp/recipes/01-basics/envelope-descriptor/recipe.toml",
@@ -1481,7 +1550,7 @@
       "xtask/Cargo.toml"
     ]
   },
-  "recipe_book_count": 15,
+  "recipe_book_count": 16,
   "recipes": [
     {
       "book": "codec/core",
@@ -1774,6 +1843,17 @@
       ],
       "summary": "Lisp surface forms for SIM expressions.",
       "title": "Lisp Codec"
+    },
+    {
+      "book": "codec/lua",
+      "book_toml": "crates/sim-codec-lua/recipes/book.toml",
+      "card_id": "cookbook/codec/lua",
+      "group": "workspace",
+      "package": "sim-codec-lua",
+      "recipe_count": 0,
+      "recipes": [],
+      "summary": "Lua expression parsing recipes for SIM codec surfaces.",
+      "title": "Lua Codec"
     },
     {
       "book": "codec/mcp",

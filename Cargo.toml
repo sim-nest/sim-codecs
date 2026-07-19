@@ -16,6 +16,7 @@ members = [
   "crates/sim-codec-doc",
   "crates/sim-codec-json",
   "crates/sim-codec-lisp",
+  "crates/sim-codec-lua",
   "crates/sim-codec-mcp",
   "crates/sim-test-support",
   "crates/sim-wasm-abi",

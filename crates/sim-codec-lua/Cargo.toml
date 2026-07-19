@@ -1,0 +1,19 @@
+[package]
+name = "sim-codec-lua"
+version = "0.1.0"
+edition = "2024"
+license = "MPL-2.0"
+description = "Lua expression lexer and parser for SIM codec surfaces."
+readme = "README.md"
+publish = true
+repository = "https://github.com/sim-nest/sim-codecs"
+homepage = "https://github.com/sim-nest/sim-codecs"
+
+[dependencies]
+sim-codec = { version = "0.1.0", path = "../sim-codec" }
+sim-codec-pratt = { version = "0.1.0", path = "../sim-codec-pratt" }
+sim-cookbook = { version = "0.1.0" }
+sim-kernel = { version = "0.1.0" }
+
+[build-dependencies]
+sim-cookbook = { version = "0.1.0" }
