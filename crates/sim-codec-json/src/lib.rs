@@ -72,6 +72,7 @@
 
 mod codec;
 mod expr_json;
+mod grammar;
 mod helpers;
 mod projection;
 mod schema;
@@ -86,6 +87,7 @@ pub static RECIPES: sim_cookbook::EmbeddedDir =
 
 pub use codec::{JsonCodec, JsonCodecLib};
 pub use expr_json::{expr_to_json, json_to_expr};
+pub use grammar::JsonGrammarRenderer;
 pub use helpers::json_escape;
 pub use projection::{
     JsonProjectionMode, json_number_to_u64, project_expr_to_json, project_json_to_expr,

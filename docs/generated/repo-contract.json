@@ -834,6 +834,13 @@
         {
           "kind": "dev",
           "optional": false,
+          "package": "sim-codec-lisp",
+          "rename": null,
+          "target": null
+        },
+        {
+          "kind": "dev",
+          "optional": false,
           "package": "sim-test-support",
           "rename": null,
           "target": null
@@ -1244,10 +1251,10 @@
     "generated_by": "cargo run -p xtask -- simdoc",
     "generation_timestamp": "2026-07-16T02:55:26+02:00",
     "generator": "xtask repo-contract v1",
-    "git_commit": "c2b42fa0e194a72b58df76ec34b789e180eb09bf",
+    "git_commit": "5f887413676026a4525fe7e0f3136de8b22efe69",
     "repo": "sim-codecs",
     "schema": "sim.provenance.v1",
-    "source_commit": "c2b42fa0e194a72b58df76ec34b789e180eb09bf",
+    "source_commit": "5f887413676026a4525fe7e0f3136de8b22efe69",
     "source_remote": "https://github.com/sim-nest/sim-codecs",
     "validation_commands": [
       "cargo fmt --all --check",
@@ -1260,9 +1267,9 @@
       "cargo run -p xtask -- validation-matrix --check --repo .",
       "cargo run -p xtask -- crate-catalog --check --repo ."
     ],
-    "workspace_hash": "beae7427ffb3a8ac",
+    "workspace_hash": "86cce390be460054",
     "workspace_hash_algorithm": "fnv1a64",
-    "workspace_hash_input_count": 284,
+    "workspace_hash_input_count": 286,
     "workspace_hash_inputs": [
       "Cargo.toml",
       "crates/sim-codec/Cargo.toml",
@@ -1475,6 +1482,7 @@
       "crates/sim-codec-json/recipes/book.toml",
       "crates/sim-codec-json/src/codec.rs",
       "crates/sim-codec-json/src/expr_json.rs",
+      "crates/sim-codec-json/src/grammar.rs",
       "crates/sim-codec-json/src/helpers.rs",
       "crates/sim-codec-json/src/lib.rs",
       "crates/sim-codec-json/src/projection.rs",
@@ -1486,6 +1494,7 @@
       "crates/sim-codec-lisp/recipes/01-basics/quote-symbol/recipe.toml",
       "crates/sim-codec-lisp/recipes/02-loadable/native-script/recipe.toml",
       "crates/sim-codec-lisp/recipes/book.toml",
+      "crates/sim-codec-lisp/src/grammar.rs",
       "crates/sim-codec-lisp/src/implementation/cli.rs",
       "crates/sim-codec-lisp/src/implementation/decode.rs",
       "crates/sim-codec-lisp/src/implementation/encode.rs",
