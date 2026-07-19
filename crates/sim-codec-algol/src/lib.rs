@@ -32,7 +32,10 @@ pub use parse::{
     parse_algol_expr_with_table_and_budget, tokenize_algol_spanned,
     tokenize_algol_spanned_with_budget,
 };
-pub use pratt::{PrattParser, default_pratt_table, supports_pratt};
+pub use pratt::{
+    AlgolTokenSource, PrattCodecParser, PrattParser, PrattTokenSource, SpannedPrattToken,
+    default_pratt_table, supports_pratt,
+};
 pub use runtime::{AlgolCodec, AlgolCodecLib};
 
 #[cfg(test)]

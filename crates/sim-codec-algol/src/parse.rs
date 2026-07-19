@@ -14,11 +14,10 @@ use sim_codec::{DecodeBudget, DecodeLimits};
 use sim_kernel::{Expr, LocatedExpr, PrattTable, Result};
 use sim_shape::{PrattShape, Shape, ShapeExprParser};
 
-pub(crate) use origin::{extend_tree_trivia, tree_origin, with_origin_span};
 pub use state::ParseCx;
 pub use tokenize::{SpannedToken, tokenize_algol_spanned, tokenize_algol_spanned_with_budget};
 
-pub(crate) use rewrite::{raw_number_expr, raw_number_tag};
+pub(crate) use sim_codec_pratt::raw_number_tag;
 
 /// Decodes Algol source into a [`LocatedExpr`], attaching span and trivia
 /// origin so source layout round-trips.

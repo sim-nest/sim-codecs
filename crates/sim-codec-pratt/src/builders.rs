@@ -1,20 +1,17 @@
-//! Node builders for the Pratt parser: construct prefix, infix, and postfix
-//! located expression trees from operators and operands, tracking spans and
-//! trivia and enforcing recursion budget.
-
-use crate::parse::{ParseCx, SpannedToken, extend_tree_trivia, tree_origin};
 use sim_codec::DecodeBudget;
 use sim_kernel::{
-    Error, Expr, LocatedExprTree, PrattOperator, PrattResult, PrattToken as Token, Result, SourceId,
+    CodecId, Error, Expr, LocatedExprTree, PrattOperator, PrattResult, PrattToken as Token, Result,
+    SourceId,
 };
 
-use super::core::PrattParser;
+use crate::parser::{ParseCx, extend_tree_trivia, tree_origin};
+use crate::{PrattCodecParser, PrattTokenSource, SpannedPrattToken};
 
-impl PrattParser {
+impl<S: PrattTokenSource> PrattCodecParser<S> {
     #[allow(clippy::too_many_arguments)]
     pub(super) fn parse_postfix_tree(
         &self,
-        codec: sim_kernel::CodecId,
+        codec: CodecId,
         source_id: &SourceId,
         source: &str,
         left: LocatedExprTree,
@@ -73,7 +70,7 @@ impl PrattParser {
     pub(super) fn parse_call_tree(
         &self,
         cx: &mut ParseCx,
-        codec: sim_kernel::CodecId,
+        codec: CodecId,
         source_id: &SourceId,
         source: &str,
         mut operator: LocatedExprTree,
@@ -84,7 +81,7 @@ impl PrattParser {
         let mut args = Vec::new();
         if matches!(
             cx.peek(),
-            Some(SpannedToken {
+            Some(SpannedPrattToken {
                 token: Token::CloseParen,
                 ..
             })
@@ -92,7 +89,7 @@ impl PrattParser {
             let close = cx.next_required()?;
             let end = close.end;
             let parent_trivia = close.leading_trivia.clone();
-            extend_tree_trivia(&mut operator, close.leading_trivia.clone());
+            extend_tree_trivia(&mut operator, close.leading_trivia);
             let expr = Expr::Call {
                 operator: Box::new(operator.expr.clone()),
                 args: Vec::new(),
@@ -123,13 +120,13 @@ impl PrattParser {
             match delimiter.token {
                 Token::Comma => {
                     if let Some(last) = args.last_mut() {
-                        extend_tree_trivia(last, delimiter.leading_trivia.clone());
+                        extend_tree_trivia(last, delimiter.leading_trivia);
                     }
                     continue;
                 }
                 Token::CloseParen => {
                     if let Some(last) = args.last_mut() {
-                        extend_tree_trivia(last, delimiter.leading_trivia.clone());
+                        extend_tree_trivia(last, delimiter.leading_trivia);
                     }
                     end = delimiter.end;
                     break;
@@ -177,7 +174,7 @@ impl PrattParser {
     #[allow(clippy::too_many_arguments)]
     pub(super) fn build_prefix_tree(
         &self,
-        codec: sim_kernel::CodecId,
+        codec: CodecId,
         source_id: &SourceId,
         source: &str,
         op: PrattOperator,
@@ -236,7 +233,7 @@ impl PrattParser {
     #[allow(clippy::too_many_arguments)]
     pub(super) fn build_infix_tree(
         &self,
-        codec: sim_kernel::CodecId,
+        codec: CodecId,
         source_id: &SourceId,
         source: &str,
         op: PrattOperator,

@@ -1,6 +1,6 @@
 {
   "generator": "xtask crate-catalog v1",
-  "package_count": 17,
+  "package_count": 18,
   "packages": [
     {
       "description": "SIM workspace package for sim codec algol.",
@@ -169,6 +169,19 @@
       "publish": "true",
       "readme": "crates/sim-codec-mcp/README.md",
       "root": "crates/sim-codec-mcp",
+      "target_kinds": [
+        "custom-build",
+        "lib"
+      ]
+    },
+    {
+      "description": "Shared Pratt expression parser substrate for SIM codecs.",
+      "generated_readme": true,
+      "manifest": "crates/sim-codec-pratt/Cargo.toml",
+      "name": "sim-codec-pratt",
+      "publish": "true",
+      "readme": "crates/sim-codec-pratt/README.md",
+      "root": "crates/sim-codec-pratt",
       "target_kinds": [
         "custom-build",
         "lib"

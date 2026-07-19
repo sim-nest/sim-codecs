@@ -1,0 +1,5 @@
+book = "codec/pratt"
+title = "Pratt Codec Substrate"
+summary = "Shared Pratt parsing substrate for codec lexers."
+order = 265
+chapters = ["01-basics"]

@@ -4,6 +4,7 @@ resolver = "3"
 members = [
   "crates/sim-codec",
   "crates/sim-codec-algol",
+  "crates/sim-codec-pratt",
   "crates/sim-codec-binary",
   "crates/sim-codec-binary-base64",
   "crates/sim-codec-bitwise",

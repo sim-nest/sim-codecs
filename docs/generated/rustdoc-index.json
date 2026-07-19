@@ -100,6 +100,13 @@
       "summary": "MCP JSON-RPC envelope codec for SIM."
     },
     {
+      "crate_name": "sim_codec_pratt",
+      "group": "workspace",
+      "manifest": "crates/sim-codec-pratt/Cargo.toml",
+      "package": "sim-codec-pratt",
+      "summary": "Shared Pratt parser substrate for SIM codecs."
+    },
+    {
       "crate_name": "sim_test_support",
       "group": "workspace",
       "manifest": "crates/sim-test-support/Cargo.toml",

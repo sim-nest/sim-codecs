@@ -197,7 +197,7 @@ impl Encoder for AlgolCodec {
     fn encode(&self, cx: &mut WriteCx<'_>, expr: &Expr) -> Result<Output> {
         Ok(Output::Text(encode_algol(
             expr,
-            &self.parser.operators,
+            self.parser.operators(),
             0,
             cx,
         )?))
@@ -208,7 +208,7 @@ impl TreeEncoder for AlgolCodec {
     fn encode_tree(&self, cx: &mut WriteCx<'_>, expr: &LocatedExprTree) -> Result<Output> {
         Ok(Output::Text(encode_algol_tree(
             expr,
-            &self.parser.operators,
+            self.parser.operators(),
             0,
             cx,
         )?))

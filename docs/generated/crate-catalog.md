@@ -19,6 +19,7 @@ Generated from Cargo metadata by `xtask crate-catalog v1`.
 | `sim-codec-json` | `true` | `custom-build, lib` | SIM workspace package for sim codec json. |
 | `sim-codec-lisp` | `true` | `cdylib, custom-build, rlib` | SIM workspace package for sim codec lisp. |
 | `sim-codec-mcp` | `true` | `custom-build, lib` | MCP JSON-RPC envelope codec for SIM. |
+| `sim-codec-pratt` | `true` | `custom-build, lib` | Shared Pratt expression parser substrate for SIM codecs. |
 | `sim-codec` | `true` | `custom-build, lib` | SIM workspace package for sim codec. |
 | `sim-test-support` | `true` | `lib` | Shared test harness for SIM crates. |
 | `sim-wasm-abi` | `true` | `lib` | SIM workspace package for sim wasm abi. |

@@ -5,5 +5,6 @@
 mod parser;
 mod table;
 
-pub use parser::PrattParser;
+pub use parser::{AlgolTokenSource, PrattParser};
+pub use sim_codec_pratt::{PrattCodecParser, PrattTokenSource, SpannedPrattToken};
 pub use table::{default_pratt_table, supports_pratt};

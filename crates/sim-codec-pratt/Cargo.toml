@@ -1,9 +1,9 @@
 [package]
-name = "sim-codec-algol"
-version = "0.1.2"
+name = "sim-codec-pratt"
+version = "0.1.0"
 edition = "2024"
 license = "MPL-2.0"
-description = "SIM workspace package for sim codec algol."
+description = "Shared Pratt expression parser substrate for SIM codecs."
 readme = "README.md"
 publish = true
 repository = "https://github.com/sim-nest/sim-codecs"
@@ -12,13 +12,7 @@ homepage = "https://github.com/sim-nest/sim-codecs"
 [dependencies]
 sim-cookbook = { version = "0.1.0" }
 sim-codec = { version = "0.1.0", path = "../sim-codec" }
-sim-codec-pratt = { version = "0.1.0", path = "../sim-codec-pratt" }
-sim-codec-lisp = { version = "0.1.0", path = "../sim-codec-lisp" }
 sim-kernel = { version = "0.1.0" }
-sim-shape = { version = "0.1.0" }
-
-[dev-dependencies]
-sim-test-support = { version = "0.1.0", path = "../sim-test-support" }
 
 [build-dependencies]
 sim-cookbook = { version = "0.1.0" }

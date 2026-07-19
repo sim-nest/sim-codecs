@@ -89,6 +89,11 @@
     {
       "features": [],
       "group": "workspace",
+      "package": "sim-codec-pratt"
+    },
+    {
+      "features": [],
+      "group": "workspace",
       "package": "sim-test-support"
     },
     {

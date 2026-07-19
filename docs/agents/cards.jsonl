@@ -76,6 +76,8 @@
 {"kind":"recipe","path":"crates/sim-codec-mcp/recipes/01-basics/envelope-descriptor/recipe.toml"}
 {"kind":"recipe","path":"crates/sim-codec-mcp/recipes/01-basics/envelope-descriptor/setup.json"}
 {"kind":"recipe","path":"crates/sim-codec-mcp/recipes/book.toml"}
+{"kind":"recipe","path":"crates/sim-codec-pratt/recipes/01-basics/chapter.toml"}
+{"kind":"recipe","path":"crates/sim-codec-pratt/recipes/book.toml"}
 {"kind":"recipe","path":"crates/sim-codec/recipes/01-basics/chapter.toml"}
 {"kind":"recipe","path":"crates/sim-codec/recipes/01-basics/positions-and-limits/purpose.md"}
 {"kind":"recipe","path":"crates/sim-codec/recipes/01-basics/positions-and-limits/recipe.toml"}
