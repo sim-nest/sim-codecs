@@ -1,17 +1,17 @@
 # sim-codec-lua
 
-In one line: It gives SIM a bounded reader foundation for Lua-flavored expressions.
+In one line: It gives SIM a bounded Lua chunk reader and writer that keeps source tied to the shared expression graph.
 
 ## What it gives you
 
-This crate recognizes Lua expression text, preserves the spelling of numbers and strings, and groups operators with Lua precedence. It covers the expression shapes builders naturally try first: arithmetic, logical operators, concatenation, table literals, field access, method calls, long strings, comments, and hexadecimal numeric spelling.
+This crate recognizes Lua chunks, preserves the spelling of source-level values, and groups operators with Lua precedence. It covers the statement shapes builders expect in real scripts: local attributes, assignment, conditionals, loops, function declarations, returns, labels, and gotos, while keeping comments and source spans available to located and tree lanes.
 
 ## Why you will be glad
 
-- Lua source can enter SIM through a parser built for resource limits from the start.
-- Operator grouping follows the Lua reference order instead of borrowing another surface.
-- Tables, calls, and comments stay visible to codec and language layers.
+- Lua source can enter SIM through a parser built around resource limits.
+- Operators, tables, calls, and blocks arrive as plain expression forms that other runtime layers can inspect.
+- Located and tree lanes keep source identity available for diagnostics and faithful replay.
 
 ## Where it fits
 
-This is a codec-family crate below the Lua language surface. It sits next to the shared Pratt parser and the core codec traits, producing Lua expression trees that chunk decoding and runtime lowering consume.
+This is a codec-family crate below the Lua language surface. It sits next to the shared Pratt parser and the core codec traits, producing `lua/*` expression forms that the Lua runtime layer can lower and execute.

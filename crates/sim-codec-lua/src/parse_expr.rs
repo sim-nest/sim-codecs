@@ -6,6 +6,7 @@ use sim_kernel::{
 use crate::LUA_CODEC_ID;
 use crate::ast::{LuaBinOp, LuaExpr, LuaField, LuaUnOp};
 use crate::lex::{LuaToken, LuaTokenKind, tokenize_lua_with_budget};
+use crate::parse_block::parse_lua_function_body_from_parser;
 use crate::pratt::{lua_pratt_parser, lua_pratt_table};
 
 /// Parses one Lua expression under default decode limits.
@@ -54,7 +55,7 @@ pub fn parse_lua_expr_tree_with_budget(
     )
 }
 
-struct LuaExprParser {
+pub(crate) struct LuaExprParser {
     codec: CodecId,
     tokens: Vec<LuaToken>,
     index: usize,
@@ -62,7 +63,7 @@ struct LuaExprParser {
 }
 
 impl LuaExprParser {
-    fn new(codec: CodecId, tokens: Vec<LuaToken>) -> Self {
+    pub(crate) fn new(codec: CodecId, tokens: Vec<LuaToken>) -> Self {
         Self {
             codec,
             tokens,
@@ -71,7 +72,15 @@ impl LuaExprParser {
         }
     }
 
-    fn parse_expr_bp(
+    pub(crate) fn parse_expr(
+        &mut self,
+        budget: &mut DecodeBudget,
+        depth: usize,
+    ) -> Result<LuaExpr> {
+        self.parse_expr_bp(0, budget, depth)
+    }
+
+    pub(crate) fn parse_expr_bp(
         &mut self,
         min_bp: u16,
         budget: &mut DecodeBudget,
@@ -156,6 +165,8 @@ impl LuaExprParser {
                 "nil" => LuaExpr::Nil,
                 "true" => LuaExpr::True,
                 "false" => LuaExpr::False,
+                "function" => parse_lua_function_body_from_parser(self, budget, depth + 1)
+                    .map(LuaExpr::Function)?,
                 _ => LuaExpr::Name(Symbol::new(text)),
             }),
             LuaTokenKind::Number(raw) => Ok(LuaExpr::Number(raw)),
@@ -271,7 +282,7 @@ impl LuaExprParser {
         .then(|| name.clone())
     }
 
-    fn expect_identifier(&mut self, label: &str) -> Result<String> {
+    pub(crate) fn expect_identifier(&mut self, label: &str) -> Result<String> {
         let token = self.advance_required()?;
         match token.kind {
             LuaTokenKind::Identifier(name) => Ok(name),
@@ -279,21 +290,21 @@ impl LuaExprParser {
         }
     }
 
-    fn expect_end(&self) -> Result<()> {
+    pub(crate) fn expect_end(&self) -> Result<()> {
         if let Some(token) = self.peek() {
             return Err(Error::Eval(format!("trailing lua token {:?}", token.kind)));
         }
         Ok(())
     }
 
-    fn expect_kind(&mut self, expected: &LuaTokenKind, label: &str) -> Result<()> {
+    pub(crate) fn expect_kind(&mut self, expected: &LuaTokenKind, label: &str) -> Result<()> {
         if self.consume_kind(expected) {
             return Ok(());
         }
         Err(Error::Eval(format!("expected {label}")))
     }
 
-    fn consume_kind(&mut self, expected: &LuaTokenKind) -> bool {
+    pub(crate) fn consume_kind(&mut self, expected: &LuaTokenKind) -> bool {
         if self.peek().is_some_and(|token| token.kind == *expected) {
             self.index += 1;
             return true;
@@ -301,18 +312,70 @@ impl LuaExprParser {
         false
     }
 
-    fn advance_required(&mut self) -> Result<LuaToken> {
+    pub(crate) fn consume_keyword(&mut self, expected: &str) -> bool {
+        if self.peek_keyword(expected) {
+            self.index += 1;
+            return true;
+        }
+        false
+    }
+
+    pub(crate) fn expect_keyword(&mut self, expected: &str) -> Result<()> {
+        if self.consume_keyword(expected) {
+            return Ok(());
+        }
+        Err(Error::Eval(format!("expected lua keyword {expected}")))
+    }
+
+    pub(crate) fn peek_keyword(&self, expected: &str) -> bool {
+        matches!(
+            self.peek().map(|token| &token.kind),
+            Some(LuaTokenKind::Identifier(text)) if text == expected
+        )
+    }
+
+    pub(crate) fn at_keyword(&self, keywords: &[&str]) -> bool {
+        keywords.iter().any(|keyword| self.peek_keyword(keyword))
+    }
+
+    pub(crate) fn consume_operator(&mut self, expected: &str) -> bool {
+        if matches!(
+            self.peek().map(|token| &token.kind),
+            Some(LuaTokenKind::Operator(text)) if text == expected
+        ) {
+            self.index += 1;
+            return true;
+        }
+        false
+    }
+
+    pub(crate) fn expect_operator(&mut self, expected: &str) -> Result<()> {
+        if self.consume_operator(expected) {
+            return Ok(());
+        }
+        Err(Error::Eval(format!("expected lua operator {expected}")))
+    }
+
+    pub(crate) fn is_empty(&self) -> bool {
+        self.index >= self.tokens.len()
+    }
+
+    pub(crate) fn codec(&self) -> CodecId {
+        self.codec
+    }
+
+    pub(crate) fn advance_required(&mut self) -> Result<LuaToken> {
         self.advance()
             .ok_or_else(|| Error::Eval("unexpected end of lua input".to_owned()))
     }
 
-    fn advance(&mut self) -> Option<LuaToken> {
+    pub(crate) fn advance(&mut self) -> Option<LuaToken> {
         let token = self.tokens.get(self.index).cloned()?;
         self.index += 1;
         Some(token)
     }
 
-    fn peek(&self) -> Option<&LuaToken> {
+    pub(crate) fn peek(&self) -> Option<&LuaToken> {
         self.tokens.get(self.index)
     }
 }

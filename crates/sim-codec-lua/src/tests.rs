@@ -1,9 +1,12 @@
-use sim_codec::{DecodeBudget, DecodeLimits};
-use sim_kernel::{CodecId, Error, Expr, Symbol};
+use sim_codec::{
+    DecodeBudget, DecodeLimits, Input, decode_located_with_codec, decode_tree_with_codec,
+    decode_with_codec, encode_tree_with_codec, encode_with_codec,
+};
+use sim_kernel::{CodecId, EncodeOptions, Error, Expr, ReadPolicy, SourceId, Symbol};
 
 use crate::{
-    LuaBinOp, LuaExpr, LuaField, LuaTokenKind, LuaUnOp, parse_lua_expr, parse_lua_expr_tree,
-    parse_lua_expr_with_budget, tokenize_lua,
+    LuaBinOp, LuaExpr, LuaField, LuaLocalAttr, LuaStmt, LuaTokenKind, LuaUnOp, parse_lua_chunk,
+    parse_lua_expr, parse_lua_expr_tree, parse_lua_expr_with_budget, tokenize_lua,
 };
 
 #[test]
@@ -169,4 +172,173 @@ fn decode_budget_limits_tokens() {
     });
     let err = parse_lua_expr_with_budget(CodecId(7), "1 + 2 * 3", &mut budget).unwrap_err();
     assert!(matches!(err, Error::CodecError { message, .. } if message.contains("tokens")));
+}
+
+#[test]
+fn parses_chunk_statement_forms() {
+    let chunk = parse_lua_chunk(
+        r#"
+local x <const>, y <close> = 1, 2
+a, b = b, a
+while x < 10 do x = x + 1 end
+repeat x = x - 1 until x == 0
+for i = 1, 3, 1 do break end
+for k, v in pairs(t) do goto done end
+function t.a:b(x) return x end
+do ::done:: end
+"#,
+    )
+    .unwrap();
+
+    assert_eq!(chunk.statements.len(), 8);
+    let LuaStmt::Local { bindings, .. } = &chunk.statements[0] else {
+        panic!("expected local");
+    };
+    assert_eq!(bindings[0].attr, Some(LuaLocalAttr::Const));
+    assert_eq!(bindings[1].attr, Some(LuaLocalAttr::Close));
+    assert!(matches!(chunk.statements[1], LuaStmt::Assign { .. }));
+    assert!(matches!(chunk.statements[2], LuaStmt::While { .. }));
+    assert!(matches!(chunk.statements[3], LuaStmt::Repeat { .. }));
+    assert!(matches!(chunk.statements[4], LuaStmt::NumericFor { .. }));
+    assert!(matches!(chunk.statements[5], LuaStmt::GenericFor { .. }));
+    assert!(matches!(chunk.statements[6], LuaStmt::Function { .. }));
+    assert!(matches!(chunk.statements[7], LuaStmt::Do(_)));
+}
+
+#[test]
+fn factorial_chunk_lowers_to_documented_heads() {
+    let expr = crate::lower_lua_chunk(&parse_lua_chunk(FACTORIAL).unwrap());
+
+    assert_eq!(lua_head(&expr), Some("chunk"));
+    assert!(contains_lua_head(&expr, "local-function"));
+    assert!(contains_lua_head(&expr, "if"));
+    assert!(contains_lua_head(&expr, "eq"));
+    assert!(contains_lua_head(&expr, "mul"));
+    assert!(contains_lua_head(&expr, "sub"));
+    assert!(contains_lua_head(&expr, "call"));
+    assert!(contains_lua_head(&expr, "return"));
+}
+
+#[test]
+fn lua_codec_decodes_encodes_and_preserves_tree_source() {
+    let mut cx = lua_cx();
+    let symbol = Symbol::qualified("codec", "lua");
+
+    let expr = decode_with_codec(
+        &mut cx,
+        &symbol,
+        Input::Text(FACTORIAL.to_owned()),
+        ReadPolicy::default(),
+    )
+    .unwrap();
+    let encoded = encode_with_codec(&mut cx, &symbol, &expr, EncodeOptions::default())
+        .unwrap()
+        .into_text()
+        .unwrap();
+    let reparsed = decode_with_codec(
+        &mut cx,
+        &symbol,
+        Input::Text(encoded),
+        ReadPolicy::default(),
+    )
+    .unwrap();
+    assert!(reparsed.canonical_eq(&expr));
+
+    let located = decode_located_with_codec(
+        &mut cx,
+        &symbol,
+        Input::Text(FACTORIAL.to_owned()),
+        ReadPolicy::default(),
+        "fact.lua",
+    )
+    .unwrap();
+    let origin = located.origin.unwrap();
+    assert_eq!(origin.source, SourceId("fact.lua".to_owned()));
+    assert_eq!(origin.span.start, 0);
+    assert_eq!(origin.span.end, FACTORIAL.len());
+
+    let tree = decode_tree_with_codec(
+        &mut cx,
+        &symbol,
+        Input::Text(FACTORIAL.to_owned()),
+        ReadPolicy::default(),
+        "fact-tree.lua",
+    )
+    .unwrap();
+    let replayed = encode_tree_with_codec(
+        &mut cx,
+        &symbol,
+        &tree,
+        EncodeOptions {
+            lossless_origin: true,
+            ..EncodeOptions::default()
+        },
+    )
+    .unwrap()
+    .into_text()
+    .unwrap();
+    assert_eq!(replayed, FACTORIAL);
+}
+
+const FACTORIAL: &str = r#"local function fact(n)
+  if n == 0 then return 1 end
+  return n * fact(n - 1)
+end
+return fact(5)"#;
+
+fn lua_cx() -> sim_kernel::Cx {
+    let mut cx = sim_test_support::core_cx();
+    let lib = crate::LuaCodecLib::new(cx.registry_mut().fresh_codec_id());
+    cx.load_lib(&lib).unwrap();
+    cx
+}
+
+fn lua_head(expr: &Expr) -> Option<&str> {
+    let Expr::Call { operator, .. } = expr else {
+        return None;
+    };
+    let Expr::Symbol(symbol) = operator.as_ref() else {
+        return None;
+    };
+    (symbol
+        .namespace
+        .as_ref()
+        .map(|namespace| namespace.as_ref())
+        == Some("lua"))
+    .then_some(symbol.name.as_ref())
+}
+
+fn contains_lua_head(expr: &Expr, head: &str) -> bool {
+    lua_head(expr) == Some(head)
+        || match expr {
+            Expr::List(items) | Expr::Vector(items) | Expr::Set(items) | Expr::Block(items) => {
+                items.iter().any(|item| contains_lua_head(item, head))
+            }
+            Expr::Map(entries) => entries
+                .iter()
+                .any(|(key, value)| contains_lua_head(key, head) || contains_lua_head(value, head)),
+            Expr::Call { operator, args } => {
+                contains_lua_head(operator, head)
+                    || args.iter().any(|arg| contains_lua_head(arg, head))
+            }
+            Expr::Infix { left, right, .. } => {
+                contains_lua_head(left, head) || contains_lua_head(right, head)
+            }
+            Expr::Prefix { arg, .. } | Expr::Postfix { arg, .. } => contains_lua_head(arg, head),
+            Expr::Quote { expr, .. } => contains_lua_head(expr, head),
+            Expr::Annotated { expr, annotations } => {
+                contains_lua_head(expr, head)
+                    || annotations
+                        .iter()
+                        .any(|(_, value)| contains_lua_head(value, head))
+            }
+            Expr::Extension { payload, .. } => contains_lua_head(payload, head),
+            Expr::Nil
+            | Expr::Bool(_)
+            | Expr::Number(_)
+            | Expr::Symbol(_)
+            | Expr::Local(_)
+            | Expr::String(_)
+            | Expr::Bytes(_) => false,
+        }
 }

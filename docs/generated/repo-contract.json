@@ -977,6 +977,13 @@
       "crate_name": "sim_codec_lua",
       "dependencies": [
         {
+          "kind": "dev",
+          "optional": false,
+          "package": "sim-test-support",
+          "rename": null,
+          "target": null
+        },
+        {
           "kind": "normal",
           "optional": false,
           "package": "sim-codec",
@@ -991,14 +998,14 @@
           "target": null
         }
       ],
-      "description": "Lua expression lexer and parser for SIM codec surfaces.",
+      "description": "Lua chunk codec with expression, located, and tree round-trip lanes.",
       "features": [],
       "group": "workspace",
       "manifest": "crates/sim-codec-lua/Cargo.toml",
       "name": "sim-codec-lua",
       "publish": "true",
       "root": "crates/sim-codec-lua",
-      "rustdoc_summary": "Lua expression lexer and parser for SIM codec surfaces.",
+      "rustdoc_summary": "Lua chunk codec for SIM codec surfaces.",
       "target_kinds": [
         "custom-build",
         "lib"
@@ -1251,10 +1258,10 @@
     "generated_by": "cargo run -p xtask -- simdoc",
     "generation_timestamp": "2026-07-16T02:55:26+02:00",
     "generator": "xtask repo-contract v1",
-    "git_commit": "5f887413676026a4525fe7e0f3136de8b22efe69",
+    "git_commit": "565562c46b8a52ba6493070f3f518f11413f4ac9",
     "repo": "sim-codecs",
     "schema": "sim.provenance.v1",
-    "source_commit": "5f887413676026a4525fe7e0f3136de8b22efe69",
+    "source_commit": "565562c46b8a52ba6493070f3f518f11413f4ac9",
     "source_remote": "https://github.com/sim-nest/sim-codecs",
     "validation_commands": [
       "cargo fmt --all --check",
@@ -1267,9 +1274,9 @@
       "cargo run -p xtask -- validation-matrix --check --repo .",
       "cargo run -p xtask -- crate-catalog --check --repo ."
     ],
-    "workspace_hash": "86cce390be460054",
+    "workspace_hash": "62b6bc05569935c2",
     "workspace_hash_algorithm": "fnv1a64",
-    "workspace_hash_input_count": 286,
+    "workspace_hash_input_count": 290,
     "workspace_hash_inputs": [
       "Cargo.toml",
       "crates/sim-codec/Cargo.toml",
@@ -1517,10 +1524,14 @@
       "crates/sim-codec-lua/build.rs",
       "crates/sim-codec-lua/recipes/book.toml",
       "crates/sim-codec-lua/src/ast.rs",
+      "crates/sim-codec-lua/src/encode.rs",
       "crates/sim-codec-lua/src/lex.rs",
       "crates/sim-codec-lua/src/lib.rs",
+      "crates/sim-codec-lua/src/lower.rs",
+      "crates/sim-codec-lua/src/parse_block.rs",
       "crates/sim-codec-lua/src/parse_expr.rs",
       "crates/sim-codec-lua/src/pratt.rs",
+      "crates/sim-codec-lua/src/runtime.rs",
       "crates/sim-codec-lua/src/tests.rs",
       "crates/sim-codec-mcp/Cargo.toml",
       "crates/sim-codec-mcp/build.rs",

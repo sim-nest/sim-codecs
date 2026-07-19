@@ -97,7 +97,7 @@
       "group": "workspace",
       "manifest": "crates/sim-codec-lua/Cargo.toml",
       "package": "sim-codec-lua",
-      "summary": "Lua expression lexer and parser for SIM codec surfaces."
+      "summary": "Lua chunk codec for SIM codec surfaces."
     },
     {
       "crate_name": "sim_codec_mcp",

@@ -86,6 +86,7 @@ self-contained, but those protocol types are the kernel's, not this repo's.
 | `sim-codec-bitwise-base64` | `codec:bitwise-base64`, a general-purpose expression codec that wraps the bitwise frame in ASCII Base64 text -- the text-transport analog of `codec:bitwise`, sharing one base64 implementation with `sim-codec-binary-base64`. |
 | `sim-codec-algol` | `codec:algol`, a general-purpose expression codec over an Algol-style infix surface with registered Pratt operators. |
 | `sim-codec-pratt` | Shared Pratt parser substrate for codec lexers: a token-source driven precedence parser that builds located `Expr` trees while preserving spans, trivia, calls, and prefix, infix, and postfix operators. |
+| `sim-codec-lua` | `codec:lua`, a Lua chunk codec that reads statements and expressions into `lua/*` forms, preserves source origins through located/tree lanes, and renders chunks back to Lua text. |
 | `sim-codec-chat` | `codec:chat`, a domain codec for provider-neutral model transcripts, with native OpenAI, Anthropic, Ollama, LM Studio, and Lemonade projection helpers. |
 | `sim-codec-config` | `codec:config`, a config codec that decodes per-library settings as one table map and shared launcher files as a directory of library id to table map. |
 | `sim-codec-doc` | `codec:doc`, a document codec that reads and writes Markdown, Typst, AsciiDoc, and LaTeX through one semantic markup value, catalogs tracked formats that fail closed until implemented, and provides fixed, recursive, and heading-aware chunk operations. |

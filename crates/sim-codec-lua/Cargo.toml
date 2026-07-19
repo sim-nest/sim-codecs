@@ -3,7 +3,7 @@ name = "sim-codec-lua"
 version = "0.1.0"
 edition = "2024"
 license = "MPL-2.0"
-description = "Lua expression lexer and parser for SIM codec surfaces."
+description = "Lua chunk codec with expression, located, and tree round-trip lanes."
 readme = "README.md"
 publish = true
 repository = "https://github.com/sim-nest/sim-codecs"
@@ -17,3 +17,6 @@ sim-kernel = { version = "0.1.0" }
 
 [build-dependencies]
 sim-cookbook = { version = "0.1.0" }
+
+[dev-dependencies]
+sim-test-support = { version = "0.1.0", path = "../sim-test-support" }

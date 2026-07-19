@@ -1,5 +1,138 @@
 use sim_kernel::Symbol;
 
+/// A parsed Lua chunk or nested statement block.
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub struct LuaBlock {
+    /// Statements in source order.
+    pub statements: Vec<LuaStmt>,
+}
+
+/// Lua statement node used by chunk decoding.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum LuaStmt {
+    /// A `local` declaration, including Lua 5.4 local attributes.
+    Local {
+        /// Declared names and optional attributes.
+        bindings: Vec<LuaBinding>,
+        /// Optional initializer expressions.
+        values: Vec<LuaExpr>,
+    },
+    /// Assignment to one or more targets.
+    Assign {
+        /// Assignment targets.
+        targets: Vec<LuaExpr>,
+        /// Assigned values.
+        values: Vec<LuaExpr>,
+    },
+    /// An `if` statement with zero or more `elseif` arms and an optional else.
+    If {
+        /// The `if` arm followed by any `elseif` arms.
+        arms: Vec<LuaIfArm>,
+        /// Optional `else` block.
+        else_block: Option<LuaBlock>,
+    },
+    /// A `while` loop.
+    While {
+        /// Loop condition.
+        condition: LuaExpr,
+        /// Loop body.
+        block: LuaBlock,
+    },
+    /// A `repeat ... until` loop.
+    Repeat {
+        /// Loop body.
+        block: LuaBlock,
+        /// Exit condition.
+        condition: LuaExpr,
+    },
+    /// A numeric `for` loop.
+    NumericFor {
+        /// Loop variable name.
+        name: Symbol,
+        /// Initial expression.
+        start: LuaExpr,
+        /// Limit expression.
+        limit: LuaExpr,
+        /// Optional step expression.
+        step: Option<LuaExpr>,
+        /// Loop body.
+        block: LuaBlock,
+    },
+    /// A generic `for ... in` loop.
+    GenericFor {
+        /// Loop variable names.
+        names: Vec<Symbol>,
+        /// Iterator expressions.
+        iter: Vec<LuaExpr>,
+        /// Loop body.
+        block: LuaBlock,
+    },
+    /// A global or table-qualified function declaration.
+    Function {
+        /// Function name.
+        name: LuaFunctionName,
+        /// Function body.
+        body: LuaFuncBody,
+    },
+    /// A `local function` declaration.
+    LocalFunction {
+        /// Function name.
+        name: Symbol,
+        /// Function body.
+        body: LuaFuncBody,
+    },
+    /// A `return` statement.
+    Return(Vec<LuaExpr>),
+    /// A `break` statement.
+    Break,
+    /// A `::label::` declaration.
+    Label(Symbol),
+    /// A `goto` statement.
+    Goto(Symbol),
+    /// A `do ... end` block.
+    Do(LuaBlock),
+    /// A call or other expression statement.
+    Expr(LuaExpr),
+}
+
+/// A local binding name and optional Lua 5.4 attribute.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct LuaBinding {
+    /// Binding name.
+    pub name: Symbol,
+    /// Optional `<const>` or `<close>` attribute.
+    pub attr: Option<LuaLocalAttr>,
+}
+
+/// Lua 5.4 local variable attributes.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum LuaLocalAttr {
+    /// The `<const>` local attribute.
+    Const,
+    /// The `<close>` local attribute.
+    Close,
+}
+
+/// One `if` or `elseif` arm.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct LuaIfArm {
+    /// Arm condition.
+    pub condition: LuaExpr,
+    /// Arm body.
+    pub block: LuaBlock,
+}
+
+/// A function declaration name.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct LuaFunctionName {
+    /// Base name.
+    pub base: Symbol,
+    /// Dot-qualified field path.
+    pub fields: Vec<Symbol>,
+    /// Optional method suffix from `:name`.
+    pub method: Option<Symbol>,
+}
+
 /// Lua expression node used by the codec lexer/parser stage.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum LuaExpr {
@@ -90,6 +223,8 @@ pub struct LuaFuncBody {
     pub params: Vec<Symbol>,
     /// Whether the body accepts `...`.
     pub vararg: bool,
+    /// Parsed function body block.
+    pub block: LuaBlock,
 }
 
 /// Lua unary operators.
