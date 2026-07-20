@@ -1,6 +1,7 @@
 use serde_json::{Value, json};
 use sim_kernel::{CodecId, Error, Expr, Result};
 
+use crate::output_grammar::{OutputGrammarDialect, output_grammar_required, output_grammar_text};
 use crate::{is_model_request_expr, validate_chat_transcript};
 
 use super::OpenAiRequestOptions;
@@ -17,12 +18,14 @@ pub fn encode_openai_request(expr: &Expr, options: &OpenAiRequestOptions) -> Res
         ));
     }
     validate_chat_transcript(expr)?;
+    let entries = request_entries(expr)?;
     let mut payload = json!({
         "model": options.model,
         "stream": options.stream,
         "messages": transcript_messages(expr)?,
         "tools": if options.tools { Value::Array(Vec::new()) } else { Value::Null },
     });
+    attach_output_grammar(entries, &mut payload)?;
     if options.stream
         && let Some(object) = payload.as_object_mut()
     {
@@ -30,6 +33,40 @@ pub fn encode_openai_request(expr: &Expr, options: &OpenAiRequestOptions) -> Res
     }
     serde_json::to_vec(&payload)
         .map_err(|err| Error::Eval(format!("openai codec failed to encode request: {err}")))
+}
+
+fn attach_output_grammar(entries: &[(Expr, Expr)], payload: &mut Value) -> Result<()> {
+    let Some(grammar) = output_grammar_text(entries, OutputGrammarDialect::JsonSchema)? else {
+        return Ok(());
+    };
+    let schema = serde_json::from_str::<Value>(&grammar)
+        .map_err(|err| Error::Eval(format!("openai output grammar is not json schema: {err}")))?;
+    let Some(object) = payload.as_object_mut() else {
+        return Err(Error::Eval(
+            "openai request payload must be a json object".to_owned(),
+        ));
+    };
+    object.insert(
+        "response_format".to_owned(),
+        json!({
+            "type": "json_schema",
+            "json_schema": {
+                "name": "sim_output",
+                "strict": output_grammar_required(entries)?,
+                "schema": schema,
+            }
+        }),
+    );
+    Ok(())
+}
+
+fn request_entries(expr: &Expr) -> Result<&[(Expr, Expr)]> {
+    let Expr::Map(entries) = expr else {
+        return Err(Error::Eval(
+            "openai codec expects request transcript as a map".to_owned(),
+        ));
+    };
+    Ok(entries)
 }
 
 /// Encodes a model-response transcript into OpenAI chat-completion JSON.

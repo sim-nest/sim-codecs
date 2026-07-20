@@ -6,7 +6,7 @@ use crate::{
     decode_ollama_stream, decode_ollama_stream_with_limits, encode_ollama_request,
 };
 
-use super::request_expr;
+use super::{request_expr, request_expr_with_extra};
 
 #[test]
 fn ollama_request_encoder_matches_fixture_shape() {
@@ -20,6 +20,76 @@ fn ollama_request_encoder_matches_fixture_shape() {
     assert!(text.contains("\"stream\":true"));
     assert!(text.contains("\"role\":\"system\""));
     assert!(text.contains("\"Summarize src/lib.rs\""));
+}
+
+#[test]
+fn ollama_request_encoder_attaches_gbnf_output_grammar() {
+    let body = encode_ollama_request(
+        &request_expr_with_extra(vec![
+            (
+                Expr::Symbol(Symbol::new("output-grammar")),
+                Expr::String("root ::= string".to_owned()),
+            ),
+            (
+                Expr::Symbol(Symbol::new("output-grammar-dialect")),
+                Expr::Symbol(Symbol::new("gbnf")),
+            ),
+        ]),
+        &OllamaRequestOptions::new("qwen3.5:4b", false, false),
+    )
+    .unwrap();
+    let json: serde_json::Value = serde_json::from_slice(&body).unwrap();
+
+    assert_eq!(json["grammar"], "root ::= string");
+}
+
+#[test]
+fn ollama_request_encoder_renders_gbnf_return_shape() {
+    let body = encode_ollama_request(
+        &request_expr_with_extra(vec![
+            (
+                Expr::Symbol(Symbol::new("return-codec")),
+                Expr::Symbol(Symbol::qualified("codec", "json")),
+            ),
+            (
+                Expr::Symbol(Symbol::new("return-shape")),
+                Expr::Symbol(Symbol::new("String")),
+            ),
+            (
+                Expr::Symbol(Symbol::new("output-grammar-dialect")),
+                Expr::Symbol(Symbol::new("gbnf")),
+            ),
+        ]),
+        &OllamaRequestOptions::new("qwen3.5:4b", false, false),
+    )
+    .unwrap();
+    let json: serde_json::Value = serde_json::from_slice(&body).unwrap();
+
+    assert!(
+        json["grammar"]
+            .as_str()
+            .is_some_and(|grammar| grammar.contains("root"))
+    );
+}
+
+#[test]
+fn ollama_request_encoder_rejects_unsupported_output_grammar() {
+    let err = encode_ollama_request(
+        &request_expr_with_extra(vec![
+            (
+                Expr::Symbol(Symbol::new("output-grammar")),
+                Expr::String(r#"{"type":"string"}"#.to_owned()),
+            ),
+            (
+                Expr::Symbol(Symbol::new("output-grammar-dialect")),
+                Expr::Symbol(Symbol::new("json-schema")),
+            ),
+        ]),
+        &OllamaRequestOptions::new("qwen3.5:4b", false, false),
+    )
+    .unwrap_err();
+
+    assert!(format!("{err:?}").contains("JsonSchema"));
 }
 
 #[test]

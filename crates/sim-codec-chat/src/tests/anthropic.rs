@@ -7,7 +7,7 @@ use crate::{
     encode_anthropic_request,
 };
 
-use super::{cx, message_expr};
+use super::{cx, message_expr, request_expr_with_extra};
 
 #[test]
 fn anthropic_runtime_codec_decodes_messages_request() {
@@ -121,6 +121,20 @@ fn anthropic_request_encoder_splits_system_and_tool_schema() {
         json["tools"][0]["input_schema"]["properties"]["location"]["type"],
         "string"
     );
+}
+
+#[test]
+fn anthropic_request_encoder_rejects_output_grammar() {
+    let err = encode_anthropic_request(
+        &request_expr_with_extra(vec![(
+            Expr::Symbol(Symbol::new("output-grammar")),
+            Expr::String(r#"{"type":"string"}"#.to_owned()),
+        )]),
+        &AnthropicRequestOptions::new("claude-sonnet-4-20250514", 256, false, false),
+    )
+    .unwrap_err();
+
+    assert!(format!("{err:?}").contains("does not support output grammar"));
 }
 
 #[test]

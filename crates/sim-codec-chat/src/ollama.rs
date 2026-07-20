@@ -13,6 +13,7 @@ use sim_codec_json::{JsonProjectionMode, json_number_to_u64, project_json_to_exp
 use sim_kernel::{CodecId, Error, Expr, Lib, LibManifest, Linker, LoadCx, Result, Symbol, WriteCx};
 use sim_value::access;
 
+use crate::output_grammar::{OutputGrammarDialect, output_grammar_text};
 use crate::{
     is_model_request_expr, model_response_expr, text_part, usage_record, validate_chat_transcript,
 };
@@ -157,6 +158,7 @@ pub fn encode_ollama_request(expr: &Expr, options: &OllamaRequestOptions) -> Res
         ));
     }
     validate_chat_transcript(expr)?;
+    let entries = request_entries(expr)?;
     let mut payload = Map::new();
     payload.insert("model".to_owned(), Value::String(options.model.clone()));
     payload.insert("stream".to_owned(), Value::Bool(options.stream));
@@ -167,8 +169,26 @@ pub fn encode_ollama_request(expr: &Expr, options: &OllamaRequestOptions) -> Res
     if options.tools {
         payload.insert("tools".to_owned(), Value::Array(Vec::new()));
     }
+    attach_output_grammar(entries, &mut payload)?;
     serde_json::to_vec(&Value::Object(payload))
         .map_err(|err| Error::Eval(format!("ollama codec failed to encode request: {err}")))
+}
+
+fn attach_output_grammar(entries: &[(Expr, Expr)], payload: &mut Map<String, Value>) -> Result<()> {
+    let Some(grammar) = output_grammar_text(entries, OutputGrammarDialect::Gbnf)? else {
+        return Ok(());
+    };
+    payload.insert("grammar".to_owned(), Value::String(grammar));
+    Ok(())
+}
+
+fn request_entries(expr: &Expr) -> Result<&[(Expr, Expr)]> {
+    let Expr::Map(entries) = expr else {
+        return Err(Error::Eval(
+            "ollama codec expects request transcript as a map".to_owned(),
+        ));
+    };
+    Ok(entries)
 }
 
 /// Decodes a non-streamed Ollama JSON response `body` into a canonical

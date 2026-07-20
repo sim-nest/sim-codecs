@@ -18,6 +18,7 @@ use crate::{
 mod anthropic;
 mod ollama;
 mod openai_compat;
+mod output_grammar;
 mod strict;
 
 fn cx() -> sim_kernel::Cx {
@@ -57,6 +58,14 @@ fn request_expr() -> Expr {
             ]),
         ),
     ])
+}
+
+fn request_expr_with_extra(extra: Vec<(Expr, Expr)>) -> Expr {
+    let Expr::Map(mut entries) = request_expr() else {
+        unreachable!("request_expr returns a map")
+    };
+    entries.extend(extra);
+    Expr::Map(entries)
 }
 
 fn response_expr() -> Expr {

@@ -1,6 +1,7 @@
 use serde_json::{Map, Value, json};
 use sim_kernel::{CodecId, Error, Expr, Result};
 
+use crate::output_grammar::reject_output_grammar;
 use crate::{is_model_request_expr, validate_chat_transcript};
 
 use super::AnthropicRequestOptions;
@@ -18,6 +19,7 @@ pub fn encode_anthropic_request(expr: &Expr, options: &AnthropicRequestOptions) 
     }
     validate_chat_transcript(expr)?;
     let entries = expr_entries(expr, "anthropic request transcript")?;
+    reject_output_grammar(entries, "anthropic")?;
     let (messages, system) = transcript_messages(entries)?;
     let mut payload = Map::new();
     payload.insert("model".to_owned(), Value::String(options.model.clone()));

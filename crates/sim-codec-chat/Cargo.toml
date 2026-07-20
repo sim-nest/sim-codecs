@@ -17,8 +17,9 @@ sim-cookbook = { version = "0.1.0" }
 serde_json = "1"
 sim-codec = { version = "0.1.0", path = "../sim-codec" }
 sim-codec-binary-base64 = { version = "0.1.0", path = "../sim-codec-binary-base64" }
-sim-codec-json = { version = "0.1.0", path = "../sim-codec-json" }
+sim-codec-json = { version = "0.1.2", path = "../sim-codec-json" }
 sim-kernel = { version = "0.1.0" }
+sim-shape = { version = "0.1.2" }
 sim-value = { version = "0.1.0" }
 
 [dev-dependencies]

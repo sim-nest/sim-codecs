@@ -13,6 +13,7 @@ mod cookbook;
 mod expr;
 mod helpers;
 mod ollama;
+mod output_grammar;
 mod parts;
 pub mod providers;
 
