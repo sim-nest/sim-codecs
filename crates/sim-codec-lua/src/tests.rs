@@ -1,6 +1,6 @@
 use sim_codec::{
-    DecodeBudget, DecodeLimits, Input, decode_located_with_codec, decode_tree_with_codec,
-    decode_with_codec, encode_tree_with_codec, encode_with_codec,
+    CodecRuntime, DecodeBudget, DecodeLimits, Input, decode_located_with_codec,
+    decode_tree_with_codec, decode_with_codec, encode_tree_with_codec, encode_with_codec,
 };
 use sim_kernel::{CodecId, EncodeOptions, Error, Expr, ReadPolicy, SourceId, Symbol};
 
@@ -280,6 +280,30 @@ fn lua_codec_decodes_encodes_and_preserves_tree_source() {
     assert_eq!(replayed, FACTORIAL);
 }
 
+#[test]
+fn invalid_utf8_input_reports_lua_codec_id() {
+    let mut cx = lua_cx();
+    let symbol = Symbol::qualified("codec", "lua");
+    let expected = codec_id(&mut cx, &symbol);
+
+    let err = decode_with_codec(
+        &mut cx,
+        &symbol,
+        Input::Bytes(vec![0xff]),
+        ReadPolicy::default(),
+    )
+    .unwrap_err();
+
+    match err {
+        Error::CodecError { codec, message } => {
+            assert_eq!(codec, expected);
+            assert_ne!(codec, CodecId(0));
+            assert!(message.contains("not valid UTF-8"), "{message}");
+        }
+        other => panic!("unexpected error {other:?}"),
+    }
+}
+
 const FACTORIAL: &str = r#"local function fact(n)
   if n == 0 then return 1 end
   return n * fact(n - 1)
@@ -291,6 +315,16 @@ fn lua_cx() -> sim_kernel::Cx {
     let lib = crate::LuaCodecLib::new(cx.registry_mut().fresh_codec_id());
     cx.load_lib(&lib).unwrap();
     cx
+}
+
+fn codec_id(cx: &mut sim_kernel::Cx, symbol: &Symbol) -> CodecId {
+    cx.resolve_codec(symbol)
+        .unwrap()
+        .object()
+        .as_any()
+        .downcast_ref::<CodecRuntime>()
+        .unwrap()
+        .id
 }
 
 fn lua_head(expr: &Expr) -> Option<&str> {

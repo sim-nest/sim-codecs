@@ -1,6 +1,7 @@
 use sim_codec::{DecodeBudget, Input, ReadCx};
 use sim_kernel::{
-    Expr, LocatedExpr, LocatedExprTree, NumberLiteral, Origin, Result, SourceId, Span, Symbol,
+    CodecId, Error, Expr, LocatedExpr, LocatedExprTree, NumberLiteral, Origin, Result, SourceId,
+    Span, Symbol,
 };
 
 use crate::ast::{
@@ -21,13 +22,23 @@ pub fn decode_lua_chunk(
     Ok(lower_lua_chunk(&chunk))
 }
 
+pub(crate) fn input_text_for(codec: CodecId, input: Input) -> Result<String> {
+    match input {
+        Input::Text(text) => Ok(text),
+        Input::Bytes(bytes) => String::from_utf8(bytes).map_err(|err| Error::CodecError {
+            codec,
+            message: format!("codec input is not valid UTF-8: {err}"),
+        }),
+    }
+}
+
 /// Decodes one Lua chunk into a root-located expression.
 pub fn decode_lua_located_chunk(
     cx: &mut ReadCx<'_>,
     source_id: impl Into<String>,
     input: Input,
 ) -> Result<LocatedExpr> {
-    let source = input.into_string_for(cx.codec)?;
+    let source = input_text_for(cx.codec, input)?;
     let source_id = SourceId(source_id.into());
     cx.cx.sources_mut().intern_text(source_id.clone(), &source);
     let mut budget = DecodeBudget::new(cx.limits);

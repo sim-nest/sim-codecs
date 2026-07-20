@@ -11,7 +11,9 @@ use sim_kernel::{
 
 use crate::LUA_CODEC_ID;
 use crate::encode::encode_lua_chunk_expr;
-use crate::lower::{decode_lua_chunk, decode_lua_located_chunk, decode_lua_tree_chunk};
+use crate::lower::{
+    decode_lua_chunk, decode_lua_located_chunk, decode_lua_tree_chunk, input_text_for,
+};
 
 /// Runtime codec object for `codec/lua`.
 #[derive(Default)]
@@ -19,7 +21,7 @@ pub struct LuaCodec;
 
 impl Decoder for LuaCodec {
     fn decode(&self, cx: &mut ReadCx<'_>, input: Input) -> Result<Expr> {
-        let source = input.into_string_for(cx.codec)?;
+        let source = input_text_for(cx.codec, input)?;
         let mut budget = DecodeBudget::new(cx.limits);
         budget.check_input_bytes(cx.codec, source.len())?;
         decode_lua_chunk(cx, "<lua>", &source, &mut budget)

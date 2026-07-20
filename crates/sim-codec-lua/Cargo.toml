@@ -10,7 +10,7 @@ repository = "https://github.com/sim-nest/sim-codecs"
 homepage = "https://github.com/sim-nest/sim-codecs"
 
 [dependencies]
-sim-codec = { version = "0.1.0", path = "../sim-codec" }
+sim-codec = { version = "0.1.4", path = "../sim-codec" }
 sim-codec-pratt = { version = "0.1.0", path = "../sim-codec-pratt" }
 sim-cookbook = { version = "0.1.0" }
 sim-kernel = { version = "0.1.0" }
