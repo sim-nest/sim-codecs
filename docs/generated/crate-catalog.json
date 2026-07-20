@@ -144,7 +144,8 @@
       "root": "crates/sim-codec-json",
       "target_kinds": [
         "custom-build",
-        "lib"
+        "lib",
+        "test"
       ]
     },
     {
@@ -162,7 +163,7 @@
       ]
     },
     {
-      "description": "Lua expression lexer and parser for SIM codec surfaces.",
+      "description": "Lua chunk codec with expression, located, and tree round-trip lanes.",
       "generated_readme": true,
       "manifest": "crates/sim-codec-lua/Cargo.toml",
       "name": "sim-codec-lua",
