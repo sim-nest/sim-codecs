@@ -40,10 +40,12 @@
 #![forbid(unsafe_code)]
 #![deny(missing_docs)]
 
+mod grammar_check;
 mod implementation;
 mod prism;
 mod runtime_api;
 
+pub use grammar_check::*;
 pub use implementation::*;
 pub use prism::*;
 pub use runtime_api::*;
