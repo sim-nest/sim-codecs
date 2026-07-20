@@ -3,10 +3,10 @@
   "generated_by": "cargo run -p xtask -- simdoc",
   "generation_timestamp": "2026-07-16T02:55:26+02:00",
   "generator": "xtask repo-contract v1",
-  "git_commit": "f829d7023c506fcbd65ae9fbe53c749cf9362822",
+  "git_commit": "6e4ce20155849fe1aa9a2c65fe34acd146333d9a",
   "repo": "sim-codecs",
   "schema": "sim.provenance.v1",
-  "source_commit": "f829d7023c506fcbd65ae9fbe53c749cf9362822",
+  "source_commit": "6e4ce20155849fe1aa9a2c65fe34acd146333d9a",
   "source_remote": "https://github.com/sim-nest/sim-codecs",
   "validation_commands": [
     "cargo fmt --all --check",
@@ -19,9 +19,9 @@
     "cargo run -p xtask -- validation-matrix --check --repo .",
     "cargo run -p xtask -- crate-catalog --check --repo ."
   ],
-  "workspace_hash": "dd7b61a44dd9bfc7",
+  "workspace_hash": "fd8668415328deae",
   "workspace_hash_algorithm": "fnv1a64",
-  "workspace_hash_input_count": 294,
+  "workspace_hash_input_count": 295,
   "workspace_hash_inputs": [
     "Cargo.toml",
     "crates/sim-codec/Cargo.toml",
@@ -271,6 +271,7 @@
     "crates/sim-codec-lisp/src/native.rs",
     "crates/sim-codec-lua/Cargo.toml",
     "crates/sim-codec-lua/build.rs",
+    "crates/sim-codec-lua/recipes/01-basics/decode-roundtrip/recipe.toml",
     "crates/sim-codec-lua/recipes/book.toml",
     "crates/sim-codec-lua/src/ast.rs",
     "crates/sim-codec-lua/src/encode.rs",

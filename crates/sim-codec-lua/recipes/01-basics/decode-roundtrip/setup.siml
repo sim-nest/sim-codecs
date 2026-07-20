@@ -1,0 +1,7 @@
+(expr:map
+  [kind "codec-roundtrip"]
+  [codec codec/lua]
+  [source "return 1 + 2 * 3"]
+  [lanes [plain located tree]]
+  [expected-root lua/chunk]
+  [runner cargo-test])

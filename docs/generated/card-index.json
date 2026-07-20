@@ -89,7 +89,7 @@
       "id": "cookbook/codec/lua",
       "kind": "cookbook-recipe",
       "owner": "sim-codec-lua",
-      "summary": "Lua expression parsing recipes for SIM codec surfaces."
+      "summary": "Lua expression parsing and round-trip recipes for SIM codec surfaces."
     },
     {
       "id": "cookbook/codec/mcp",
