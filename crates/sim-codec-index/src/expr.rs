@@ -75,8 +75,11 @@ fn specimen_expr(specimen: &DiscoveredSpecimen) -> Expr {
         field("id", text(specimen.id.as_str())),
         field("subject", text(specimen.subject.as_str())),
         field("kind", text(&specimen.kind)),
+        field("path", text(&specimen.path)),
+        field("language", optional_text(specimen.language.as_ref())),
         field("runnable", Expr::Bool(specimen.runnable)),
         field("checked", Expr::Bool(specimen.checked)),
+        field("checked-by", optional_text(specimen.checked_by.as_ref())),
         field("doc-anchor", optional_id(specimen.doc_anchor.as_ref())),
     ])
 }
@@ -192,8 +195,11 @@ fn specimen_from_expr(expr: &Expr) -> Result<DiscoveredSpecimen, CodecError> {
         id: SpecimenId::new(string_field(entries, "id")?),
         subject: SubjectId::new(string_field(entries, "subject")?),
         kind: string_field(entries, "kind")?.to_owned(),
+        path: string_field(entries, "path")?.to_owned(),
+        language: optional_string_field(entries, "language")?,
         runnable: bool_field(entries, "runnable")?,
         checked: bool_field(entries, "checked")?,
+        checked_by: optional_string_field(entries, "checked-by")?,
         doc_anchor: optional_anchor(entries, "doc-anchor")?,
     })
 }
@@ -354,6 +360,13 @@ fn optional_surface(entries: &[(Expr, Expr)], name: &str) -> Result<Option<Surfa
     optional_id_from_field(entries, name).map(|value| value.map(SurfaceId::new))
 }
 
+fn optional_string_field(
+    entries: &[(Expr, Expr)],
+    name: &str,
+) -> Result<Option<String>, CodecError> {
+    optional_id_from_field(entries, name).map(|value| value.map(str::to_owned))
+}
+
 fn optional_id_from_field<'a>(
     entries: &'a [(Expr, Expr)],
     name: &str,
@@ -419,6 +432,10 @@ fn strings<'a>(items: impl Iterator<Item = &'a String>) -> Expr {
 
 fn optional_id<T: ToString>(value: Option<&T>) -> Expr {
     value.map_or(Expr::Nil, |id| text(id.to_string()))
+}
+
+fn optional_text(value: Option<&String>) -> Expr {
+    value.map_or(Expr::Nil, text)
 }
 
 fn text(value: impl AsRef<str>) -> Expr {

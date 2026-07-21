@@ -52,8 +52,11 @@ fn valid_doc() -> IndexDoc {
             id: SpecimenId::new("recipe/sim-run/repl"),
             subject: subject.clone(),
             kind: "recipe".to_owned(),
+            path: "recipes/01-basics/repl/recipe.toml".to_owned(),
+            language: Some("cli-transcript".to_owned()),
             runnable: true,
             checked: true,
+            checked_by: Some("xtask check-recipes".to_owned()),
             doc_anchor: Some(AnchorId::new("doc/sim-run/repl")),
         }],
         drafts: Vec::new(),
@@ -108,7 +111,16 @@ fn roundtrip_sx_and_json_include_specimens() {
     assert_eq!(from_sx, doc);
     assert_eq!(from_json, doc);
     assert_eq!(from_sx.specimens[0].id.as_str(), "recipe/sim-run/repl");
+    assert_eq!(
+        from_sx.specimens[0].path,
+        "recipes/01-basics/repl/recipe.toml"
+    );
+    assert_eq!(
+        from_sx.specimens[0].checked_by.as_deref(),
+        Some("xtask check-recipes")
+    );
     assert!(sx.contains("specimens"));
+    assert!(sx.contains("checked-by"));
     assert!(json.contains("specimens"));
 }
 
