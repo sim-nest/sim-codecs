@@ -1,24 +1,50 @@
 schema = "sim.features"
 
+[enforcement.audience]
+framework = "strict"
+
 [enforcement.route]
 major_entrypoints = "advisory"
 frameworks = "advisory"
 
 [[feature]]
-id = "feature/sim-codecs/codec-core"
-title = "Codec core contract"
-summary = "Define codec positions, limits, and the domain codec runtime library used by concrete codecs."
+id = "feature/sim-codecs/codec"
+title = "Codec framework"
+summary = "Define codec positions, limits, syntax surfaces, wire surfaces, and loadable codec runtime libraries."
 owner = "crate/sim-codec"
 audiences = ["code", "framework"]
 guidance = "Use this row when adding a codec or checking how codec positions are represented."
 claims_anchors = [
   "anchor/crate/sim-codec",
+  "anchor/runtime-lib/sim-codec-algol/algol-codec-lib",
+  "anchor/runtime-lib/sim-codec-binary-base64/binary-base64-codec-lib",
+  "anchor/runtime-lib/sim-codec-binary/binary-codec-lib",
+  "anchor/runtime-lib/sim-codec-bitwise-base64/bitwise-base64-codec-lib",
+  "anchor/runtime-lib/sim-codec-bitwise/bitwise-codec-lib",
+  "anchor/runtime-lib/sim-codec-chat/anthropic-codec-lib",
+  "anchor/runtime-lib/sim-codec-chat/chat-codec-lib",
+  "anchor/runtime-lib/sim-codec-chat/lemonade-codec-lib",
+  "anchor/runtime-lib/sim-codec-chat/lm-studio-codec-lib",
+  "anchor/runtime-lib/sim-codec-chat/ollama-codec-lib",
+  "anchor/runtime-lib/sim-codec-chat/open-ai-codec-lib",
+  "anchor/runtime-lib/sim-codec-config/config-codec-lib",
+  "anchor/runtime-lib/sim-codec-doc/doc-codec-lib",
+  "anchor/runtime-lib/sim-codec-doc/markup-codec-lib",
+  "anchor/runtime-lib/sim-codec-index/index-codec-lib",
+  "anchor/runtime-lib/sim-codec-json/json-codec-lib",
+  "anchor/runtime-lib/sim-codec-lisp/lisp-codec-lib",
+  "anchor/runtime-lib/sim-codec-lua/lua-codec-lib",
+  "anchor/runtime-lib/sim-codec-mcp/mcp-codec-lib",
   "anchor/runtime-lib/sim-codec/domain-codec-lib",
+  "anchor/runtime-lib/sim-wasm-abi/wasm-lib",
+]
+claims_specimens = [
+  "spec-test/sim-codecs/crates/sim-codec-doc/tests/conformance",
 ]
 
 [[feature]]
-id = "feature/sim-codecs/pratt-operator-language"
-title = "Pratt operator language"
+id = "feature/sim-codecs/pratt"
+title = "Pratt operator parser"
 summary = "Parse operator-oriented expression languages through the Pratt codec surface."
 owner = "crate/sim-codec-pratt"
 audiences = ["code", "framework"]
@@ -50,7 +76,7 @@ id = "route/add-a-codec"
 task = "Add a codec"
 audiences = ["code", "framework"]
 steps = [
-  { feature = "feature/sim-codecs/codec-core", why = "Start with the shared codec contract and position rules." },
+  { feature = "feature/sim-codecs/codec", why = "Start with the shared codec contract and position rules." },
 ]
 
 [[route]]
@@ -58,5 +84,13 @@ id = "route/parse-operator-language"
 task = "Parse an operator language"
 audiences = ["code", "framework"]
 steps = [
-  { feature = "feature/sim-codecs/pratt-operator-language", why = "The Pratt codec is the operator-language parser surface." },
+  { feature = "feature/sim-codecs/pratt", why = "The Pratt codec is the operator-language parser surface." },
+]
+
+[[route]]
+id = "route/add-bridge-packet-codec"
+task = "Add a Bridge packet codec"
+audiences = ["code", "framework"]
+steps = [
+  { feature = "feature/sim-codecs/bridge-packet-codec", why = "The Bridge packet codec owns the Bridge wire grammar." },
 ]
