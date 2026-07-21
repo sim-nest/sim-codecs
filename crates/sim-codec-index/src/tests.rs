@@ -12,17 +12,25 @@ use crate::{
 };
 
 fn valid_doc() -> IndexDoc {
+    let repo_subject = SubjectId::new("repo/sim-run");
     let subject = SubjectId::new("crate/sim-run");
     let feature_id = FeatureId::new("feature/sim-run/repl");
     IndexDoc {
         schema: "sim.index".to_owned(),
         generated_by: "sim-codec-index-tests".to_owned(),
         visibility: Visibility::Public,
-        subjects: vec![SubjectRecord {
-            id: subject.clone(),
-            kind: "crate".to_owned(),
-            title: "sim-run".to_owned(),
-        }],
+        subjects: vec![
+            SubjectRecord {
+                id: repo_subject.clone(),
+                kind: "repo".to_owned(),
+                title: "sim-run".to_owned(),
+            },
+            SubjectRecord {
+                id: subject.clone(),
+                kind: "crate".to_owned(),
+                title: "sim-run".to_owned(),
+            },
+        ],
         anchors: vec![
             DiscoveredAnchor {
                 id: AnchorId::new("export/sim-run/repl"),
@@ -52,7 +60,7 @@ fn valid_doc() -> IndexDoc {
         features: vec![FeatureRecord {
             id: feature_id.clone(),
             key: canonical_feature_key(&subject, feature_id.as_str()),
-            subject,
+            subject: subject.clone(),
             title: "REPL".to_owned(),
             summary: "Interactive command loop for SIM sessions.".to_owned(),
             anchors: vec![AnchorId::new("export/sim-run/repl")],
@@ -76,11 +84,10 @@ fn valid_doc() -> IndexDoc {
             ],
             doc_anchor: Some(AnchorId::new("doc/sim-run/repl")),
         }],
-        edges: vec![IndexEdge {
-            from: feature_id.clone(),
-            predicate: "supports".to_owned(),
-            to: feature_id,
-        }],
+        edges: vec![
+            IndexEdge::relates(feature_id.clone(), "supports", feature_id),
+            IndexEdge::contains(repo_subject, subject),
+        ],
     }
 }
 

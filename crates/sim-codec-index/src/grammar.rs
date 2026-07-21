@@ -218,7 +218,7 @@ fn edge(expr: &Expr) -> Result<(), CodecError> {
         map(expr, "edge")?,
         &[
             Field::string("from"),
-            Field::string("predicate"),
+            Field::string("rel"),
             Field::string("to"),
         ],
         "edge",

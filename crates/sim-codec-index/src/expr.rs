@@ -153,9 +153,9 @@ fn step_expr(step: &RouteStep) -> Expr {
 
 fn edge_expr(edge: &IndexEdge) -> Expr {
     map(vec![
-        field("from", text(edge.from.as_str())),
-        field("predicate", text(&edge.predicate)),
-        field("to", text(edge.to.as_str())),
+        field("from", text(&edge.from)),
+        field("rel", text(&edge.rel)),
+        field("to", text(&edge.to)),
     ])
 }
 
@@ -270,11 +270,11 @@ fn step_from_expr(expr: &Expr) -> Result<RouteStep, CodecError> {
 
 fn edge_from_expr(expr: &Expr) -> Result<IndexEdge, CodecError> {
     let entries = expect_map(expr, "edge")?;
-    Ok(IndexEdge {
-        from: FeatureId::new(string_field(entries, "from")?),
-        predicate: string_field(entries, "predicate")?.to_owned(),
-        to: FeatureId::new(string_field(entries, "to")?),
-    })
+    Ok(IndexEdge::new(
+        string_field(entries, "from")?,
+        string_field(entries, "rel")?,
+        string_field(entries, "to")?,
+    ))
 }
 
 fn expect_map<'a>(expr: &'a Expr, label: &str) -> Result<&'a [(Expr, Expr)], CodecError> {
