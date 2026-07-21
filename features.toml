@@ -1,0 +1,62 @@
+schema = "sim.features"
+
+[enforcement.route]
+major_entrypoints = "advisory"
+frameworks = "advisory"
+
+[[feature]]
+id = "feature/sim-codecs/codec-core"
+title = "Codec core contract"
+summary = "Define codec positions, limits, and the domain codec runtime library used by concrete codecs."
+owner = "crate/sim-codec"
+audiences = ["code", "framework"]
+guidance = "Use this row when adding a codec or checking how codec positions are represented."
+claims_anchors = [
+  "anchor/crate/sim-codec",
+  "anchor/runtime-lib/sim-codec/domain-codec-lib",
+]
+
+[[feature]]
+id = "feature/sim-codecs/pratt-operator-language"
+title = "Pratt operator language"
+summary = "Parse operator-oriented expression languages through the Pratt codec surface."
+owner = "crate/sim-codec-pratt"
+audiences = ["code", "framework"]
+guidance = "Use this row when building a parser for an operator language."
+claims_anchors = [
+  "anchor/crate/sim-codec-pratt",
+]
+claims_surfaces = [
+  "syntax/pratt",
+]
+
+[[feature]]
+id = "feature/sim-codecs/bridge-packet-codec"
+title = "Bridge packet codec"
+summary = "Encode and decode Bridge packet workflow data through the Bridge wire grammar."
+owner = "crate/sim-codec-bridge"
+audiences = ["code", "framework"]
+guidance = "Use this row when following packet-shaped model workflow data at the codec layer."
+claims_anchors = [
+  "anchor/crate/sim-codec-bridge",
+  "anchor/runtime-lib/sim-codec-bridge/bridge-codec-lib",
+]
+claims_surfaces = [
+  "wire/bridge",
+]
+
+[[route]]
+id = "route/add-a-codec"
+task = "Add a codec"
+audiences = ["code", "framework"]
+steps = [
+  { feature = "feature/sim-codecs/codec-core", why = "Start with the shared codec contract and position rules." },
+]
+
+[[route]]
+id = "route/parse-operator-language"
+task = "Parse an operator language"
+audiences = ["code", "framework"]
+steps = [
+  { feature = "feature/sim-codecs/pratt-operator-language", why = "The Pratt codec is the operator-language parser surface." },
+]

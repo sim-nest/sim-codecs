@@ -54,6 +54,7 @@ enum FieldKind {
     String,
     Bool,
     OptionalString,
+    OptionalList(CheckFn),
     List(CheckFn),
 }
 
@@ -76,6 +77,13 @@ impl Field {
         Self {
             name,
             kind: FieldKind::OptionalString,
+        }
+    }
+
+    const fn optional_list(name: &'static str, item: CheckFn) -> Self {
+        Self {
+            name,
+            kind: FieldKind::OptionalList(item),
         }
     }
 
@@ -201,6 +209,7 @@ fn route(expr: &Expr) -> Result<(), CodecError> {
         &[
             Field::string("id"),
             Field::string("title"),
+            Field::optional_list("audiences", string_item),
             Field::list("steps", step),
             Field::optional_string("doc-anchor"),
         ],
@@ -211,7 +220,11 @@ fn route(expr: &Expr) -> Result<(), CodecError> {
 fn step(expr: &Expr) -> Result<(), CodecError> {
     fields(
         map(expr, "route step")?,
-        &[Field::string("kind"), Field::string("id")],
+        &[
+            Field::string("kind"),
+            Field::string("id"),
+            Field::optional_string("why"),
+        ],
         "route step",
     )
 }
@@ -239,13 +252,30 @@ fn fields(entries: &[(Expr, Expr)], spec: &[Field], label: &str) -> Result<(), C
         }
     }
     for field in spec {
-        let value = entries
+        let Some(value) = entries
             .iter()
             .find_map(|(key, value)| (symbol_name(key) == Some(field.name)).then_some(value))
-            .ok_or_else(|| CodecError::Shape(format!("{label} missing field {}", field.name)))?;
+        else {
+            if field.is_optional() {
+                continue;
+            }
+            return Err(CodecError::Shape(format!(
+                "{label} missing field {}",
+                field.name
+            )));
+        };
         check_field_kind(value, *field, label)?;
     }
     Ok(())
+}
+
+impl Field {
+    fn is_optional(self) -> bool {
+        matches!(
+            self.kind,
+            FieldKind::OptionalString | FieldKind::OptionalList(_)
+        )
+    }
 }
 
 fn check_field_kind(value: &Expr, field: Field, label: &str) -> Result<(), CodecError> {
@@ -258,6 +288,10 @@ fn check_field_kind(value: &Expr, field: Field, label: &str) -> Result<(), Codec
         FieldKind::OptionalString => match value {
             Expr::Nil | Expr::String(_) => Ok(()),
             other => wrong(label, field.name, "nil or string", other),
+        },
+        FieldKind::OptionalList(item) => match value {
+            Expr::List(items) => items.iter().try_for_each(item),
+            other => wrong(label, field.name, "list", other),
         },
         FieldKind::List(item) => match value {
             Expr::List(items) => items.iter().try_for_each(item),

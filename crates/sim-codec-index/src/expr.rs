@@ -136,6 +136,7 @@ fn route_expr(route: &RouteRecord) -> Expr {
     map(vec![
         field("id", text(route.id.as_str())),
         field("title", text(&route.title)),
+        field("audiences", strings(route.audiences.iter())),
         field("steps", list(route.steps.iter().map(step_expr))),
         field("doc-anchor", optional_id(route.doc_anchor.as_ref())),
     ])
@@ -143,13 +144,15 @@ fn route_expr(route: &RouteRecord) -> Expr {
 
 fn step_expr(step: &RouteStep) -> Expr {
     match step {
-        RouteStep::Feature(id) => map(vec![
+        RouteStep::Feature { id, why } => map(vec![
             field("kind", text("feature")),
             field("id", text(id.as_str())),
+            field("why", text(why)),
         ]),
-        RouteStep::Specimen(id) => map(vec![
+        RouteStep::Specimen { id, why } => map(vec![
             field("kind", text("specimen")),
             field("id", text(id.as_str())),
+            field("why", text(why)),
         ]),
     }
 }
@@ -254,6 +257,7 @@ fn route_from_expr(expr: &Expr) -> Result<RouteRecord, CodecError> {
     Ok(RouteRecord {
         id: RouteId::new(string_field(entries, "id")?),
         title: string_field(entries, "title")?.to_owned(),
+        audiences: optional_string_list_field(entries, "audiences")?,
         steps: map_list_field(entries, "steps", step_from_expr)?,
         doc_anchor: optional_anchor(entries, "doc-anchor")?,
     })
@@ -261,13 +265,16 @@ fn route_from_expr(expr: &Expr) -> Result<RouteRecord, CodecError> {
 
 fn step_from_expr(expr: &Expr) -> Result<RouteStep, CodecError> {
     let entries = expect_map(expr, "route step")?;
+    let why = optional_string_field(entries, "why")?.unwrap_or_default();
     match string_field(entries, "kind")? {
-        "feature" => Ok(RouteStep::Feature(FeatureId::new(string_field(
-            entries, "id",
-        )?))),
-        "specimen" => Ok(RouteStep::Specimen(SpecimenId::new(string_field(
-            entries, "id",
-        )?))),
+        "feature" => Ok(RouteStep::Feature {
+            id: FeatureId::new(string_field(entries, "id")?),
+            why,
+        }),
+        "specimen" => Ok(RouteStep::Specimen {
+            id: SpecimenId::new(string_field(entries, "id")?),
+            why,
+        }),
         other => Err(CodecError::Shape(format!(
             "unsupported route step kind {other:?}"
         ))),
@@ -313,6 +320,27 @@ fn id_list<T>(
 
 fn string_list_field(entries: &[(Expr, Expr)], name: &str) -> Result<Vec<String>, CodecError> {
     Ok(string_list(entries, name)?.map(str::to_owned).collect())
+}
+
+fn optional_string_list_field(
+    entries: &[(Expr, Expr)],
+    name: &str,
+) -> Result<Vec<String>, CodecError> {
+    let Some(value) = field_value(entries, name) else {
+        return Ok(Vec::new());
+    };
+    let Expr::List(items) = value else {
+        return Err(CodecError::Shape(format!("{name} must be a list")));
+    };
+    items
+        .iter()
+        .map(|expr| match expr {
+            Expr::String(value) => Ok(value.clone()),
+            other => Err(CodecError::Shape(format!(
+                "{name} item must be a string, found {other:?}"
+            ))),
+        })
+        .collect()
 }
 
 fn string_list<'a>(
@@ -371,7 +399,10 @@ fn optional_id_from_field<'a>(
     entries: &'a [(Expr, Expr)],
     name: &str,
 ) -> Result<Option<&'a str>, CodecError> {
-    match required(entries, name)? {
+    let Some(value) = field_value(entries, name) else {
+        return Ok(None);
+    };
+    match value {
         Expr::Nil => Ok(None),
         Expr::String(value) => Ok(Some(value)),
         other => Err(CodecError::Shape(format!(
@@ -381,10 +412,13 @@ fn optional_id_from_field<'a>(
 }
 
 fn required<'a>(entries: &'a [(Expr, Expr)], name: &str) -> Result<&'a Expr, CodecError> {
+    field_value(entries, name).ok_or_else(|| CodecError::Shape(format!("missing field {name}")))
+}
+
+fn field_value<'a>(entries: &'a [(Expr, Expr)], name: &str) -> Option<&'a Expr> {
     entries
         .iter()
         .find_map(|(key, value)| (symbol_name(key) == Some(name)).then_some(value))
-        .ok_or_else(|| CodecError::Shape(format!("missing field {name}")))
 }
 
 fn symbol_name(expr: &Expr) -> Option<&str> {

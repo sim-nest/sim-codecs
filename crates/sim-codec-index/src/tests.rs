@@ -81,9 +81,16 @@ fn valid_doc() -> IndexDoc {
         routes: vec![RouteRecord {
             id: RouteId::new("route/use-repl"),
             title: "Use the REPL".to_owned(),
+            audiences: vec!["user".to_owned(), "code".to_owned()],
             steps: vec![
-                RouteStep::Feature(feature_id.clone()),
-                RouteStep::Specimen(SpecimenId::new("recipe/sim-run/repl")),
+                RouteStep::Feature {
+                    id: feature_id.clone(),
+                    why: "Start with the interactive entry point.".to_owned(),
+                },
+                RouteStep::Specimen {
+                    id: SpecimenId::new("recipe/sim-run/repl"),
+                    why: "Run the checked REPL recipe.".to_owned(),
+                },
             ],
             doc_anchor: Some(AnchorId::new("doc/sim-run/repl")),
         }],
@@ -121,7 +128,10 @@ fn roundtrip_sx_and_json_include_specimens() {
     );
     assert!(sx.contains("specimens"));
     assert!(sx.contains("checked-by"));
+    assert!(sx.contains("audiences"));
+    assert!(sx.contains("why"));
     assert!(json.contains("specimens"));
+    assert!(json.contains("audiences"));
 }
 
 #[test]
