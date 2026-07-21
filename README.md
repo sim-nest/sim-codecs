@@ -90,6 +90,7 @@ self-contained, but those protocol types are the kernel's, not this repo's.
 | `sim-codec-chat` | `codec:chat`, a domain codec for provider-neutral model transcripts, with native OpenAI, Anthropic, Ollama, LM Studio, and Lemonade projection helpers. |
 | `sim-codec-config` | `codec:config`, a config codec that decodes per-library settings as one table map and shared launcher files as a directory of library id to table map. |
 | `sim-codec-doc` | `codec:doc`, a document codec that reads and writes Markdown, Typst, AsciiDoc, and LaTeX through one semantic markup value, catalogs tracked formats that fail closed until implemented, and provides fixed, recursive, and heading-aware chunk operations. |
+| `sim-codec-index` | `codec:index`, a domain codec that validates the SIM Index graph through one `IndexDoc` model and writes semantically equivalent s-expression and JSON surfaces. |
 | `sim-codec-mcp` | `codec:mcp`, a domain codec for one MCP JSON-RPC 2.0 envelope per frame. |
 | `sim-wasm-abi` | The wasm guest ABI: byte-frame value/manifest/exports transport and a wasm-backed `Lib`. This is the plugin ABI surface, not an expression codec. |
 | `sim-test-support` | Shared test harness (`install_core_runtime`-style `Cx`, `roundtrip` helper). Used only as a `dev-dependency`; depends only on `sim-kernel`, `sim-value`, and `sim-codec`, so it forms no dependency cycle. |

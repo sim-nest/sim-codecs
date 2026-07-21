@@ -79,6 +79,13 @@
       "summary": "Markup document domain codec for SIM."
     },
     {
+      "crate_name": "sim_codec_index",
+      "group": "workspace",
+      "manifest": "crates/sim-codec-index/Cargo.toml",
+      "package": "sim-codec-index",
+      "summary": "SIM Index codec over the shared IndexDoc graph."
+    },
+    {
       "crate_name": "sim_codec_json",
       "group": "workspace",
       "manifest": "crates/sim-codec-json/Cargo.toml",

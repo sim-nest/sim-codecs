@@ -4,4 +4,4 @@ In one line: one shared workshop where every SIM format reads text or bytes in a
 
 ## What it gives you
 
-First-class readers and writers for parenthesized s-expressions, JSON, familiar infix notation, Lua chunks, hand-edited configuration files, documents, model conversations, and the Model Context Protocol, plus a compact tagged binary form and the smallest predictable bit-packed form (each with a plain-text carrier), and the handshake that passes values to and from sandboxed WebAssembly -- all speaking one shared value model.
+First-class readers and writers for parenthesized s-expressions, JSON, familiar infix notation, Lua chunks, hand-edited configuration files, documents, model conversations, the SIM Index, and the Model Context Protocol, plus a compact tagged binary form and the smallest predictable bit-packed form (each with a plain-text carrier), and the handshake that passes values to and from sandboxed WebAssembly -- all speaking one shared value model.

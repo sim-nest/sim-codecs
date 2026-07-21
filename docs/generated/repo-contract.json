@@ -130,6 +130,7 @@
       "sim-codec-compare",
       "sim-codec-config",
       "sim-codec-doc",
+      "sim-codec-index",
       "sim-codec-json",
       "sim-codec-lisp",
       "sim-codec-lua",
@@ -159,7 +160,7 @@
       "reason": "test-only f64 number-domain fixture for codec boundary tests"
     }
   ],
-  "package_count": 19,
+  "package_count": 20,
   "packages": [
     {
       "crate_name": "sim_codec",
@@ -829,6 +830,62 @@
       ]
     },
     {
+      "crate_name": "sim_codec_index",
+      "dependencies": [
+        {
+          "kind": "dev",
+          "optional": false,
+          "package": "sim-test-support",
+          "rename": null,
+          "target": null
+        },
+        {
+          "kind": "normal",
+          "optional": false,
+          "package": "sim-codec",
+          "rename": null,
+          "target": null
+        },
+        {
+          "kind": "normal",
+          "optional": false,
+          "package": "sim-codec-json",
+          "rename": null,
+          "target": null
+        },
+        {
+          "kind": "normal",
+          "optional": false,
+          "package": "sim-codec-lisp",
+          "rename": null,
+          "target": null
+        }
+      ],
+      "description": "SIM Index codec for checked s-expression and JSON index graph forms.",
+      "features": [],
+      "group": "workspace",
+      "manifest": "crates/sim-codec-index/Cargo.toml",
+      "name": "sim-codec-index",
+      "publish": "true",
+      "root": "crates/sim-codec-index",
+      "rustdoc_summary": "SIM Index codec over the shared IndexDoc graph.",
+      "target_kinds": [
+        "lib"
+      ],
+      "targets": [
+        {
+          "crate_types": [
+            "lib"
+          ],
+          "kind": [
+            "lib"
+          ],
+          "name": "sim_codec_index",
+          "src": "crates/sim-codec-index/src/lib.rs"
+        }
+      ]
+    },
+    {
       "crate_name": "sim_codec_json",
       "dependencies": [
         {
@@ -1269,10 +1326,10 @@
     "generated_by": "cargo run -p xtask -- simdoc",
     "generation_timestamp": "2026-07-16T02:55:26+02:00",
     "generator": "xtask repo-contract v1",
-    "git_commit": "6fcca732004a5eda693c67d927a5df87799ffa61",
+    "git_commit": "c5765ac2bed94fbeb8cb4da3b85f4498ea600b0c",
     "repo": "sim-codecs",
     "schema": "sim.provenance.v1",
-    "source_commit": "6fcca732004a5eda693c67d927a5df87799ffa61",
+    "source_commit": "c5765ac2bed94fbeb8cb4da3b85f4498ea600b0c",
     "source_remote": "https://github.com/sim-nest/sim-codecs",
     "validation_commands": [
       "cargo fmt --all --check",
@@ -1285,9 +1342,9 @@
       "cargo run -p xtask -- validation-matrix --check --repo .",
       "cargo run -p xtask -- crate-catalog --check --repo ."
     ],
-    "workspace_hash": "a42b636931d53231",
+    "workspace_hash": "199e3d8d2dd5f682",
     "workspace_hash_algorithm": "fnv1a64",
-    "workspace_hash_input_count": 295,
+    "workspace_hash_input_count": 303,
     "workspace_hash_inputs": [
       "Cargo.toml",
       "crates/sim-codec/Cargo.toml",
@@ -1497,6 +1554,14 @@
       "crates/sim-codec-doc/src/typst_backend.rs",
       "crates/sim-codec-doc/src/typst_writer.rs",
       "crates/sim-codec-doc/tests/conformance.rs",
+      "crates/sim-codec-index/Cargo.toml",
+      "crates/sim-codec-index/src/error.rs",
+      "crates/sim-codec-index/src/expr.rs",
+      "crates/sim-codec-index/src/form.rs",
+      "crates/sim-codec-index/src/grammar.rs",
+      "crates/sim-codec-index/src/lib.rs",
+      "crates/sim-codec-index/src/runtime.rs",
+      "crates/sim-codec-index/src/tests.rs",
       "crates/sim-codec-json/Cargo.toml",
       "crates/sim-codec-json/build.rs",
       "crates/sim-codec-json/recipes/01-basics/tagged-string/recipe.toml",
