@@ -20,6 +20,7 @@ sim-codec-json = { version = "0.1.2", path = "../sim-codec-json" }
 sim-codec-lisp = { version = "0.1.1", path = "../sim-codec-lisp" }
 sim-index-core = { version = "0.1.0", git = "https://github.com/sim-nest/sim-foundation", rev = "27e42f36387e785ceeaee188c0482301c2784401" }
 sim-kernel = { version = "0.1.0" }
+sim-value = "0.1.2"
 
 [dev-dependencies]
 sim-test-support = { version = "0.1.0", path = "../sim-test-support" }

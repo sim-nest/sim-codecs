@@ -5,7 +5,8 @@ use sim_index_core::{
     FeatureDraft, FeatureId, FeatureRecord, GrammarContract, IndexDoc, IndexEdge, RouteId,
     RouteRecord, RouteStep, SpecimenId, SubjectId, SubjectRecord, SurfaceId, Visibility,
 };
-use sim_kernel::{Expr, Symbol};
+use sim_kernel::Expr;
+use sim_value::build::entry as field;
 
 use crate::CodecError;
 
@@ -395,10 +396,6 @@ fn visibility_from_name(name: &str) -> Result<Visibility, CodecError> {
             "unsupported visibility {other:?}"
         ))),
     }
-}
-
-fn field(name: &str, value: Expr) -> (Expr, Expr) {
-    (Expr::Symbol(Symbol::new(name.to_owned())), value)
 }
 
 fn map(entries: Vec<(Expr, Expr)>) -> Expr {
