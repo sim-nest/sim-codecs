@@ -17,9 +17,12 @@ This generated lane consumes `docs/generated/sim-index-fragment.sx`. Global inde
 
 | Feature | Subject | Specimens | Summary |
 | --- | --- | ---: | --- |
-| `feature/sim-codecs/codec` | `crate/sim-codec` | 1 | Define codec positions, limits, syntax surfaces, wire surfaces, and loadable codec runtime libraries. |
+| `feature/sim-codecs/codec` | `crate/sim-codec` | 0 | Define codec positions, limits, syntax surfaces, wire surfaces, and loadable codec runtime libraries. |
+| `feature/sim-codecs/expression-syntax-grammars` | `crate/sim-codec-lisp` | 0 | Read and write Lisp, JSON, Algol, Lua, Compare, and Bridge rendered expression grammars. |
+| `feature/sim-codecs/domain-syntax-grammars` | `crate/sim-codec` | 0 | Read and write binary, bitwise, chat, config, document, index, and MCP grammar surfaces. |
+| `feature/sim-codecs/wire-protocol-grammars` | `crate/sim-codec` | 0 | Read and write binary, bitwise, chat, config, document, index, and MCP wire protocols. |
 | `feature/sim-codecs/pratt` | `crate/sim-codec-pratt` | 0 | Parse operator-oriented expression languages through the Pratt codec surface. |
-| `feature/sim-codecs/bridge-packet-codec` | `crate/sim-codec-bridge` | 0 | Encode and decode Bridge packet workflow data through the Bridge wire grammar. |
+| `feature/sim-codecs/bridge-packet-codec` | `crate/sim-codec-bridge` | 1 | Encode and decode Bridge packet workflow data through the Bridge wire grammar. |
 
 ## Surfaces
 
@@ -151,7 +154,7 @@ This generated lane consumes `docs/generated/sim-index-fragment.sx`. Global inde
 
 ## Worked Examples
 
-### `feature/sim-codecs/codec`
+### `feature/sim-codecs/bridge-packet-codec`
 
 Specimen `spec-test/sim-codecs/crates/sim-codec-doc/tests/conformance` is checked by `cargo test`.
 

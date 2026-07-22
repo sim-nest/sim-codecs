@@ -3,6 +3,10 @@ schema = "sim.features"
 [enforcement.audience]
 framework = "strict"
 
+[enforcement.surface]
+syntax = "strict"
+wire = "strict"
+
 [enforcement.route]
 major_entrypoints = "advisory"
 frameworks = "advisory"
@@ -38,8 +42,68 @@ claims_anchors = [
   "anchor/runtime-lib/sim-codec/domain-codec-lib",
   "anchor/runtime-lib/sim-wasm-abi/wasm-lib",
 ]
-claims_specimens = [
-  "spec-test/sim-codecs/crates/sim-codec-doc/tests/conformance",
+
+[[feature]]
+id = "feature/sim-codecs/expression-syntax-grammars"
+title = "Expression syntax grammars"
+summary = "Read and write Lisp, JSON, Algol, Lua, Compare, and Bridge rendered expression grammars."
+owner = "crate/sim-codec-lisp"
+audiences = ["code", "framework"]
+guidance = "Use this row when finding an expression syntax grammar or adding a language-shaped codec surface."
+claims_surfaces = [
+  "syntax/algol",
+  "syntax/bridge",
+  "syntax/compare",
+  "syntax/json",
+  "syntax/lisp",
+  "syntax/lua",
+]
+supports = [
+  "feature/sim-codecs/codec",
+]
+
+[[feature]]
+id = "feature/sim-codecs/domain-syntax-grammars"
+title = "Domain syntax grammars"
+summary = "Read and write binary, bitwise, chat, config, document, index, and MCP grammar surfaces."
+owner = "crate/sim-codec"
+audiences = ["code", "framework"]
+guidance = "Use this row when finding a domain codec grammar for data, packets, configuration, or generated index text."
+claims_surfaces = [
+  "syntax/binary",
+  "syntax/binary-base64",
+  "syntax/bitwise",
+  "syntax/bitwise-base64",
+  "syntax/chat",
+  "syntax/config",
+  "syntax/doc",
+  "syntax/index",
+  "syntax/mcp",
+]
+supports = [
+  "feature/sim-codecs/codec",
+]
+
+[[feature]]
+id = "feature/sim-codecs/wire-protocol-grammars"
+title = "Wire protocol grammars"
+summary = "Read and write binary, bitwise, chat, config, document, index, and MCP wire protocols."
+owner = "crate/sim-codec"
+audiences = ["code", "framework"]
+guidance = "Use this row when checking the grammar contract for a packet or byte-level wire surface."
+claims_surfaces = [
+  "wire/binary",
+  "wire/binary-base64",
+  "wire/bitwise",
+  "wire/bitwise-base64",
+  "wire/chat",
+  "wire/config",
+  "wire/doc",
+  "wire/index",
+  "wire/mcp",
+]
+supports = [
+  "feature/sim-codecs/codec",
 ]
 
 [[feature]]
@@ -51,6 +115,7 @@ audiences = ["code", "framework"]
 guidance = "Use this row when building a parser for an operator language."
 claims_anchors = [
   "anchor/crate/sim-codec-pratt",
+  "anchor/grammar/syntax/pratt",
 ]
 claims_surfaces = [
   "syntax/pratt",
@@ -65,10 +130,14 @@ audiences = ["code", "framework"]
 guidance = "Use this row when following packet-shaped model workflow data at the codec layer."
 claims_anchors = [
   "anchor/crate/sim-codec-bridge",
+  "anchor/grammar/wire/bridge",
   "anchor/runtime-lib/sim-codec-bridge/bridge-codec-lib",
 ]
 claims_surfaces = [
   "wire/bridge",
+]
+claims_specimens = [
+  "spec-test/sim-codecs/crates/sim-codec-doc/tests/conformance",
 ]
 
 [[route]]
@@ -88,9 +157,38 @@ steps = [
 ]
 
 [[route]]
+id = "route/add-a-language"
+task = "Add a language"
+audiences = ["code", "framework"]
+steps = [
+  { feature = "feature/sim-codecs/codec", why = "The codec row owns shared positions, limits, and loadable codec contracts." },
+  { feature = "feature/sim-codecs/expression-syntax-grammars", why = "Expression syntax rows expose language and grammar subjects with round-trip contracts." },
+  { feature = "feature/sim-codecs/pratt", why = "Operator-shaped languages reuse the Pratt syntax surface." },
+]
+
+[[route]]
+id = "route/add-a-packet-codec"
+task = "Add a packet codec"
+audiences = ["code", "framework"]
+steps = [
+  { feature = "feature/sim-codecs/bridge-packet-codec", why = "The Bridge packet codec owns the Bridge wire grammar." },
+  { feature = "feature/sim-codecs/wire-protocol-grammars", why = "The wire grammar row groups packet and byte-level protocol contracts." },
+]
+
+[[route]]
 id = "route/add-bridge-packet-codec"
 task = "Add a Bridge packet codec"
 audiences = ["code", "framework"]
 steps = [
   { feature = "feature/sim-codecs/bridge-packet-codec", why = "The Bridge packet codec owns the Bridge wire grammar." },
+]
+
+[[route]]
+id = "route/find-a-grammar"
+task = "Find a grammar"
+audiences = ["code", "framework"]
+steps = [
+  { feature = "feature/sim-codecs/expression-syntax-grammars", why = "The expression syntax row carries language and grammar subjects." },
+  { feature = "feature/sim-codecs/domain-syntax-grammars", why = "The domain syntax row carries data, document, config, and packet syntax contracts." },
+  { feature = "feature/sim-codecs/wire-protocol-grammars", why = "The wire row carries packet and byte-level grammar contracts." },
 ]
