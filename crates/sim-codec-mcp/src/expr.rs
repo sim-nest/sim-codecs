@@ -5,6 +5,7 @@
 use std::collections::BTreeSet;
 
 use sim_kernel::{Error, Expr, NumberLiteral, Result, Symbol};
+use sim_value::{access::map_entries as map_fields, build::entry};
 
 use crate::envelope::{
     McpEnvelope, McpError, McpErrorEnvelope, McpNotification, McpRequest, McpResponse,
@@ -29,30 +30,30 @@ const MCP_VERSION: &str = "2.0";
 pub fn envelope_to_expr(envelope: &McpEnvelope) -> Expr {
     match envelope {
         McpEnvelope::Request(request) => Expr::Map(vec![
-            field("mcp", Expr::String(MCP_VERSION.to_owned())),
-            field("id", request.id.clone()),
-            field("method", Expr::String(request.method.clone())),
-            field("params", request.params.clone()),
+            entry("mcp", Expr::String(MCP_VERSION.to_owned())),
+            entry("id", request.id.clone()),
+            entry("method", Expr::String(request.method.clone())),
+            entry("params", request.params.clone()),
         ]),
         McpEnvelope::Notification(notification) => Expr::Map(vec![
-            field("mcp", Expr::String(MCP_VERSION.to_owned())),
-            field("method", Expr::String(notification.method.clone())),
-            field("params", notification.params.clone()),
+            entry("mcp", Expr::String(MCP_VERSION.to_owned())),
+            entry("method", Expr::String(notification.method.clone())),
+            entry("params", notification.params.clone()),
         ]),
         McpEnvelope::Response(response) => Expr::Map(vec![
-            field("mcp", Expr::String(MCP_VERSION.to_owned())),
-            field("id", response.id.clone()),
-            field("result", response.result.clone()),
+            entry("mcp", Expr::String(MCP_VERSION.to_owned())),
+            entry("id", response.id.clone()),
+            entry("result", response.result.clone()),
         ]),
         McpEnvelope::Error(error) => Expr::Map(vec![
-            field("mcp", Expr::String(MCP_VERSION.to_owned())),
-            field("id", error.id.clone()),
-            field(
+            entry("mcp", Expr::String(MCP_VERSION.to_owned())),
+            entry("id", error.id.clone()),
+            entry(
                 "error",
                 Expr::Map(vec![
-                    field("code", error_code_expr(error.error.code)),
-                    field("message", Expr::String(error.error.message.clone())),
-                    field("data", error.error.data.clone()),
+                    entry("code", error_code_expr(error.error.code)),
+                    entry("message", Expr::String(error.error.message.clone())),
+                    entry("data", error.error.data.clone()),
                 ]),
             ),
         ]),
@@ -197,8 +198,6 @@ fn optional_field<'a>(fields: &'a [(Expr, Expr)], name: &str) -> Option<&'a Expr
         .find_map(|(key, value)| (field_name(key).ok()?.as_str() == name).then_some(value))
 }
 
-use sim_value::access::map_entries as map_fields;
-
 fn reject_unknown(fields: &[(Expr, Expr)], allowed: &[&str]) -> Result<()> {
     let mut seen = BTreeSet::new();
     for (key, _) in fields {
@@ -222,10 +221,6 @@ fn field_name(expr: &Expr) -> Result<String> {
             found: "invalid field key",
         }),
     }
-}
-
-fn field(name: &str, value: Expr) -> (Expr, Expr) {
-    sim_value::build::entry(name, value)
 }
 
 pub(crate) fn error_code_expr(code: i64) -> Expr {

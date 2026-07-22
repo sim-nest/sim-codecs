@@ -1,6 +1,7 @@
 //! The comparison corpus: `Expr` values grouped by the payload shape they stress.
 
 use sim_kernel::{Expr, NumberLiteral, Symbol};
+use sim_value::build::sym;
 
 /// What kind of payload a sample stresses -- the axis the verdict is sliced on.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -76,10 +77,6 @@ fn num(domain: &str, canonical: &str) -> Expr {
 
 fn int(n: i64) -> Expr {
     num("i64", &n.to_string())
-}
-
-fn sym(s: &str) -> Expr {
-    sim_value::build::sym(s)
 }
 
 fn deep(depth: usize) -> Expr {
