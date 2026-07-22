@@ -17,7 +17,7 @@ model = []
 [dependencies]
 sim-codec-binary = { version = "0.1.0", path = "../sim-codec-binary" }
 sim-kernel = { version = "0.1.4" }
-wasmi = "0.51.5"
+wasmi = "1.1.0"
 
 [dev-dependencies]
 sim-kernel = { version = "0.1.4", features = ["test-support"] }
