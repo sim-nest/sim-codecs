@@ -7,6 +7,8 @@ on:
 jobs:
   check:
     runs-on: ubuntu-latest
+    env:
+      SIMDOC_TOOLING_MANIFEST: ${{ github.workspace }}/sim-tooling/Cargo.toml
     steps:
       - uses: actions/checkout@v4
         with:
