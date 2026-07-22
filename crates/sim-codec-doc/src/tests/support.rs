@@ -1,4 +1,5 @@
 use sim_kernel::{Args, Expr, NumberLiteral, Symbol};
+pub(super) use sim_value::access::field as map_field;
 
 use crate::{
     BackendId, MarkupBackend, MarkupBlock, MarkupDecodeOptions, MarkupDoc, MarkupEncodeOptions,
@@ -40,15 +41,6 @@ pub(super) fn map_string<'a>(expr: &'a Expr, field: &str) -> Option<&'a str> {
         Expr::String(text) => Some(text),
         _ => None,
     }
-}
-
-pub(super) fn map_field<'a>(expr: &'a Expr, field: &str) -> Option<&'a Expr> {
-    let Expr::Map(entries) = expr else {
-        return None;
-    };
-    entries.iter().find_map(|(key, value)| {
-        matches!(key, Expr::Symbol(symbol) if symbol.name.as_ref() == field).then_some(value)
-    })
 }
 
 pub(super) fn blocks_without_spans(blocks: &[MarkupBlock]) -> Vec<MarkupBlock> {

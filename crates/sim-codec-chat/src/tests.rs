@@ -6,6 +6,7 @@ use sim_codec::{
 use sim_kernel::{
     Args, DefaultFactory, EagerPolicy, EncodeOptions, Error, Expr, ReadPolicy, Symbol,
 };
+use sim_value::access::{field as map_field, field_str as field_string};
 
 use crate::{
     AnthropicCodecLib, ChatCodecLib, LemonadeCodecLib, LmStudioCodecLib, OllamaCodecLib,
@@ -376,23 +377,6 @@ fn call_report(cx: &mut sim_kernel::Cx, symbol: Symbol) -> Expr {
 fn field_bool(expr: &Expr, name: &str) -> Option<bool> {
     map_field(expr, name).and_then(|value| match value {
         Expr::Bool(value) => Some(*value),
-        _ => None,
-    })
-}
-
-fn field_string<'a>(expr: &'a Expr, name: &str) -> Option<&'a str> {
-    map_field(expr, name).and_then(|value| match value {
-        Expr::String(value) => Some(value.as_str()),
-        _ => None,
-    })
-}
-
-fn map_field<'a>(expr: &'a Expr, name: &str) -> Option<&'a Expr> {
-    let Expr::Map(entries) = expr else {
-        return None;
-    };
-    entries.iter().find_map(|(key, value)| match key {
-        Expr::Symbol(symbol) if symbol.name.as_ref() == name => Some(value),
         _ => None,
     })
 }

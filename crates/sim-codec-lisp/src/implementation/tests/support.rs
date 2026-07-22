@@ -5,10 +5,10 @@ pub(super) use sim_codec::{
     decode_with_codec, decode_with_codec_and_limits, encode_with_codec,
 };
 pub(super) use sim_kernel::{
-    Args, Callable, Class, ClassId, ClassRef, Cx, DefaultFactory, EagerPolicy, EncodePosition,
-    Expr, Factory, NumberLiteral, Object, ObjectEncode, ObjectEncoding, ReadPolicy, ShapeRef,
-    SourceId, Symbol, TableRef, Trivia, Value, WriteCx as KernelWriteCx, read_construct_capability,
-    read_eval_capability,
+    Args, Callable, Class, ClassId, ClassRef, Cx, DefaultFactory, EncodePosition, Expr, Factory,
+    NumberLiteral, Object, ObjectEncode, ObjectEncoding, ReadPolicy, ShapeRef, SourceId, Symbol,
+    TableRef, Trivia, Value, WriteCx as KernelWriteCx, read_construct_capability,
+    read_eval_capability, testing::eager_cx,
 };
 
 pub(super) use super::super::{
@@ -308,7 +308,7 @@ pub(super) fn install_point(cx: &mut Cx) {
 }
 
 pub(super) fn cx() -> Cx {
-    let mut cx = Cx::new(Arc::new(EagerPolicy), Arc::new(DefaultFactory));
+    let mut cx = eager_cx();
     sim_test_support::register_core_classes(&mut cx);
     sim_test_support::register_f64_number_domain(&mut cx);
     cx
