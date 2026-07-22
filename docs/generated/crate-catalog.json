@@ -1,6 +1,6 @@
 {
   "generator": "xtask crate-catalog v1",
-  "package_count": 19,
+  "package_count": 20,
   "packages": [
     {
       "description": "SIM workspace package for sim codec algol.",
@@ -132,6 +132,18 @@
         "custom-build",
         "lib",
         "test"
+      ]
+    },
+    {
+      "description": "SIM Index codec for checked s-expression and JSON index graph forms.",
+      "generated_readme": true,
+      "manifest": "crates/sim-codec-index/Cargo.toml",
+      "name": "sim-codec-index",
+      "publish": "true",
+      "readme": "crates/sim-codec-index/README.md",
+      "root": "crates/sim-codec-index",
+      "target_kinds": [
+        "lib"
       ]
     },
     {

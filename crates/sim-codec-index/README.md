@@ -12,4 +12,4 @@ SIM Index codec for checked s-expression and JSON index graph forms.
 
 ## Crate Documentation
 
-SIM Index codec over the shared `IndexDoc` graph.
+SIM Index codec over the shared IndexDoc graph.

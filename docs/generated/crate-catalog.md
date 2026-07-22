@@ -16,6 +16,7 @@ Generated from Cargo metadata by `xtask crate-catalog v1`.
 | `sim-codec-compare` | `false` | `bin, custom-build, lib` | Developer harness comparing sim-codec-bitwise vs sim-codec-binary on size and speed. |
 | `sim-codec-config` | `true` | `custom-build, lib` | SIM config codec for per-library and single-file config maps. |
 | `sim-codec-doc` | `true` | `custom-build, lib, test` | Markup document codec backends for SIM. |
+| `sim-codec-index` | `true` | `lib` | SIM Index codec for checked s-expression and JSON index graph forms. |
 | `sim-codec-json` | `true` | `custom-build, lib, test` | SIM workspace package for sim codec json. |
 | `sim-codec-lisp` | `true` | `cdylib, custom-build, rlib` | SIM workspace package for sim codec lisp. |
 | `sim-codec-lua` | `true` | `custom-build, lib` | Lua chunk codec with expression, located, and tree round-trip lanes. |
