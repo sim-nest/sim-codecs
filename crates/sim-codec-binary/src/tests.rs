@@ -10,6 +10,7 @@ use sim_kernel::{
     Args, Datum, DefaultFactory, EagerPolicy, EncodeOptions, Expr, LocatedExpr, LocatedExprTree,
     NumberLiteral, Origin, QuoteMode, SourceId, Span, Symbol, Trivia,
 };
+use sim_value::access::{field as map_field, field_str as field_string};
 
 use crate::{
     BinaryCodecLib, BinaryFrame, DecodeLimits, decode_frame, decode_located_frame,
@@ -84,21 +85,24 @@ fn field_bool(expr: &Expr, name: &str) -> Option<bool> {
     })
 }
 
-fn field_string<'a>(expr: &'a Expr, name: &str) -> Option<&'a str> {
-    map_field(expr, name).and_then(|value| match value {
-        Expr::String(value) => Some(value.as_str()),
-        _ => None,
-    })
-}
+#[test]
+fn report_field_helpers_use_bare_symbol_policy() {
+    let bare = Expr::Map(vec![(
+        Expr::Symbol(Symbol::new("codec")),
+        Expr::String("ok".into()),
+    )]);
+    let string_key = Expr::Map(vec![(
+        Expr::String("codec".into()),
+        Expr::String("no".into()),
+    )]);
+    let qualified = Expr::Map(vec![(
+        Expr::Symbol(Symbol::qualified("codec", "codec")),
+        Expr::String("no".into()),
+    )]);
 
-fn map_field<'a>(expr: &'a Expr, name: &str) -> Option<&'a Expr> {
-    let Expr::Map(entries) = expr else {
-        return None;
-    };
-    entries.iter().find_map(|(key, value)| match key {
-        Expr::Symbol(symbol) if symbol.name.as_ref() == name => Some(value),
-        _ => None,
-    })
+    assert_eq!(field_string(&bare, "codec"), Some("ok"));
+    assert_eq!(field_string(&string_key, "codec"), None);
+    assert_eq!(field_string(&qualified, "codec"), None);
 }
 
 #[test]

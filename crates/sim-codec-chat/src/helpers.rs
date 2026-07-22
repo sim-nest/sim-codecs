@@ -5,6 +5,7 @@
 use std::collections::BTreeSet;
 
 use sim_kernel::{Error, Expr, Result, Symbol};
+use sim_value::access::{entry_field, entry_field_any, field as expr_field};
 
 /// Returns `true` when `expr` is a chat transcript map carrying a true
 /// `model-request` marker.
@@ -249,14 +250,14 @@ fn validate_event(entries: &[(Expr, Expr)]) -> Result<()> {
     require_symbol_field(entries, "runner")?;
     require_string_field(entries, "model")?;
     require_field(entries, "span-id")?;
-    if let Some(tool_call) = field(entries, "tool-call") {
+    if let Some(tool_call) = entry_field(entries, "tool-call") {
         validate_projected_expr(tool_call, "chat tool-call event")?;
     }
-    if let Some(tool_result) = field(entries, "tool-result") {
+    if let Some(tool_result) = entry_field(entries, "tool-result") {
         validate_projected_expr(tool_result, "chat tool-result event")?;
     }
     validate_optional_usage(entries)?;
-    if let Some(response) = field(entries, "response") {
+    if let Some(response) = entry_field(entries, "response") {
         validate_chat_transcript(response)?;
     }
     validate_optional_projected_field(entries, "raw-provider-response")?;
@@ -327,14 +328,14 @@ fn validate_tool_result(entries: &[(Expr, Expr)]) -> Result<()> {
 }
 
 fn validate_optional_usage(entries: &[(Expr, Expr)]) -> Result<()> {
-    if let Some(usage) = field(entries, "usage") {
+    if let Some(usage) = entry_field(entries, "usage") {
         validate_projected_expr(usage, "chat usage")?;
     }
     Ok(())
 }
 
 fn validate_optional_projected_field(entries: &[(Expr, Expr)], name: &'static str) -> Result<()> {
-    if let Some(value) = field(entries, name) {
+    if let Some(value) = entry_field(entries, name) {
         validate_projected_expr(value, name)?;
     }
     Ok(())
@@ -413,11 +414,12 @@ fn reject_duplicate_bare_keys(entries: &[(Expr, Expr)], context: &str) -> Result
 }
 
 fn require_field<'a>(entries: &'a [(Expr, Expr)], name: &'static str) -> Result<&'a Expr> {
-    field(entries, name).ok_or_else(|| chat_eval(format!("chat transcript missing {name} field")))
+    entry_field(entries, name)
+        .ok_or_else(|| chat_eval(format!("chat transcript missing {name} field")))
 }
 
 fn require_field_any<'a>(entries: &'a [(Expr, Expr)], name: &'static str) -> Result<&'a Expr> {
-    field_any(entries, name)
+    entry_field_any(entries, name)
         .ok_or_else(|| chat_eval(format!("chat transcript missing {name} field")))
 }
 
@@ -472,38 +474,12 @@ fn require_list_field<'a>(entries: &'a [(Expr, Expr)], name: &'static str) -> Re
     }
 }
 
-fn expr_field<'a>(expr: &'a Expr, name: &str) -> Option<&'a Expr> {
-    let Expr::Map(entries) = expr else {
-        return None;
-    };
-    field(entries, name)
-}
-
-fn field<'a>(entries: &'a [(Expr, Expr)], name: &str) -> Option<&'a Expr> {
-    entries.iter().find_map(|(key, value)| match key {
-        Expr::Symbol(symbol) if symbol.namespace.is_none() && symbol.name.as_ref() == name => {
-            Some(value)
-        }
-        _ => None,
-    })
-}
-
-fn field_any<'a>(entries: &'a [(Expr, Expr)], name: &str) -> Option<&'a Expr> {
-    entries.iter().find_map(|(key, value)| match key {
-        Expr::Symbol(symbol) if symbol.namespace.is_none() && symbol.name.as_ref() == name => {
-            Some(value)
-        }
-        Expr::String(text) if text == name => Some(value),
-        _ => None,
-    })
-}
-
 fn marker_is_true(expr: &Expr, name: &str) -> bool {
     matches!(expr_field(expr, name), Some(Expr::Bool(true)))
 }
 
 fn marker_is_true_in(entries: &[(Expr, Expr)], name: &str) -> bool {
-    matches!(field(entries, name), Some(Expr::Bool(true)))
+    matches!(entry_field(entries, name), Some(Expr::Bool(true)))
 }
 
 fn key_bool(name: &str, value: bool) -> (Expr, Expr) {
