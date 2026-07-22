@@ -15,7 +15,7 @@ reason = "The index codec is taught through rustdoc examples and fail-closed tes
 
 [dependencies]
 serde_json = "1"
-sim-codec = { version = "0.1.0", path = "../sim-codec" }
+sim-codec = { version = "0.1.5", path = "../sim-codec" }
 sim-codec-json = { version = "0.1.2", path = "../sim-codec-json" }
 sim-codec-lisp = { version = "0.1.1", path = "../sim-codec-lisp" }
 sim-index-core = { version = "0.1.0", git = "https://github.com/sim-nest/sim-foundation", rev = "d11442dccfb66699bb644f7c1074be19449112c8" }
