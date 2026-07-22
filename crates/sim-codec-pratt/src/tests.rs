@@ -6,6 +6,8 @@ use sim_kernel::{
 
 use crate::{PrattCodecParser, PrattTokenSource, SpannedPrattToken};
 
+// conformance: Pratt parser handles operator precedence and associativity.
+
 #[derive(Clone)]
 struct StaticTokens(Vec<SpannedPrattToken>);
 

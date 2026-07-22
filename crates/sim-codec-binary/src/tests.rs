@@ -1,5 +1,7 @@
 use std::sync::Arc;
 
+// conformance: wire protocol grammar preserves binary frames.
+
 use sim_codec::{
     DecodePosition, DecodedForm, Input, Output, decode_datum_with_codec, decode_default_with_codec,
     encode_datum_with_codec,

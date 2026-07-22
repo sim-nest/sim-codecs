@@ -148,7 +148,7 @@
       "descriptor": "core/Codec",
       "file": "crates/sim-codec/src/implementation/runtime.rs",
       "kind": "handle",
-      "line": 244,
+      "line": 246,
       "reason": "codec runtime registry handle; reconstruct by loading the codec lib and using the codec symbol"
     },
     {
@@ -1326,10 +1326,10 @@
     "generated_by": "cargo run -p xtask -- simdoc",
     "generation_timestamp": "2026-07-16T02:55:26+02:00",
     "generator": "xtask repo-contract v1",
-    "git_commit": "42c7ef590797be468ad680dbb0570cdc483d8f55",
+    "git_commit": "d7799e233a1c423962d7a25003905331916d701c",
     "repo": "sim-codecs",
     "schema": "sim.provenance.v1",
-    "source_commit": "42c7ef590797be468ad680dbb0570cdc483d8f55",
+    "source_commit": "d7799e233a1c423962d7a25003905331916d701c",
     "source_remote": "https://github.com/sim-nest/sim-codecs",
     "validation_commands": [
       "cargo fmt --all --check",
@@ -1342,7 +1342,7 @@
       "cargo run -p xtask -- validation-matrix --check --repo .",
       "cargo run -p xtask -- crate-catalog --check --repo ."
     ],
-    "workspace_hash": "7784c546dde385ed",
+    "workspace_hash": "359272f401d9943b",
     "workspace_hash_algorithm": "fnv1a64",
     "workspace_hash_input_count": 304,
     "workspace_hash_inputs": [

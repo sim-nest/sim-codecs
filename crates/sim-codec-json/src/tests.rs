@@ -1,5 +1,7 @@
 use std::sync::Arc;
 
+// conformance: domain syntax grammars round-trip JSON values.
+
 use serde_json::{Value as JsonValue, json};
 use sim_codec::{
     CodecRuntime, DecodeBudget, DecodeLimits, DecodePosition, DecodedForm, Input,

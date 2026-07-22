@@ -17,11 +17,11 @@ This generated lane consumes `docs/generated/sim-index-fragment.sx`. Global inde
 
 | Feature | Subject | Specimens | Summary |
 | --- | --- | ---: | --- |
-| `feature/sim-codecs/codec` | `crate/sim-codec` | 0 | Define codec positions, limits, syntax surfaces, wire surfaces, and loadable codec runtime libraries. |
-| `feature/sim-codecs/expression-syntax-grammars` | `crate/sim-codec-lisp` | 0 | Read and write Lisp, JSON, Algol, Lua, Compare, and Bridge rendered expression grammars. |
-| `feature/sim-codecs/domain-syntax-grammars` | `crate/sim-codec` | 0 | Read and write binary, bitwise, chat, config, document, index, and MCP grammar surfaces. |
-| `feature/sim-codecs/wire-protocol-grammars` | `crate/sim-codec` | 0 | Read and write binary, bitwise, chat, config, document, index, and MCP wire protocols. |
-| `feature/sim-codecs/pratt` | `crate/sim-codec-pratt` | 0 | Parse operator-oriented expression languages through the Pratt codec surface. |
+| `feature/sim-codecs/codec` | `crate/sim-codec` | 1 | Define codec positions, limits, syntax surfaces, wire surfaces, and loadable codec runtime libraries. |
+| `feature/sim-codecs/expression-syntax-grammars` | `crate/sim-codec-lisp` | 1 | Read and write Lisp, JSON, Algol, Lua, Compare, and Bridge rendered expression grammars. |
+| `feature/sim-codecs/domain-syntax-grammars` | `crate/sim-codec` | 1 | Read and write binary, bitwise, chat, config, document, index, and MCP grammar surfaces. |
+| `feature/sim-codecs/wire-protocol-grammars` | `crate/sim-codec` | 1 | Read and write binary, bitwise, chat, config, document, index, and MCP wire protocols. |
+| `feature/sim-codecs/pratt` | `crate/sim-codec-pratt` | 1 | Parse operator-oriented expression languages through the Pratt codec surface. |
 | `feature/sim-codecs/bridge-packet-codec` | `crate/sim-codec-bridge` | 1 | Encode and decode Bridge packet workflow data through the Bridge wire grammar. |
 | `feature/sim-codecs/contract-emitter` | `crate/xtask` | 0 | Emit generated repository contract and index fragments for codec crates. |
 
@@ -154,6 +154,2152 @@ This generated lane consumes `docs/generated/sim-index-fragment.sx`. Global inde
 - `crates/sim-codec/recipes/book.toml`
 
 ## Worked Examples
+
+### `feature/sim-codecs/codec`
+
+Specimen `spec-test/sim-codecs/crates/sim-codec/src/implementation/runtime` is checked by `cargo test`.
+
+Source `crates/sim-codec/src/implementation/runtime.rs`:
+
+```rust
+//! The core decoder/encoder runtime contracts.
+//!
+//! Defines `Input`/`Output`, the `DecodePosition`/`DecodeTarget` output-position
+//! model, the `Decoder`/`Encoder` traits (with their located and tree variants),
+//! and the `CodecRuntime` glue that registers a codec as a runtime
+//! object.
+
+// conformance: codec runtime installs codec objects with position-aware decode.
+
+use std::sync::Arc;
+
+use sim_kernel::{
+    ClassRef, CodecId, Cx, LocatedExpr, LocatedExprTree, Object, Result, ShapeRef, Symbol, Value,
+    WriteCx,
+};
+
+use super::limits::ReadCx;
+
+/// Raw input handed to a [`Decoder`]: source text or source bytes.
+///
+/// Text codecs take [`Input::Text`]; binary codecs take [`Input::Bytes`]. A text
+/// codec given bytes interprets them as UTF-8 (see [`Input::into_string_for`]).
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum Input {
+    /// Source text.
+    Text(String),
+    /// Raw source bytes.
+    Bytes(Vec<u8>),
+}
+
+impl Input {
+    /// Take the input as UTF-8 text, decoding [`Input::Bytes`] and failing closed
+    /// with a codec error if the bytes are not valid UTF-8.
+    pub fn into_string(self) -> Result<String> {
+        self.into_string_for(CodecId(0))
+    }
+
+    /// Take the input as UTF-8 text, tagging invalid bytes with `codec`.
+    pub fn into_string_for(self, codec: CodecId) -> Result<String> {
+        match self {
+            Self::Text(text) => Ok(text),
+            Self::Bytes(bytes) => {
+                String::from_utf8(bytes).map_err(|err| sim_kernel::Error::CodecError {
+                    codec,
+                    message: format!("codec input is not valid UTF-8: {err}"),
+                })
+            }
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn input_utf8_error_uses_supplied_codec_id() {
+        let err = Input::Bytes(vec![0xff])
+            .into_string_for(CodecId(42))
+            .unwrap_err();
+
+        match err {
+            sim_kernel::Error::CodecError { codec, message } => {
+                assert_eq!(codec, CodecId(42));
+                assert!(message.contains("not valid UTF-8"), "{message}");
+            }
+            other => panic!("unexpected error {other:?}"),
+        }
+    }
+}
+
+/// Rendered output produced by an [`Encoder`]: text or bytes.
+///
+/// Text codecs emit [`Output::Text`]; binary codecs emit [`Output::Bytes`].
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum Output {
+    /// Rendered text.
+    Text(String),
+    /// Rendered bytes.
+    Bytes(Vec<u8>),
+}
+
+impl Output {
+    /// Take the output as UTF-8 text, decoding [`Output::Bytes`] and failing
+    /// closed with a codec error if the bytes are not valid UTF-8.
+    pub fn into_text(self) -> Result<String> {
+        match self {
+            Self::Text(text) => Ok(text),
+            Self::Bytes(bytes) => {
+                String::from_utf8(bytes).map_err(|err| sim_kernel::Error::CodecError {
+                    codec: CodecId(0),
+                    message: err.to_string(),
+                })
+            }
+        }
+    }
+}
+
+/// The syntactic position a decode is targeting, mirroring the kernel's
+/// `EncodePosition`.
+///
+/// Position is the core idea of the codec contract: a decoder reads the same
+/// text differently depending on where its result will land. A codec may, for
+/// example, lower forms to calls in [`DecodePosition::Eval`] but keep them as
+/// data everywhere else (see [`CodecDefaultDecode::target_for`]).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum DecodePosition {
+    /// Decoding into evaluable position: the result will be evaluated.
+    Eval,
+    /// Decoding inside a quote: the result is literal structure, not evaluated.
+    Quote,
+    /// Decoding as plain data.
+    Data,
+    /// Decoding into a pattern (match/binding) position.
+    Pattern,
+}
+
+impl From<sim_kernel::EncodePosition> for DecodePosition {
+    fn from(position: sim_kernel::EncodePosition) -> Self {
+        match position {
+            sim_kernel::EncodePosition::Eval => Self::Eval,
+            sim_kernel::EncodePosition::Quote => Self::Quote,
+            sim_kernel::EncodePosition::Data => Self::Data,
+            sim_kernel::EncodePosition::Pattern => Self::Pattern,
+        }
+    }
+}
+
+/// The checked form a decode resolves to once a position is known: inert data
+/// or an evaluable term.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum DecodeTarget {
+    /// Decode to a `Datum` (inert data).
+    Datum,
+    /// Decode to a `Term` (an evaluable form, e.g. a call).
+    Term,
+}
+
+/// A codec's policy for choosing a [`DecodeTarget`] from a [`DecodePosition`].
+///
+/// Data codecs always yield data; eval-aware codecs yield a term in eval
+/// position and data otherwise.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum CodecDefaultDecode {
+    /// Always decode to a `Datum`, regardless of position.
+    Datum,
+    /// Decode to a `Term` in [`DecodePosition::Eval`], otherwise to a `Datum`.
+    TermInEvalDatumOtherwise,
+}
+
+impl CodecDefaultDecode {
+    /// Resolve the [`DecodeTarget`] for `position` under this policy.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use sim_codec::{CodecDefaultDecode, DecodePosition, DecodeTarget};
+    ///
+    /// let policy = CodecDefaultDecode::TermInEvalDatumOtherwise;
+    /// assert_eq!(policy.target_for(DecodePosition::Eval), DecodeTarget::Term);
+    /// assert_eq!(policy.target_for(DecodePosition::Data), DecodeTarget::Datum);
+    ///
+    /// // A pure data codec always yields data.
+    /// assert_eq!(
+    ///     CodecDefaultDecode::Datum.target_for(DecodePosition::Eval),
+    ///     DecodeTarget::Datum,
+    /// );
+    /// ```
+    pub fn target_for(self, position: DecodePosition) -> DecodeTarget {
+        match (self, position) {
+            (Self::TermInEvalDatumOtherwise, DecodePosition::Eval) => DecodeTarget::Term,
+            _ => DecodeTarget::Datum,
+        }
+    }
+
+    /// The stable kebab-case name of this policy, for metadata and display.
+    pub fn as_symbol_name(self) -> &'static str {
+        match self {
+            Self::Datum => "datum",
+            Self::TermInEvalDatumOtherwise => "term-in-eval-datum-otherwise",
+        }
+    }
+}
+
+/// The core decode contract: turn [`Input`] into a checked kernel `Expr`.
+///
+/// Every codec that can read implements `Decoder`. The [`ReadCx`] carries the
+/// kernel context, the codec id, the read policy, and the decode limits applied
+/// to untrusted input.
+pub trait Decoder: Send + Sync {
+    /// Decode `input` into a kernel `Expr`, charging the [`ReadCx`] budget.
+    fn decode(&self, cx: &mut ReadCx<'_>, input: Input) -> Result<sim_kernel::Expr>;
+}
+
+/// A decoder that preserves source `Origin`, producing a [`LocatedExpr`].
+///
+/// Optional: [`CodecRuntime`] falls back to a plain [`Decoder`] with no origin
+/// when a codec provides none.
+pub trait LocatedDecoder: Send + Sync {
+    /// Decode `input` into a [`LocatedExpr`], attributing spans to `source_id`.
+    fn decode_located(
+        &self,
+        cx: &mut ReadCx<'_>,
+        input: Input,
+        source_id: String,
+    ) -> Result<LocatedExpr>;
+}
+
+/// A decoder that preserves the full source tree as a [`LocatedExprTree`],
+/// including trivia, for lossless round-tripping.
+pub trait TreeDecoder: Send + Sync {
+    /// Decode `input` into a [`LocatedExprTree`], attributing spans to
+    /// `source_id`.
+    fn decode_tree(
+        &self,
+        cx: &mut ReadCx<'_>,
+        input: Input,
+        source_id: String,
+    ) -> Result<LocatedExprTree>;
+}
+
+/// The core encode contract: render a kernel `Expr` to [`Output`].
+///
+/// Every codec that can write implements `Encoder`. The [`WriteCx`] carries the
+/// kernel context, the codec id, and the [`EncodeOptions`](sim_kernel::EncodeOptions)
+/// that fix the output position and fidelity.
+pub trait Encoder: Send + Sync {
+    /// Encode `expr` into [`Output`] under the context's encode options.
+    fn encode(&self, cx: &mut WriteCx<'_>, expr: &sim_kernel::Expr) -> Result<Output>;
+}
+
+/// An encoder that consumes a [`LocatedExpr`], able to use source origin for a
+/// higher-fidelity rendering than the plain [`Encoder`].
+pub trait LocatedEncoder: Send + Sync {
+    /// Encode a [`LocatedExpr`], optionally using its origin for fidelity.
+    fn encode_located(&self, cx: &mut WriteCx<'_>, expr: &LocatedExpr) -> Result<Output>;
+}
+
+/// An encoder that consumes a full [`LocatedExprTree`], able to reproduce trivia
+/// and exact layout for lossless round-trips.
+pub trait TreeEncoder: Send + Sync {
+    /// Encode a [`LocatedExprTree`], reproducing layout and trivia where present.
+    fn encode_tree(&self, cx: &mut WriteCx<'_>, expr: &LocatedExprTree) -> Result<Output>;
+}
+
+#[sim_citizen_derive::non_citizen(
+    reason = "codec runtime registry handle; reconstruct by loading the codec lib and using the codec symbol",
+    kind = "handle",
+    descriptor = "core/Codec"
+)]
+/// A registered codec as a runtime object: a symbol-named bundle of optional
+/// decode/encode capabilities plus the Shapes and default-decode policy it
+/// exposes.
+///
+/// This is the value the kernel hands back from a codec lookup. Each capability
+/// is optional; the dispatch methods ([`decode`](CodecRuntime::decode),
+/// [`encode_located`](CodecRuntime::encode_located), ...) pick the richest
+/// implementation present and fall back to the plain forms otherwise, failing
+/// closed with a codec error when none is provided.
+pub struct CodecRuntime {
+    /// Stable id of this codec.
+    pub id: CodecId,
+    /// The symbol the codec is registered and looked up under.
+    pub symbol: Symbol,
+    /// Plain `Expr` decoder, if the codec can read.
+    pub decoder: Option<Arc<dyn Decoder>>,
+    /// Origin-preserving decoder, if available.
+    pub located_decoder: Option<Arc<dyn LocatedDecoder>>,
+    /// Full-tree (lossless) decoder, if available.
+    pub tree_decoder: Option<Arc<dyn TreeDecoder>>,
+    /// Plain `Expr` encoder, if the codec can write.
+    pub encoder: Option<Arc<dyn Encoder>>,
+    /// Origin-aware encoder, if available.
+    pub located_encoder: Option<Arc<dyn LocatedEncoder>>,
+    /// Full-tree (lossless) encoder, if available.
+    pub tree_encoder: Option<Arc<dyn TreeEncoder>>,
+    /// Advisory browse metadata: a `Shape` that describes the expressions this
+    /// codec is intended for, surfaced in the codec's browse table so callers
+    /// can discover a codec's domain. It is descriptive only -- decode does not
+    /// validate results against it (each codec enforces its own grammar and
+    /// [`DecodeLimits`](crate::DecodeLimits) directly).
+    pub expr_shape: ShapeRef,
+    /// Shape describing this codec's options table.
+    pub options_shape: ShapeRef,
+    /// How this codec maps a [`DecodePosition`] to a [`DecodeTarget`].
+    pub default_decode: CodecDefaultDecode,
+}
+
+impl CodecRuntime {
+    /// Decode `input` with this codec's plain decoder, erroring if it has none.
+    pub fn decode(&self, cx: &mut ReadCx<'_>, input: Input) -> Result<sim_kernel::Expr> {
+        let Some(decoder) = &self.decoder else {
+            return Err(sim_kernel::Error::CodecError {
+                codec: self.id,
+                message: format!("codec {} has no decoder", self.symbol),
+            });
+        };
+        decoder.decode(cx, input)
+    }
+
+    /// Encode `expr` with this codec's plain encoder, erroring if it has none.
+    pub fn encode(&self, cx: &mut WriteCx<'_>, expr: &sim_kernel::Expr) -> Result<Output> {
+        let Some(encoder) = &self.encoder else {
+            return Err(sim_kernel::Error::CodecError {
+                codec: self.id,
+                message: format!("codec {} has no encoder", self.symbol),
+            });
+        };
+        encoder.encode(cx, expr)
+    }
+
+    /// Decode `input` preserving origin, falling back to [`decode`](Self::decode)
+    /// with no origin when the codec has no [`LocatedDecoder`].
+    pub fn decode_located(
+        &self,
+        cx: &mut ReadCx<'_>,
+        input: Input,
+        source_id: String,
+    ) -> Result<LocatedExpr> {
+        if let Some(decoder) = &self.located_decoder {
+            return decoder.decode_located(cx, input, source_id);
+        }
+        Ok(LocatedExpr {
+            expr: self.decode(cx, input)?,
+            origin: None,
+        })
+    }
+
+    /// Decode `input` into a full tree, falling back to
+    /// [`decode_located`](Self::decode_located) reconstructed recursively when
+    /// the codec has no [`TreeDecoder`].
+    pub fn decode_tree(
+        &self,
+        cx: &mut ReadCx<'_>,
+        input: Input,
+        source_id: String,
+    ) -> Result<LocatedExprTree> {
+        if let Some(decoder) = &self.tree_decoder {
+            return decoder.decode_tree(cx, input, source_id);
+        }
+        let located = self.decode_located(cx, input, source_id)?;
+        let mut tree = LocatedExprTree::from_expr_recursive(located.expr.clone());
+        tree.origin = located.origin;
+        Ok(tree)
+    }
+
+    /// Encode a [`LocatedExpr`], using the origin-aware encoder only when
+    /// lossless-origin output is requested; otherwise drop the origin and use
+    /// [`encode`](Self::encode).
+    pub fn encode_located(&self, cx: &mut WriteCx<'_>, expr: &LocatedExpr) -> Result<Output> {
+        if cx.options.lossless_origin
+            && let Some(encoder) = &self.located_encoder
+        {
+            return encoder.encode_located(cx, expr);
+        }
+        self.encode(cx, &expr.expr)
+    }
+
+    /// Encode a [`LocatedExprTree`], preferring the tree encoder then the
+    /// located encoder for lossless-origin output, and otherwise dropping to
+    /// [`encode`](Self::encode) on the bare expression.
+    pub fn encode_tree(&self, cx: &mut WriteCx<'_>, expr: &LocatedExprTree) -> Result<Output> {
+        if cx.options.lossless_origin {
+            if let Some(encoder) = &self.tree_encoder {
+                return encoder.encode_tree(cx, expr);
+            }
+            if let Some(encoder) = &self.located_encoder {
+                return encoder.encode_located(cx, &expr.located());
+            }
+        }
+        self.encode(cx, &expr.expr)
+    }
+}
+
+impl Object for CodecRuntime {
+    fn display(&self, _cx: &mut Cx) -> Result<String> {
+        Ok(format!("#<codec {}>", self.symbol))
+    }
+
+    fn as_any(&self) -> &dyn std::any::Any {
+        self
+    }
+}
+
+impl sim_kernel::ObjectCompat for CodecRuntime {
+    fn class(&self, cx: &mut Cx) -> Result<ClassRef> {
+        if let Some(value) = cx
+            .registry()
+            .class_by_symbol(&Symbol::qualified("core", "Codec"))
+        {
+            return Ok(value.clone());
+        }
+        cx.factory().class_stub(
+            sim_kernel::CORE_CODEC_CLASS_ID,
+            Symbol::qualified("core", "Codec"),
+        )
+    }
+    fn as_expr(&self, _cx: &mut Cx) -> Result<sim_kernel::Expr> {
+        Ok(sim_kernel::Expr::Symbol(self.symbol.clone()))
+    }
+    fn as_table(&self, cx: &mut Cx) -> Result<Value> {
+        cx.factory().table(vec![
+            (
+                Symbol::new("symbol"),
+                cx.factory().string(self.symbol.to_string())?,
+            ),
+            (
+                Symbol::new("has-decoder"),
+                cx.factory().bool(self.decoder.is_some())?,
+            ),
+            (
+                Symbol::new("has-encoder"),
+                cx.factory().bool(self.encoder.is_some())?,
+            ),
+            (
+                Symbol::new("has-located-decoder"),
+                cx.factory().bool(self.located_decoder.is_some())?,
+            ),
+            (
+                Symbol::new("has-located-encoder"),
+                cx.factory().bool(self.located_encoder.is_some())?,
+            ),
+            (
+                Symbol::new("has-tree-decoder"),
+                cx.factory().bool(self.tree_decoder.is_some())?,
+            ),
+            (
+                Symbol::new("has-tree-encoder"),
+                cx.factory().bool(self.tree_encoder.is_some())?,
+            ),
+            (
+                Symbol::new("default-decode"),
+                cx.factory()
+                    .string(self.default_decode.as_symbol_name().to_owned())?,
+            ),
+            (Symbol::new("expr-shape"), self.expr_shape.clone()),
+            (Symbol::new("options-shape"), self.options_shape.clone()),
+        ])
+    }
+}
+```
+
+### `feature/sim-codecs/expression-syntax-grammars`
+
+Specimen `spec-test/sim-codecs/crates/sim-codec-lisp/src/implementation/tests/basics` is checked by `cargo test`.
+
+Source `crates/sim-codec-lisp/src/implementation/tests/basics.rs`:
+
+```rust
+use super::*;
+
+// conformance: expression syntax grammars round-trip Lisp forms.
+
+#[test]
+fn decodes_lists_vectors_and_quotes() {
+    let mut cx = cx();
+    register_lisp_codec(&mut cx);
+    let expr = decode_with_codec(
+        &mut cx,
+        &Symbol::qualified("codec", "lisp"),
+        Input::Text("(quote [1 2])".to_owned()),
+        ReadPolicy::default(),
+    )
+    .unwrap();
+    assert!(matches!(
+        expr,
+        Expr::Quote {
+            mode: sim_kernel::QuoteMode::Quote,
+            ..
+        }
+    ));
+}
+
+#[test]
+fn codec_is_registered_as_lib_export() {
+    let mut cx = cx();
+    register_lisp_codec(&mut cx);
+    assert!(
+        cx.registry()
+            .codec_by_symbol(&Symbol::qualified("codec", "lisp"))
+            .is_some()
+    );
+}
+
+#[test]
+fn invalid_utf8_input_reports_lisp_codec_id() {
+    let mut cx = cx();
+    register_lisp_codec(&mut cx);
+    let symbol = Symbol::qualified("codec", "lisp");
+    let expected = runtime_codec_id(&mut cx, &symbol);
+
+    let err = decode_with_codec(
+        &mut cx,
+        &symbol,
+        Input::Bytes(vec![0xff]),
+        ReadPolicy::default(),
+    )
+    .unwrap_err();
+
+    assert_codec_error(err, expected, "not valid UTF-8");
+}
+
+#[test]
+fn quote_encoding_is_canonical_and_round_trips() {
+    let mut cx = cx();
+    register_lisp_codec(&mut cx);
+    let expr = Expr::Quote {
+        mode: sim_kernel::QuoteMode::Quote,
+        expr: Box::new(Expr::Vector(vec![
+            Expr::Number(NumberLiteral {
+                domain: Symbol::qualified("numbers", "f64"),
+                canonical: "1".to_owned(),
+            }),
+            Expr::Number(NumberLiteral {
+                domain: Symbol::qualified("numbers", "f64"),
+                canonical: "2".to_owned(),
+            }),
+        ])),
+    };
+    let encoded = encode_with_codec(
+        &mut cx,
+        &Symbol::qualified("codec", "lisp"),
+        &expr,
+        Default::default(),
+    )
+    .unwrap()
+    .into_text()
+    .unwrap();
+    assert_eq!(encoded, "(quote [1 2])");
+
+    let decoded = decode_with_codec(
+        &mut cx,
+        &Symbol::qualified("codec", "lisp"),
+        Input::Text(encoded),
+        ReadPolicy::default(),
+    )
+    .unwrap();
+    assert!(decoded.canonical_eq(&expr));
+}
+
+#[test]
+fn qualified_symbols_with_dot_names_round_trip() {
+    let mut cx = cx();
+    register_lisp_codec(&mut cx);
+    let codec = Symbol::qualified("codec", "lisp");
+    for (expr, expected) in [
+        (
+            Expr::Symbol(Symbol::qualified("capability", "browse.internal")),
+            "capability/browse.internal",
+        ),
+        (
+            Expr::Symbol(Symbol::qualified("core/help", "args")),
+            "core/help/args",
+        ),
+        (Expr::Symbol(Symbol::new("6")), "(expr:symbol nil \"6\")"),
+        (Expr::Symbol(Symbol::new("+")), "+"),
+        (
+            Expr::Symbol(Symbol::qualified("numbers/quad", "central-3")),
+            "(expr:symbol \"numbers/quad\" \"central-3\")",
+        ),
+    ] {
+        let encoded = encode_with_codec(&mut cx, &codec, &expr, Default::default())
+            .unwrap()
+            .into_text()
+            .unwrap();
+        assert_eq!(encoded, expected);
+
+        let decoded =
+            decode_with_codec(&mut cx, &codec, Input::Text(encoded), ReadPolicy::default())
+                .unwrap();
+        assert_eq!(decoded, expr);
+    }
+}
+
+#[test]
+fn shared_string_escape_codec_roundtrips_common_escapes() {
+    let mut cx = cx();
+    register_lisp_codec(&mut cx);
+    let expr = Expr::String("slash\\\\ quote\" tab\t cr\r lf\n bell\u{7}".to_owned());
+    let encoded = encode_with_codec(
+        &mut cx,
+        &Symbol::qualified("codec", "lisp"),
+        &expr,
+        Default::default(),
+    )
+    .unwrap()
+    .into_text()
+    .unwrap();
+    assert_eq!(
+        encoded,
+        "\"slash\\\\\\\\ quote\\\" tab\\t cr\\r lf\\n bell\\u{7}\""
+    );
+    let decoded = decode_with_codec(
+        &mut cx,
+        &Symbol::qualified("codec", "lisp"),
+        Input::Text(encoded),
+        ReadPolicy::default(),
+    )
+    .unwrap();
+    assert_eq!(decoded, expr);
+}
+
+#[test]
+fn lower_eval_surface_preserves_quoted_payloads() {
+    let quoted = Expr::Quote {
+        mode: sim_kernel::QuoteMode::Quote,
+        expr: Box::new(Expr::List(vec![
+            Expr::Symbol(Symbol::new("+")),
+            Expr::Number(NumberLiteral {
+                domain: Symbol::qualified("numbers", "f64"),
+                canonical: "1".to_owned(),
+            }),
+            Expr::Number(NumberLiteral {
+                domain: Symbol::qualified("numbers", "f64"),
+                canonical: "2".to_owned(),
+            }),
+        ])),
+    };
+    assert_eq!(lower_eval_surface(quoted.clone()), quoted);
+}
+
+#[test]
+fn read_eval_is_capability_gated() {
+    let mut cx = cx();
+    register_lisp_codec(&mut cx);
+    let denied = decode_with_codec(
+        &mut cx,
+        &Symbol::qualified("codec", "lisp"),
+        Input::Text("#eval(1)".to_owned()),
+        ReadPolicy::default(),
+    );
+    assert!(matches!(
+        denied,
+        Err(sim_kernel::Error::CapabilityDenied { .. })
+    ));
+
+    let allowed = decode_with_codec(
+        &mut cx,
+        &Symbol::qualified("codec", "lisp"),
+        Input::Text("#eval(1)".to_owned()),
+        policy_with(vec![read_eval_capability()]),
+    )
+    .unwrap();
+    assert_eq!(
+        allowed,
+        Expr::Number(NumberLiteral {
+            domain: Symbol::qualified("numbers", "f64"),
+            canonical: "1".to_owned(),
+        })
+    );
+}
+
+#[test]
+fn read_time_eval_dot_is_capability_gated() {
+    // `#.` is CL read-time eval; it must be gated on read_eval like its `#eval`
+    // sibling. Previously it evaluated untrusted input with no capability check.
+    // (The space keeps the codec lexer from folding `.1` into one atom.)
+    let mut cx = cx();
+    register_lisp_codec(&mut cx);
+    let denied = decode_with_codec(
+        &mut cx,
+        &Symbol::qualified("codec", "lisp"),
+        Input::Text("#. 1".to_owned()),
+        ReadPolicy::default(),
+    );
+    assert!(matches!(
+        denied,
+        Err(sim_kernel::Error::CapabilityDenied { .. })
+    ));
+
+    let allowed = decode_with_codec(
+        &mut cx,
+        &Symbol::qualified("codec", "lisp"),
+        Input::Text("#. 1".to_owned()),
+        policy_with(vec![read_eval_capability()]),
+    )
+    .unwrap();
+    assert_eq!(
+        allowed,
+        Expr::Number(NumberLiteral {
+            domain: Symbol::qualified("numbers", "f64"),
+            canonical: "1".to_owned(),
+        })
+    );
+}
+
+#[test]
+fn read_eval_requires_trusted_policy_even_when_capability_is_present() {
+    let mut cx = cx();
+    register_lisp_codec(&mut cx);
+    let denied = decode_with_codec(
+        &mut cx,
+        &Symbol::qualified("codec", "lisp"),
+        Input::Text("#eval(1)".to_owned()),
+        ReadPolicy {
+            trust: sim_kernel::TrustLevel::Untrusted,
+            capabilities: sim_kernel::CapabilitySet::new().grant(read_eval_capability()),
+        },
+    );
+    assert!(matches!(
+        denied,
+        Err(sim_kernel::Error::TrustDenied { capability, trust })
+            if capability == read_eval_capability()
+                && trust == sim_kernel::TrustLevel::Untrusted
+    ));
+}
+
+#[test]
+fn registered_number_domains_can_parse_non_f64_literals() {
+    let mut cx = cx();
+    let domain = cx.factory().opaque(Arc::new(RationalDomain)).unwrap();
+    cx.registry_mut()
+        .register_number_domain_value(Symbol::qualified("numbers", "rational"), domain)
+        .unwrap();
+
+    assert_eq!(
+        cx.parse_number_literal("1/3").unwrap(),
+        Some(NumberLiteral {
+            domain: Symbol::qualified("numbers", "rational"),
+            canonical: "1/3".to_owned(),
+        })
+    );
+}
+
+#[test]
+fn lisp_codec_parses_rational_and_complex_literals_from_source_text() {
+    let mut cx = cx();
+    register_lisp_codec(&mut cx);
+    let rational = cx.factory().opaque(Arc::new(RationalDomain)).unwrap();
+    cx.registry_mut()
+        .register_number_domain_value(Symbol::qualified("numbers", "rational"), rational)
+        .unwrap();
+    let complex = cx.factory().opaque(Arc::new(ComplexDomain)).unwrap();
+    cx.registry_mut()
+        .register_number_domain_value(Symbol::qualified("numbers", "complex"), complex)
+        .unwrap();
+
+    let rational = decode_with_codec(
+        &mut cx,
+        &Symbol::qualified("codec", "lisp"),
+        Input::Text("1/3".to_owned()),
+        ReadPolicy::default(),
+    )
+    .unwrap();
+    assert_eq!(
+        rational,
+        Expr::Number(NumberLiteral {
+            domain: Symbol::qualified("numbers", "rational"),
+            canonical: "1/3".to_owned(),
+        })
+    );
+
+    let complex = decode_with_codec(
+        &mut cx,
+        &Symbol::qualified("codec", "lisp"),
+        Input::Text("1+2i".to_owned()),
+        ReadPolicy::default(),
+    )
+    .unwrap();
+    assert_eq!(
+        complex,
+        Expr::Number(NumberLiteral {
+            domain: Symbol::qualified("numbers", "complex"),
+            canonical: "1+2i".to_owned(),
+        })
+    );
+}
+
+#[test]
+fn read_construct_is_capability_gated() {
+    let mut cx = cx();
+    register_lisp_codec(&mut cx);
+    install_point(&mut cx);
+
+    let denied = decode_with_codec(
+        &mut cx,
+        &Symbol::qualified("codec", "lisp"),
+        Input::Text("#(Point 1 2)".to_owned()),
+        ReadPolicy::default(),
+    );
+    assert!(matches!(
+        denied,
+        Err(sim_kernel::Error::CapabilityDenied { .. })
+    ));
+
+    cx.grant(read_construct_capability());
+    let expr = decode_with_codec(
+        &mut cx,
+        &Symbol::qualified("codec", "lisp"),
+        Input::Text("#(Point 1 2)".to_owned()),
+        policy_with(vec![read_construct_capability()]),
+    )
+    .unwrap();
+    assert!(matches!(expr, Expr::Map(_)));
+}
+
+#[test]
+fn read_construct_args_decode_as_data_by_default() {
+    let mut cx = cx();
+    register_lisp_codec(&mut cx);
+    install_point(&mut cx);
+    cx.grant(read_construct_capability());
+
+    let decoded = decode_with_codec(
+        &mut cx,
+        &Symbol::qualified("codec", "lisp"),
+        Input::Text("#(Point (+ 1 2) 3)".to_owned()),
+        policy_with(vec![read_construct_capability()]),
+    )
+    .unwrap();
+    let Expr::Map(fields) = decoded else {
+        panic!("expected read-construct result map");
+    };
+    assert!(fields.iter().any(|(key, value)| {
+        key == &Expr::Symbol(Symbol::new("x"))
+            && matches!(value, Expr::List(items) if items == &vec![
+                Expr::Symbol(Symbol::new("+")),
+                Expr::Number(NumberLiteral {
+                    domain: Symbol::qualified("numbers", "f64"),
+                    canonical: "1".to_owned(),
+                }),
+                Expr::Number(NumberLiteral {
+                    domain: Symbol::qualified("numbers", "f64"),
+                    canonical: "2".to_owned(),
+                }),
+            ])
+    }));
+}
+
+#[test]
+fn read_construct_explicit_eval_is_capability_gated() {
+    let mut cx = cx();
+    register_lisp_codec(&mut cx);
+    install_point(&mut cx);
+    cx.grant(read_construct_capability());
+
+    let denied = decode_with_codec(
+        &mut cx,
+        &Symbol::qualified("codec", "lisp"),
+        Input::Text("#(Point #eval(1) 3)".to_owned()),
+        policy_with(vec![read_construct_capability()]),
+    );
+    assert!(matches!(
+        denied,
+        Err(sim_kernel::Error::CapabilityDenied { capability })
+            if capability == read_eval_capability()
+    ));
+}
+
+#[test]
+fn read_construct_explicit_eval_runs_when_granted() {
+    let mut cx = cx();
+    register_lisp_codec(&mut cx);
+    install_point(&mut cx);
+    cx.grant(read_construct_capability());
+    cx.grant(read_eval_capability());
+
+    let decoded = decode_with_codec(
+        &mut cx,
+        &Symbol::qualified("codec", "lisp"),
+        Input::Text("#(Point #eval(1) 3)".to_owned()),
+        policy_with(vec![read_construct_capability(), read_eval_capability()]),
+    )
+    .unwrap();
+    let Expr::Map(fields) = decoded else {
+        panic!("expected read-construct result map");
+    };
+    assert!(fields.iter().any(|(key, value)| {
+        key == &Expr::Symbol(Symbol::new("x"))
+            && value
+                == &Expr::Number(NumberLiteral {
+                    domain: Symbol::qualified("numbers", "f64"),
+                    canonical: "1".to_owned(),
+                })
+    }));
+}
+
+#[test]
+fn encoder_can_escape_non_native_exprs() {
+    let mut cx = cx();
+    register_lisp_codec(&mut cx);
+    let encoded = encode_with_codec(
+        &mut cx,
+        &Symbol::qualified("codec", "lisp"),
+        &Expr::Infix {
+            operator: Symbol::new("+"),
+            left: Box::new(Expr::Number(NumberLiteral {
+                domain: Symbol::qualified("numbers", "f64"),
+                canonical: "1".to_owned(),
+            })),
+            right: Box::new(Expr::Number(NumberLiteral {
+                domain: Symbol::qualified("numbers", "f64"),
+                canonical: "2".to_owned(),
+            })),
+        },
+        Default::default(),
+    )
+    .unwrap()
+    .into_text()
+    .unwrap();
+    assert_eq!(encoded, "(expr:infix \"+\" 1 2)");
+}
+
+#[test]
+fn default_encoder_never_emits_read_eval_syntax() {
+    let mut cx = cx();
+    register_lisp_codec(&mut cx);
+    let encoded = encode_with_codec(
+        &mut cx,
+        &Symbol::qualified("codec", "lisp"),
+        &Expr::Symbol(Symbol::new("#eval")),
+        Default::default(),
+    )
+    .unwrap()
+    .into_text()
+    .unwrap();
+
+    assert_eq!(encoded, "(expr:symbol nil \"#eval\")");
+    assert!(!encoded.contains("#eval("));
+    assert!(!encoded.contains("#."));
+}
+
+#[test]
+fn constructor_values_encode_as_read_construct_in_quote_position() {
+    let mut cx = cx();
+    let point = cx
+        .factory()
+        .opaque(Arc::new(PointValue {
+            args: vec![
+                Expr::Number(NumberLiteral {
+                    domain: Symbol::qualified("numbers", "f64"),
+                    canonical: "1".to_owned(),
+                }),
+                Expr::Number(NumberLiteral {
+                    domain: Symbol::qualified("numbers", "f64"),
+                    canonical: "2".to_owned(),
+                }),
+            ],
+            fields: Vec::new(),
+        }))
+        .unwrap();
+    let mut write = KernelWriteCx {
+        cx: &mut cx,
+        codec: sim_kernel::CodecId(1),
+        options: sim_kernel::EncodeOptions {
+            position: EncodePosition::Quote,
+            ..Default::default()
+        },
+    };
+    let encoded = encode_object_lisp(&mut write, point).unwrap();
+    assert_eq!(encoded, "#(Point 1 2)");
+}
+
+#[test]
+fn constructor_values_encode_as_read_construct_in_data_position() {
+    let mut cx = cx();
+    let point = cx
+        .factory()
+        .opaque(Arc::new(PointValue {
+            args: vec![
+                Expr::Number(NumberLiteral {
+                    domain: Symbol::qualified("numbers", "f64"),
+                    canonical: "1".to_owned(),
+                }),
+                Expr::Number(NumberLiteral {
+                    domain: Symbol::qualified("numbers", "f64"),
+                    canonical: "2".to_owned(),
+                }),
+            ],
+            fields: Vec::new(),
+        }))
+        .unwrap();
+    let mut write = KernelWriteCx {
+        cx: &mut cx,
+        codec: sim_kernel::CodecId(1),
+        options: sim_kernel::EncodeOptions {
+            position: EncodePosition::Data,
+            ..Default::default()
+        },
+    };
+    let encoded = encode_object_lisp(&mut write, point).unwrap();
+    assert_eq!(encoded, "#(Point 1 2)");
+}
+
+#[test]
+fn constructor_encoding_round_trips_through_lisp_codec() {
+    let mut cx = cx();
+    register_lisp_codec(&mut cx);
+    install_point(&mut cx);
+    cx.grant(read_construct_capability());
+
+    let point = cx
+        .factory()
+        .opaque(Arc::new(PointValue {
+            args: vec![
+                Expr::Number(NumberLiteral {
+                    domain: Symbol::qualified("numbers", "f64"),
+                    canonical: "1".to_owned(),
+                }),
+                Expr::Number(NumberLiteral {
+                    domain: Symbol::qualified("numbers", "f64"),
+                    canonical: "2".to_owned(),
+                }),
+            ],
+            fields: vec![
+                (
+                    Symbol::new("x"),
+                    cx.factory()
+                        .number_literal(Symbol::qualified("numbers", "f64"), "1".to_owned())
+                        .unwrap(),
+                ),
+                (
+                    Symbol::new("y"),
+                    cx.factory()
+                        .number_literal(Symbol::qualified("numbers", "f64"), "2".to_owned())
+                        .unwrap(),
+                ),
+            ],
+        }))
+        .unwrap();
+    let mut write = KernelWriteCx {
+        cx: &mut cx,
+        codec: sim_kernel::CodecId(1),
+        options: sim_kernel::EncodeOptions {
+            position: EncodePosition::Quote,
+            ..Default::default()
+        },
+    };
+    let encoded = encode_object_lisp(&mut write, point).unwrap();
+    let decoded = decode_with_codec(
+        &mut cx,
+        &Symbol::qualified("codec", "lisp"),
+        Input::Text(encoded),
+        policy_with(vec![read_construct_capability()]),
+    )
+    .unwrap();
+    assert!(matches!(decoded, Expr::Map(_)));
+}
+
+#[test]
+fn malformed_dispatch_is_rejected() {
+    let mut cx = cx();
+    register_lisp_codec(&mut cx);
+    let error = decode_with_codec(
+        &mut cx,
+        &Symbol::qualified("codec", "lisp"),
+        Input::Text("#wat".to_owned()),
+        ReadPolicy::default(),
+    )
+    .unwrap_err();
+    assert!(matches!(error, sim_kernel::Error::CodecError { .. }));
+}
+```
+
+### `feature/sim-codecs/domain-syntax-grammars`
+
+Specimen `spec-test/sim-codecs/crates/sim-codec-json/src/tests` is checked by `cargo test`.
+
+Source `crates/sim-codec-json/src/tests.rs`:
+
+```rust
+use std::sync::Arc;
+
+// conformance: domain syntax grammars round-trip JSON values.
+
+use serde_json::{Value as JsonValue, json};
+use sim_codec::{
+    CodecRuntime, DecodeBudget, DecodeLimits, DecodePosition, DecodedForm, Input,
+    decode_datum_with_codec, decode_default_with_codec, decode_with_codec,
+    decode_with_codec_and_limits, encode_datum_with_codec, encode_tree_with_codec,
+};
+use sim_kernel::{
+    Datum, DefaultFactory, EagerPolicy, EncodeOptions, Expr, LocatedExpr, LocatedExprTree,
+    NumberLiteral, Origin, QuoteMode, ReadPolicy, SourceId, Span, Symbol, Trivia,
+};
+
+use crate::helpers::base64_encode;
+use crate::{
+    JsonCodecLib, expr_to_json, json_escape, json_to_expr, json_to_located_expr,
+    located_expr_to_json,
+};
+
+fn cx() -> sim_kernel::Cx {
+    let mut cx = sim_kernel::Cx::new(Arc::new(EagerPolicy), Arc::new(DefaultFactory));
+    sim_test_support::register_core_classes(&mut cx);
+    let lib = JsonCodecLib::new(cx.registry_mut().fresh_codec_id());
+    cx.load_lib(&lib).unwrap();
+    cx
+}
+
+#[test]
+fn codec_registers() {
+    let cx = cx();
+    assert!(
+        cx.registry()
+            .codec_by_symbol(&Symbol::qualified("codec", "json"))
+            .is_some()
+    );
+}
+
+fn codec_id(cx: &mut sim_kernel::Cx, symbol: &Symbol) -> sim_kernel::CodecId {
+    cx.resolve_codec(symbol)
+        .unwrap()
+        .object()
+        .as_any()
+        .downcast_ref::<CodecRuntime>()
+        .unwrap()
+        .id
+}
+
+fn assert_codec_error(err: sim_kernel::Error, expected: sim_kernel::CodecId, needle: &str) {
+    match err {
+        sim_kernel::Error::CodecError { codec, message } => {
+            assert_eq!(codec, expected);
+            assert_ne!(codec, sim_kernel::CodecId(0));
+            assert!(message.contains(needle), "{message}");
+        }
+        other => panic!("unexpected error {other:?}"),
+    }
+}
+
+#[test]
+fn invalid_utf8_input_reports_json_codec_id() {
+    let mut cx = cx();
+    let symbol = Symbol::qualified("codec", "json");
+    let expected = codec_id(&mut cx, &symbol);
+
+    let err = decode_with_codec(
+        &mut cx,
+        &symbol,
+        Input::Bytes(vec![0xff]),
+        ReadPolicy::default(),
+    )
+    .unwrap_err();
+
+    assert_codec_error(err, expected, "not valid UTF-8");
+}
+
+#[test]
+fn json_escape_returns_a_json_string_fragment() {
+    assert_eq!(
+        json_escape("quote\" slash\\ lf\n cr\r tab\t back\u{08} form\u{0c} nul\u{0}"),
+        "quote\\\" slash\\\\ lf\\n cr\\r tab\\t back\\b form\\f nul\\u0000"
+    );
+    assert_eq!(json_escape("plain utf8 cafe"), "plain utf8 cafe");
+}
+
+#[test]
+fn call_roundtrips() {
+    let mut cx = cx();
+    let expr = Expr::Call {
+        operator: Box::new(Expr::Symbol(Symbol::new("+"))),
+        args: vec![
+            Expr::Number(NumberLiteral {
+                domain: Symbol::qualified("numbers", "f64"),
+                canonical: "1".to_owned(),
+            }),
+            Expr::Number(NumberLiteral {
+                domain: Symbol::qualified("numbers", "f64"),
+                canonical: "2".to_owned(),
+            }),
+        ],
+    };
+
+    assert_eq!(sim_test_support::roundtrip(&mut cx, "json", &expr), expr);
+}
+
+#[test]
+fn full_expr_surface_roundtrips() {
+    let mut cx = cx();
+    let expr = Expr::Annotated {
+        expr: Box::new(Expr::Extension {
+            tag: Symbol::qualified("demo", "tag"),
+            payload: Box::new(Expr::Map(vec![
+                (
+                    Expr::Symbol(Symbol::new("x")),
+                    Expr::Vector(vec![
+                        Expr::Bool(true),
+                        Expr::Bytes(vec![1, 2, 3, 4]),
+                        Expr::Quote {
+                            mode: QuoteMode::Syntax,
+                            expr: Box::new(Expr::Infix {
+                                operator: Symbol::new("+"),
+                                left: Box::new(Expr::Prefix {
+                                    operator: Symbol::new("-"),
+                                    arg: Box::new(Expr::Number(NumberLiteral {
+                                        domain: Symbol::qualified("numbers", "f64"),
+                                        canonical: "4".to_owned(),
+                                    })),
+                                }),
+                                right: Box::new(Expr::Postfix {
+                                    operator: Symbol::new("!"),
+                                    arg: Box::new(Expr::Symbol(Symbol::new("n"))),
+                                }),
+                            }),
+                        },
+                    ]),
+                ),
+                (
+                    Expr::String("set".to_owned()),
+                    Expr::Set(vec![
+                        Expr::String("b".to_owned()),
+                        Expr::String("a".to_owned()),
+                    ]),
+                ),
+            ])),
+        }),
+        annotations: vec![
+            (
+                Symbol::qualified("meta", "origin"),
+                Expr::String("test".to_owned()),
+            ),
+            (
+                Symbol::new("count"),
+                Expr::Number(NumberLiteral {
+                    domain: Symbol::qualified("numbers", "f64"),
+                    canonical: "2".to_owned(),
+                }),
+            ),
+        ],
+    };
+
+    let decoded = sim_test_support::roundtrip(&mut cx, "json", &expr);
+    assert!(decoded.canonical_eq(&expr));
+}
+
+#[test]
+fn datum_roundtrip_preserves_content_id() {
+    let mut cx = cx();
+    let datum = sample_datum();
+    let content_id = datum.content_id().unwrap();
+
+    let output = encode_datum_with_codec(
+        &mut cx,
+        &Symbol::qualified("codec", "json"),
+        &datum,
+        EncodeOptions::default(),
+    )
+    .unwrap();
+    let decoded = decode_datum_with_codec(
+        &mut cx,
+        &Symbol::qualified("codec", "json"),
+        Input::Text(output.into_text().unwrap()),
+        Default::default(),
+    )
+    .unwrap();
+
+    assert_eq!(decoded, datum);
+    assert_eq!(decoded.content_id().unwrap(), content_id);
+}
+
+#[test]
+fn default_decode_returns_datum_even_in_eval_position() {
+    let mut cx = cx();
+    let datum = sample_datum();
+    let output = encode_datum_with_codec(
+        &mut cx,
+        &Symbol::qualified("codec", "json"),
+        &datum,
+        EncodeOptions::default(),
+    )
+    .unwrap();
+
+    let decoded = decode_default_with_codec(
+        &mut cx,
+        &Symbol::qualified("codec", "json"),
+        Input::Text(output.into_text().unwrap()),
+        Default::default(),
+        DecodePosition::Eval,
+    )
+    .unwrap();
+
+    assert_eq!(decoded, DecodedForm::Datum(datum));
+}
+
+#[test]
+fn slash_named_symbols_round_trip_structurally() {
+    // The division operator is the symbol `/`; flattening operators through
+    // `to_string()`/`split_once('/')` mangled it to `qualified("", "")`. The
+    // structured symbol form must round-trip it (and every other symbol-bearing
+    // position) exactly.
+    let mut cx = cx();
+    let expr = Expr::Annotated {
+        expr: Box::new(Expr::Extension {
+            tag: Symbol::new("/"),
+            payload: Box::new(Expr::Infix {
+                operator: Symbol::new("/"),
+                left: Box::new(Expr::Prefix {
+                    operator: Symbol::new("/"),
+                    arg: Box::new(Expr::Local(Symbol::new("/"))),
+                }),
+                right: Box::new(Expr::Postfix {
+                    operator: Symbol::qualified("ops", "/"),
+                    arg: Box::new(Expr::Symbol(Symbol::new("/"))),
+                }),
+            }),
+        }),
+        annotations: vec![(Symbol::new("/"), Expr::String("v".to_owned()))],
+    };
+    let decoded = sim_test_support::roundtrip(&mut cx, "json", &expr);
+    assert!(decoded.canonical_eq(&expr), "got {decoded:?}");
+
+    // Direct encode/decode also round-trips the bare division operator.
+    let infix = Expr::Infix {
+        operator: Symbol::new("/"),
+        left: Box::new(Expr::Symbol(Symbol::new("a"))),
+        right: Box::new(Expr::Symbol(Symbol::new("b"))),
+    };
+    let json = expr_to_json(&infix);
+    let back = json_to_expr(
+        sim_kernel::CodecId(1),
+        &json,
+        &mut DecodeBudget::new(DecodeLimits::default()),
+        0,
+    )
+    .unwrap();
+    assert_eq!(back, infix);
+}
+
+#[test]
+fn compatibility_string_operator_still_decodes() {
+    // Old payloads encoded operators/tags as bare strings; decode must remain
+    // backward compatible with that flattened form.
+    let compatibility_form = json!({
+        "$expr": "infix",
+        "operator": "+",
+        "left": { "$expr": "symbol", "name": "a" },
+        "right": { "$expr": "symbol", "name": "b" },
+    });
+    let decoded = json_to_expr(
+        sim_kernel::CodecId(1),
+        &compatibility_form,
+        &mut DecodeBudget::new(DecodeLimits::default()),
+        0,
+    )
+    .unwrap();
+    assert_eq!(
+        decoded,
+        Expr::Infix {
+            operator: Symbol::new("+"),
+            left: Box::new(Expr::Symbol(Symbol::new("a"))),
+            right: Box::new(Expr::Symbol(Symbol::new("b"))),
+        }
+    );
+}
+
+#[test]
+fn bytes_use_base64() {
+    let json = expr_to_json(&Expr::Bytes(vec![0xfb, 0xef]));
+    assert_eq!(json["base64"], JsonValue::String("++8=".to_owned()));
+    assert_eq!(
+        json_to_expr(
+            sim_kernel::CodecId(1),
+            &json,
+            &mut DecodeBudget::new(DecodeLimits::default()),
+            0,
+        )
+        .unwrap(),
+        Expr::Bytes(vec![0xfb, 0xef])
+    );
+}
+
+#[test]
+fn base64_rejects_noncanonical_padding() {
+    use crate::helpers::base64_decode;
+    let codec = sim_kernel::CodecId(1);
+    for bad in ["AA=A", "AA==AAAA", "=AAA", "A=AA", "AAAA=AAA"] {
+        assert!(
+            base64_decode(codec, bad).is_err(),
+            "accepted bad padding: {bad}"
+        );
+    }
+    // Canonical encodings still decode.
+    assert_eq!(base64_decode(codec, "Zm9v").unwrap(), b"foo");
+    assert_eq!(base64_decode(codec, "Zg==").unwrap(), b"f");
+}
+
+fn sample_datum() -> Datum {
+    Datum::Map(vec![
+        (
+            Datum::Symbol(Symbol::new("name")),
+            Datum::String("json".to_owned()),
+        ),
+        (
+            Datum::Symbol(Symbol::new("payload")),
+            Datum::Vector(vec![Datum::Bool(true), Datum::Bytes(vec![0xfb, 0xef])]),
+        ),
+    ])
+}
+
+#[test]
+fn unknown_tags_fail() {
+    let err = json_to_expr(
+        sim_kernel::CodecId(7),
+        &json!({ "$expr": "mystery" }),
+        &mut DecodeBudget::new(DecodeLimits::default()),
+        0,
+    )
+    .unwrap_err();
+    match err {
+        sim_kernel::Error::CodecError { codec, message } => {
+            assert_eq!(codec, sim_kernel::CodecId(7));
+            assert!(message.contains("unknown expr tag mystery"));
+        }
+        other => panic!("unexpected error {other:?}"),
+    }
+}
+
+#[test]
+fn located_expr_roundtrips_with_origin() {
+    let located = LocatedExpr {
+        expr: Expr::String("hello".to_owned()),
+        origin: Some(Origin {
+            codec: sim_kernel::CodecId(9),
+            source: SourceId("test.lisp".to_owned()),
+            span: Span { start: 3, end: 8 },
+            trivia: vec![
+                Trivia::Whitespace(" ".to_owned()),
+                Trivia::LineComment("; hi".to_owned()),
+            ],
+        }),
+    };
+
+    let value = located_expr_to_json(&located, true);
+    let decoded = json_to_located_expr(
+        sim_kernel::CodecId(9),
+        &value,
+        &mut DecodeBudget::new(DecodeLimits::default()),
+        0,
+    )
+    .unwrap();
+    assert_eq!(decoded, located);
+}
+
+#[test]
+fn json_decode_rejects_excessive_collection_len() {
+    let mut cx = cx();
+    let limits = DecodeLimits {
+        max_collection_len: 1,
+        ..DecodeLimits::default()
+    };
+    let err = decode_with_codec_and_limits(
+        &mut cx,
+        &Symbol::qualified("codec", "json"),
+        Input::Text(
+            "{\"$expr\":\"list\",\"items\":[{\"$expr\":\"nil\"},{\"$expr\":\"nil\"}]}".to_owned(),
+        ),
+        Default::default(),
+        limits,
+    )
+    .unwrap_err();
+    assert!(
+        matches!(err, sim_kernel::Error::CodecError { message, .. } if message.contains("collection length"))
+    );
+}
+
+#[test]
+fn json_decode_rejects_excessive_depth() {
+    let mut cx = cx();
+    let mut wrapped = "{\"$expr\":\"nil\"}".to_owned();
+    for _ in 0..10 {
+        wrapped = format!("{{\"$expr\":\"list\",\"items\":[{wrapped}]}}");
+    }
+    let limits = DecodeLimits {
+        max_depth: 4,
+        ..DecodeLimits::default()
+    };
+    let err = decode_with_codec_and_limits(
+        &mut cx,
+        &Symbol::qualified("codec", "json"),
+        Input::Text(wrapped),
+        Default::default(),
+        limits,
+    )
+    .unwrap_err();
+    assert!(
+        matches!(err, sim_kernel::Error::CodecError { message, .. } if message.contains("recursion depth"))
+    );
+}
+
+#[test]
+fn json_decode_rejects_excessive_blob_bytes() {
+    let mut cx = cx();
+    let payload = base64_encode(&[0u8; 32]);
+    let limits = DecodeLimits {
+        max_blob_bytes: 8,
+        ..DecodeLimits::default()
+    };
+    let err = decode_with_codec_and_limits(
+        &mut cx,
+        &Symbol::qualified("codec", "json"),
+        Input::Text(format!("{{\"$expr\":\"bytes\",\"base64\":\"{payload}\"}}")),
+        Default::default(),
+        limits,
+    )
+    .unwrap_err();
+    assert!(
+        matches!(err, sim_kernel::Error::CodecError { message, .. } if message.contains("blob bytes"))
+    );
+}
+
+#[test]
+fn malformed_tree_encode_returns_error() {
+    let mut cx = cx();
+    let tree = LocatedExprTree {
+        expr: Expr::Call {
+            operator: Box::new(Expr::Symbol(Symbol::new("f"))),
+            args: vec![Expr::Bool(true)],
+        },
+        origin: None,
+        children: vec![LocatedExprTree::without_children(
+            Expr::Symbol(Symbol::new("f")),
+            None,
+        )],
+    };
+
+    let err = encode_tree_with_codec(
+        &mut cx,
+        &Symbol::qualified("codec", "json"),
+        &tree,
+        EncodeOptions {
+            lossless_origin: true,
+            ..EncodeOptions::default()
+        },
+    )
+    .unwrap_err();
+    match err {
+        sim_kernel::Error::CodecError { message, .. } => {
+            assert!(message.contains("call tree expected 2 children"));
+        }
+        other => panic!("unexpected error {other:?}"),
+    }
+}
+```
+
+### `feature/sim-codecs/wire-protocol-grammars`
+
+Specimen `spec-test/sim-codecs/crates/sim-codec-binary/src/tests` is checked by `cargo test`.
+
+Source `crates/sim-codec-binary/src/tests.rs`:
+
+```rust
+use std::sync::Arc;
+
+// conformance: wire protocol grammar preserves binary frames.
+
+use sim_codec::{
+    DecodePosition, DecodedForm, Input, Output, decode_datum_with_codec, decode_default_with_codec,
+    encode_datum_with_codec,
+};
+use sim_kernel::{
+    Args, Datum, DefaultFactory, EagerPolicy, EncodeOptions, Expr, LocatedExpr, LocatedExprTree,
+    NumberLiteral, Origin, QuoteMode, SourceId, Span, Symbol, Trivia,
+};
+
+use crate::{
+    BinaryCodecLib, BinaryFrame, DecodeLimits, decode_frame, decode_located_frame,
+    decode_located_tree_frame, decode_located_tree_frame_with_limits, encode_frame,
+    encode_located_frame, encode_located_tree_frame,
+};
+
+fn cx() -> sim_kernel::Cx {
+    let mut cx = sim_kernel::Cx::new(Arc::new(EagerPolicy), Arc::new(DefaultFactory));
+    sim_test_support::register_core_classes(&mut cx);
+    let lib = BinaryCodecLib::new(cx.registry_mut().fresh_codec_id());
+    cx.load_lib(&lib).unwrap();
+    cx
+}
+
+#[test]
+fn codec_registers() {
+    let cx = cx();
+    assert!(
+        cx.registry()
+            .codec_by_symbol(&Symbol::qualified("codec", "binary"))
+            .is_some()
+    );
+    assert!(
+        cx.registry()
+            .function_by_symbol(&Symbol::qualified("binary", "roundtrip-report"))
+            .is_some()
+    );
+}
+
+#[test]
+fn roundtrip_report_function_runs() {
+    let mut cx = cx();
+    let report = call_report(&mut cx, Symbol::qualified("binary", "roundtrip-report"));
+    assert_eq!(field_bool(&report, "roundtrip"), Some(true));
+    assert_eq!(field_string(&report, "codec"), Some("codec/binary"));
+}
+
+#[test]
+fn frame_header_carries_tables() {
+    let expr = Expr::Call {
+        operator: Box::new(Expr::Symbol(Symbol::qualified("math", "add"))),
+        args: vec![Expr::Number(NumberLiteral {
+            domain: Symbol::qualified("numbers", "f64"),
+            canonical: "1".to_owned(),
+        })],
+    };
+
+    let BinaryFrame(frame) = encode_frame(&expr).unwrap();
+    let (tables, decoded) = decode_frame(sim_kernel::CodecId(1), &frame).unwrap();
+
+    assert_eq!(decoded, expr);
+    assert_eq!(tables.libs, vec!["math".to_owned(), "numbers".to_owned()]);
+    assert!(tables.symbols.contains(&Symbol::qualified("math", "add")));
+    assert_eq!(
+        tables.number_domains,
+        vec![Symbol::qualified("numbers", "f64")]
+    );
+}
+
+fn call_report(cx: &mut sim_kernel::Cx, symbol: Symbol) -> Expr {
+    let value = cx.registry().function_by_symbol(&symbol).unwrap().clone();
+    let callable = value.object().as_callable().unwrap();
+    let value = callable.call(cx, Args::new(Vec::new())).unwrap();
+    value.object().as_expr(cx).unwrap()
+}
+
+fn field_bool(expr: &Expr, name: &str) -> Option<bool> {
+    map_field(expr, name).and_then(|value| match value {
+        Expr::Bool(value) => Some(*value),
+        _ => None,
+    })
+}
+
+fn field_string<'a>(expr: &'a Expr, name: &str) -> Option<&'a str> {
+    map_field(expr, name).and_then(|value| match value {
+        Expr::String(value) => Some(value.as_str()),
+        _ => None,
+    })
+}
+
+fn map_field<'a>(expr: &'a Expr, name: &str) -> Option<&'a Expr> {
+    let Expr::Map(entries) = expr else {
+        return None;
+    };
+    entries.iter().find_map(|(key, value)| match key {
+        Expr::Symbol(symbol) if symbol.name.as_ref() == name => Some(value),
+        _ => None,
+    })
+}
+
+#[test]
+fn frame_is_canonical_for_map_and_set() {
+    let left = Expr::Map(vec![
+        (Expr::Symbol(Symbol::new("b")), Expr::Bool(false)),
+        (Expr::Symbol(Symbol::new("a")), Expr::Bool(true)),
+    ]);
+    let right = Expr::Map(vec![
+        (Expr::Symbol(Symbol::new("a")), Expr::Bool(true)),
+        (Expr::Symbol(Symbol::new("b")), Expr::Bool(false)),
+    ]);
+
+    assert_eq!(encode_frame(&left).unwrap(), encode_frame(&right).unwrap());
+
+    let left = Expr::Set(vec![
+        Expr::String("z".to_owned()),
+        Expr::String("a".to_owned()),
+    ]);
+    let right = Expr::Set(vec![
+        Expr::String("a".to_owned()),
+        Expr::String("z".to_owned()),
+    ]);
+    assert_eq!(encode_frame(&left).unwrap(), encode_frame(&right).unwrap());
+}
+
+#[test]
+fn full_expr_surface_roundtrips() {
+    let mut cx = cx();
+    let expr = Expr::Annotated {
+        expr: Box::new(Expr::Extension {
+            tag: Symbol::qualified("demo", "wire"),
+            payload: Box::new(Expr::Block(vec![
+                Expr::Nil,
+                Expr::Vector(vec![
+                    Expr::Bool(true),
+                    Expr::Bytes(vec![1, 2, 3]),
+                    Expr::Quote {
+                        mode: QuoteMode::Syntax,
+                        expr: Box::new(Expr::Infix {
+                            operator: Symbol::new("+"),
+                            left: Box::new(Expr::Prefix {
+                                operator: Symbol::new("-"),
+                                arg: Box::new(Expr::Number(NumberLiteral {
+                                    domain: Symbol::qualified("numbers", "f64"),
+                                    canonical: "4".to_owned(),
+                                })),
+                            }),
+                            right: Box::new(Expr::Postfix {
+                                operator: Symbol::new("!"),
+                                arg: Box::new(Expr::Symbol(Symbol::new("n"))),
+                            }),
+                        }),
+                    },
+                ]),
+                Expr::Call {
+                    operator: Box::new(Expr::Symbol(Symbol::qualified("math", "add"))),
+                    args: vec![
+                        Expr::String("x".to_owned()),
+                        Expr::Map(vec![(
+                            Expr::Symbol(Symbol::new("k")),
+                            Expr::Set(vec![
+                                Expr::String("a".to_owned()),
+                                Expr::String("b".to_owned()),
+                            ]),
+                        )]),
+                    ],
+                },
+            ])),
+        }),
+        annotations: vec![
+            (
+                Symbol::qualified("meta", "origin"),
+                Expr::String("test".to_owned()),
+            ),
+            (
+                Symbol::new("count"),
+                Expr::Number(NumberLiteral {
+                    domain: Symbol::qualified("numbers", "f64"),
+                    canonical: "2".to_owned(),
+                }),
+            ),
+        ],
+    };
+
+    let decoded = sim_test_support::roundtrip(&mut cx, "binary", &expr);
+    assert!(decoded.canonical_eq(&expr));
+}
+
+#[test]
+fn datum_roundtrip_preserves_content_id() {
+    let mut cx = cx();
+    let datum = sample_datum();
+    let content_id = datum.content_id().unwrap();
+
+    let output = encode_datum_with_codec(
+        &mut cx,
+        &Symbol::qualified("codec", "binary"),
+        &datum,
+        EncodeOptions::default(),
+    )
+    .unwrap();
+    let input = match output {
+        Output::Bytes(bytes) => Input::Bytes(bytes),
+        Output::Text(text) => Input::Text(text),
+    };
+    let decoded = decode_datum_with_codec(
+        &mut cx,
+        &Symbol::qualified("codec", "binary"),
+        input,
+        Default::default(),
+    )
+    .unwrap();
+
+    assert_eq!(decoded, datum);
+    assert_eq!(decoded.content_id().unwrap(), content_id);
+}
+
+#[test]
+fn default_decode_returns_datum_even_in_eval_position() {
+    let mut cx = cx();
+    let datum = sample_datum();
+    let output = encode_datum_with_codec(
+        &mut cx,
+        &Symbol::qualified("codec", "binary"),
+        &datum,
+        EncodeOptions::default(),
+    )
+    .unwrap();
+    let input = match output {
+        Output::Bytes(bytes) => Input::Bytes(bytes),
+        Output::Text(text) => Input::Text(text),
+    };
+
+    let decoded = decode_default_with_codec(
+        &mut cx,
+        &Symbol::qualified("codec", "binary"),
+        input,
+        Default::default(),
+        DecodePosition::Eval,
+    )
+    .unwrap();
+
+    assert_eq!(decoded, DecodedForm::Datum(datum));
+}
+
+#[test]
+fn malformed_frames_fail() {
+    let err = decode_frame(sim_kernel::CodecId(9), b"BAD!").unwrap_err();
+    match err {
+        sim_kernel::Error::CodecError { codec, message } => {
+            assert_eq!(codec, sim_kernel::CodecId(9));
+            assert!(message.contains("magic mismatch"));
+        }
+        other => panic!("unexpected error {other:?}"),
+    }
+}
+
+fn sample_datum() -> Datum {
+    Datum::Node {
+        tag: Symbol::qualified("demo", "binary"),
+        fields: vec![
+            (Symbol::new("name"), Datum::String("frame".to_owned())),
+            (
+                Symbol::new("payload"),
+                Datum::Set(vec![
+                    Datum::String("a".to_owned()),
+                    Datum::String("b".to_owned()),
+                ]),
+            ),
+        ],
+    }
+}
+
+#[test]
+fn located_frame_roundtrips_with_origin() {
+    let located = LocatedExpr {
+        expr: Expr::String("wire".to_owned()),
+        origin: Some(Origin {
+            codec: sim_kernel::CodecId(3),
+            source: SourceId("cache.bin".to_owned()),
+            span: Span { start: 10, end: 14 },
+            trivia: vec![
+                Trivia::Whitespace(" ".to_owned()),
+                Trivia::BlockComment("/*x*/".to_owned()),
+            ],
+        }),
+    };
+
+    let BinaryFrame(bytes) = encode_located_frame(&located, true).unwrap();
+    let (_tables, decoded) = decode_located_frame(sim_kernel::CodecId(3), &bytes).unwrap();
+    assert_eq!(decoded, located);
+}
+
+#[test]
+fn tree_frame_roundtrips_nested_origins() {
+    let tree = LocatedExprTree {
+        expr: Expr::Call {
+            operator: Box::new(Expr::Symbol(Symbol::qualified("math", "add"))),
+            args: vec![
+                Expr::Number(NumberLiteral {
+                    domain: Symbol::qualified("numbers", "f64"),
+                    canonical: "1".to_owned(),
+                }),
+                Expr::Number(NumberLiteral {
+                    domain: Symbol::qualified("numbers", "f64"),
+                    canonical: "2".to_owned(),
+                }),
+            ],
+        },
+        origin: Some(Origin {
+            codec: sim_kernel::CodecId(3),
+            source: SourceId("tree.bin".to_owned()),
+            span: Span { start: 0, end: 5 },
+            trivia: Vec::new(),
+        }),
+        children: vec![
+            LocatedExprTree::without_children(
+                Expr::Symbol(Symbol::qualified("math", "add")),
+                Some(Origin {
+                    codec: sim_kernel::CodecId(3),
+                    source: SourceId("tree.bin".to_owned()),
+                    span: Span { start: 0, end: 1 },
+                    trivia: Vec::new(),
+                }),
+            ),
+            LocatedExprTree::without_children(
+                Expr::Number(NumberLiteral {
+                    domain: Symbol::qualified("numbers", "f64"),
+                    canonical: "1".to_owned(),
+                }),
+                Some(Origin {
+                    codec: sim_kernel::CodecId(3),
+                    source: SourceId("tree.bin".to_owned()),
+                    span: Span { start: 2, end: 3 },
+                    trivia: Vec::new(),
+                }),
+            ),
+            LocatedExprTree::without_children(
+                Expr::Number(NumberLiteral {
+                    domain: Symbol::qualified("numbers", "f64"),
+                    canonical: "2".to_owned(),
+                }),
+                Some(Origin {
+                    codec: sim_kernel::CodecId(3),
+                    source: SourceId("tree.bin".to_owned()),
+                    span: Span { start: 4, end: 5 },
+                    trivia: Vec::new(),
+                }),
+            ),
+        ],
+    };
+
+    let BinaryFrame(bytes) = encode_located_tree_frame(&tree, true).unwrap();
+    let (_tables, decoded) = decode_located_tree_frame(sim_kernel::CodecId(3), &bytes).unwrap();
+    assert_eq!(decoded, tree);
+}
+
+#[test]
+fn tree_frame_encode_rejects_malformed_tree() {
+    let tree = LocatedExprTree {
+        expr: Expr::Call {
+            operator: Box::new(Expr::Symbol(Symbol::new("f"))),
+            args: vec![Expr::Bool(true)],
+        },
+        origin: None,
+        children: vec![LocatedExprTree::without_children(
+            Expr::Symbol(Symbol::new("f")),
+            None,
+        )],
+    };
+
+    let err = encode_located_tree_frame(&tree, false).unwrap_err();
+    match err {
+        sim_kernel::Error::CodecError { message, .. } => {
+            assert!(message.contains("call tree expected 2 children"));
+        }
+        other => panic!("unexpected error {other:?}"),
+    }
+}
+
+#[test]
+fn decode_enforces_limits() {
+    let BinaryFrame(bytes) = encode_frame(&Expr::String("wire".repeat(8))).unwrap();
+    let err = decode_located_tree_frame_with_limits(
+        sim_kernel::CodecId(3),
+        &bytes,
+        DecodeLimits {
+            max_string_bytes: 4,
+            ..DecodeLimits::default()
+        },
+    )
+    .unwrap_err();
+    match err {
+        sim_kernel::Error::CodecError { message, .. } => {
+            assert!(message.contains("string exceeds decode limit"));
+        }
+        other => panic!("unexpected error {other:?}"),
+    }
+}
+
+#[test]
+fn decode_bounds_deeply_nested_count_bomb() {
+    // Each level is a list that declares 65536 elements but supplies only its
+    // first (a deeper list). Before the allocation cap, the eager
+    // `Vec::with_capacity(65536)` at every level forced gigabytes of
+    // simultaneous reservations; now each reservation is capped and the depth
+    // budget fails the decode closed without ballooning memory or crashing.
+    let mut bytes = Vec::new();
+    bytes.extend_from_slice(b"SLB8"); // MAGIC
+    bytes.push(0x01); // version
+    bytes.push(0x00); // flags (no origin)
+    bytes.push(0x00); // lib table length
+    bytes.push(0x00); // symbol table length
+    bytes.push(0x00); // number-domain table length
+    for _ in 0..200 {
+        bytes.push(0x07); // BinaryTag::List
+        bytes.extend_from_slice(&[0x80, 0x80, 0x04]); // varuint(65_536)
+    }
+    let err = decode_located_tree_frame_with_limits(
+        sim_kernel::CodecId(1),
+        &bytes,
+        DecodeLimits {
+            max_depth: 64,
+            ..DecodeLimits::default()
+        },
+    )
+    .unwrap_err();
+    match err {
+        sim_kernel::Error::CodecError { message, .. } => {
+            assert!(
+                message.contains("nesting depth"),
+                "expected depth error, got: {message}"
+            );
+        }
+        other => panic!("unexpected error {other:?}"),
+    }
+}
+
+#[test]
+fn decode_header_table_count_does_not_allocate_above_clamp() {
+    // A ~9-byte frame whose symbol-table header declares 65535 entries but
+    // supplies none. The count is within the table-entry limit, so before the
+    // ALLOC_RESERVE_CAP clamp the header eagerly reserved a 65535-slot `Vec`
+    // (multiple MiB) for a truncated frame; now the reservation is capped and
+    // the decode fails closed on the missing records without ballooning memory.
+    let mut bytes = Vec::new();
+    bytes.extend_from_slice(b"SLB8"); // MAGIC
+    bytes.push(0x01); // version
+    bytes.push(0x00); // flags (no origin)
+    bytes.push(0x00); // lib table length
+    bytes.extend_from_slice(&[0xff, 0xff, 0x03]); // symbol table length = varuint(65_535)
+    // no symbol records follow: the frame is truncated here.
+    let err = decode_located_tree_frame_with_limits(
+        sim_kernel::CodecId(1),
+        &bytes,
+        DecodeLimits::default(),
+    )
+    .unwrap_err();
+    match err {
+        sim_kernel::Error::CodecError { message, .. } => {
+            assert!(
+                message.contains("unexpected end of binary frame"),
+                "expected truncation error, got: {message}"
+            );
+        }
+        other => panic!("unexpected error {other:?}"),
+    }
+}
+```
+
+### `feature/sim-codecs/pratt`
+
+Specimen `spec-test/sim-codecs/crates/sim-codec-pratt/src/tests` is checked by `cargo test`.
+
+Source `crates/sim-codec-pratt/src/tests.rs`:
+
+```rust
+use sim_codec::{DecodeBudget, DecodeLimits};
+use sim_kernel::{
+    CodecId, Error, Expr, Fixity, PrattOperator, PrattResult, PrattTable, PrattToken as Token,
+    Result, Symbol, Trivia,
+};
+
+use crate::{PrattCodecParser, PrattTokenSource, SpannedPrattToken};
+
+// conformance: Pratt parser handles operator precedence and associativity.
+
+#[derive(Clone)]
+struct StaticTokens(Vec<SpannedPrattToken>);
+
+impl PrattTokenSource for StaticTokens {
+    fn tokenize_pratt(
+        &self,
+        _codec: CodecId,
+        _source: &str,
+        _budget: &mut DecodeBudget,
+    ) -> Result<Vec<SpannedPrattToken>> {
+        Ok(self.0.clone())
+    }
+}
+
+#[test]
+fn parses_token_source_with_operator_precedence() {
+    let parser = PrattCodecParser::new(arithmetic_table(), StaticTokens(tokens_for_expr()));
+    let tree = parser
+        .parse_tree_with_source(CodecId(7), "calc.pratt", "1 + 2 * 3")
+        .unwrap();
+
+    let Expr::Infix {
+        operator, right, ..
+    } = &tree.expr
+    else {
+        panic!("expected top-level infix");
+    };
+    assert_eq!(operator, &Symbol::new("+"));
+    assert!(matches!(
+        right.as_ref(),
+        Expr::Infix { operator, .. } if operator == &Symbol::new("*")
+    ));
+    assert_eq!(tree.origin.as_ref().unwrap().span.start, 0);
+    assert_eq!(tree.origin.as_ref().unwrap().span.end, 9);
+    assert_eq!(tree.children[1].origin.as_ref().unwrap().span.start, 4);
+}
+
+#[test]
+fn carries_token_trivia_into_tree_origins() {
+    let mut tokens = tokens_for_sum();
+    tokens[2].leading_trivia = vec![Trivia::BlockComment("/* note */".to_owned())];
+    let parser = PrattCodecParser::new(arithmetic_table(), StaticTokens(tokens));
+    let tree = parser
+        .parse_tree_with_source(CodecId(7), "calc.pratt", "1 + /* note */ 2")
+        .unwrap();
+
+    assert!(
+        tree.origin
+            .as_ref()
+            .unwrap()
+            .trivia
+            .iter()
+            .any(|trivia| matches!(trivia, Trivia::BlockComment(text) if text.contains("note")))
+    );
+}
+
+#[test]
+fn enforces_token_budget_after_token_source_runs() {
+    let parser = PrattCodecParser::new(arithmetic_table(), StaticTokens(tokens_for_expr()));
+    let mut budget = DecodeBudget::new(DecodeLimits {
+        max_tokens: 2,
+        ..DecodeLimits::default()
+    });
+    let err = parser
+        .parse_tree_with_budget(CodecId(7), "1 + 2 * 3", &mut budget)
+        .unwrap_err();
+
+    assert!(matches!(err, Error::CodecError { message, .. } if message.contains("tokens")));
+}
+
+fn tokens_for_sum() -> Vec<SpannedPrattToken> {
+    vec![
+        SpannedPrattToken::new(Token::Number("1".to_owned()), 0, 1),
+        SpannedPrattToken::new(Token::Operator("+".to_owned()), 2, 3),
+        SpannedPrattToken::new(Token::Number("2".to_owned()), 4, 5),
+    ]
+}
+
+fn tokens_for_expr() -> Vec<SpannedPrattToken> {
+    vec![
+        SpannedPrattToken::new(Token::Number("1".to_owned()), 0, 1),
+        SpannedPrattToken::new(Token::Operator("+".to_owned()), 2, 3),
+        SpannedPrattToken::new(Token::Number("2".to_owned()), 4, 5),
+        SpannedPrattToken::new(Token::Operator("*".to_owned()), 6, 7),
+        SpannedPrattToken::new(Token::Number("3".to_owned()), 8, 9),
+    ]
+}
+
+fn arithmetic_table() -> PrattTable {
+    let mut table = PrattTable::new();
+    table.register(PrattOperator {
+        symbol: Symbol::new("+"),
+        fixity: Fixity::InfixLeft,
+        left_bp: 50,
+        right_bp: 51,
+        result: PrattResult::ExprInfix,
+    });
+    table.register(PrattOperator {
+        symbol: Symbol::new("*"),
+        fixity: Fixity::InfixLeft,
+        left_bp: 60,
+        right_bp: 61,
+        result: PrattResult::ExprInfix,
+    });
+    table
+}
+```
 
 ### `feature/sim-codecs/bridge-packet-codec`
 

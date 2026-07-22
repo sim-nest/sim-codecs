@@ -1,5 +1,7 @@
 use super::*;
 
+// conformance: expression syntax grammars round-trip Lisp forms.
+
 #[test]
 fn decodes_lists_vectors_and_quotes() {
     let mut cx = cx();

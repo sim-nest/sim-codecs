@@ -5,6 +5,8 @@
 //! and the `CodecRuntime` glue that registers a codec as a runtime
 //! object.
 
+// conformance: codec runtime installs codec objects with position-aware decode.
+
 use std::sync::Arc;
 
 use sim_kernel::{
