@@ -3,7 +3,7 @@ use std::sync::Arc;
 use sim_codec::{DecodePosition, encode_with_codec, grammar_check};
 use sim_codec_json::{JsonCodecLib, JsonGrammarRenderer};
 use sim_codec_lisp::{LispCodecLib, LispGrammarRenderer};
-use sim_kernel::{Cx, EncodeOptions, Expr, NumberLiteral, Symbol};
+use sim_kernel::{Cx, EncodeOptions, Expr, NumberLiteral, Symbol, testing::eager_cx};
 use sim_shape::{
     ExprKind, ExprKindShape, GrammarDialect, GrammarGraph, GrammarPosition, GrammarRenderer,
     GrammarTarget, ListShape, OneOfShape, Production, Shape, ShapeDefRef, ShapeDefs, TerminalAtom,
@@ -195,7 +195,8 @@ fn renderer_cases() -> Vec<RendererCase> {
 }
 
 fn cx() -> Cx {
-    let mut cx = sim_test_support::core_cx();
+    let mut cx = eager_cx();
+    sim_test_support::register_core_classes(&mut cx);
     sim_test_support::register_f64_number_domain(&mut cx);
     let json = JsonCodecLib::new(cx.registry_mut().fresh_codec_id());
     cx.load_lib(&json).unwrap();

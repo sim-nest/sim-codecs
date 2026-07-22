@@ -77,9 +77,9 @@ mod tests {
     use std::sync::Arc;
 
     use sim_kernel::{
-        AbiVersion, CodecId, Cx, Datum, DefaultFactory, Dependency, EagerPolicy, Export, Expr,
-        Factory, Lib, LibManifest, LibTarget, Linker, LoadCx, MatchScore, Result, ShapeMatch,
-        Symbol, Version,
+        AbiVersion, CodecId, Cx, Datum, DefaultFactory, Dependency, Export, Expr, Factory, Lib,
+        LibManifest, LibTarget, Linker, LoadCx, MatchScore, Result, ShapeMatch, Symbol, Version,
+        testing::eager_cx as cx,
     };
 
     use crate::{CodecDefaultDecode, CodecRuntime, Decoder, Input, ReadCx, codec_value};
@@ -150,10 +150,6 @@ mod tests {
         );
         assert_eq!(check.diagnostics.len(), 1);
         assert_eq!(check.diagnostics[0].message, "expected ok");
-    }
-
-    fn cx() -> Cx {
-        Cx::new(Arc::new(EagerPolicy), Arc::new(DefaultFactory))
     }
 
     fn install_text_codec(cx: &mut Cx) {
