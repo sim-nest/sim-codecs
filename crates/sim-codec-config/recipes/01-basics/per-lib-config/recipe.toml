@@ -1,8 +1,8 @@
 id = "per-lib-config"
 title = "Per-library config descriptor"
-codec = "lisp"
-setup = "setup.siml"
+codec = "config"
+setup = "setup.toml"
 purpose = "purpose.md"
 order = 10
-tags = ["codec", "config", "table", "sandbox-descriptor"]
-requires = ["core", "codec/lisp"]
+tags = ["codec", "config", "table", "roundtrip"]
+requires = ["codec/config"]

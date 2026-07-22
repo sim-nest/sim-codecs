@@ -1,4 +1,4 @@
-use sim_codec::{Input, decode_with_codec, encode_with_codec};
+use sim_codec::{CodecRuntime, Input, decode_with_codec, encode_with_codec};
 use sim_kernel::{EncodeOptions, Expr, NumberLiteral, ReadPolicy, Symbol};
 
 use crate::{ConfigCodecLib, ConfigDecoder, ConfigEncoder};
@@ -35,6 +35,27 @@ fn field<'a>(expr: &'a Expr, name: &str) -> &'a Expr {
         .unwrap_or_else(|| panic!("missing key {name:?}"))
 }
 
+fn codec_id(cx: &mut sim_kernel::Cx, symbol: &Symbol) -> sim_kernel::CodecId {
+    cx.resolve_codec(symbol)
+        .unwrap()
+        .object()
+        .as_any()
+        .downcast_ref::<CodecRuntime>()
+        .unwrap()
+        .id
+}
+
+fn assert_codec_error(err: sim_kernel::Error, expected: sim_kernel::CodecId, needle: &str) {
+    match err {
+        sim_kernel::Error::CodecError { codec, message } => {
+            assert_eq!(codec, expected);
+            assert_ne!(codec, sim_kernel::CodecId(0));
+            assert!(message.contains(needle), "{message}");
+        }
+        other => panic!("unexpected error {other:?}"),
+    }
+}
+
 #[test]
 fn codec_registers() {
     let cx = cx();
@@ -43,6 +64,23 @@ fn codec_registers() {
             .codec_by_symbol(&Symbol::qualified("codec", "config"))
             .is_some()
     );
+}
+
+#[test]
+fn invalid_utf8_input_reports_config_codec_id() {
+    let mut cx = cx();
+    let symbol = Symbol::qualified("codec", "config");
+    let expected = codec_id(&mut cx, &symbol);
+
+    let err = decode_with_codec(
+        &mut cx,
+        &symbol,
+        Input::Bytes(vec![0xff]),
+        ReadPolicy::default(),
+    )
+    .unwrap_err();
+
+    assert_codec_error(err, expected, "not valid UTF-8");
 }
 
 #[test]
@@ -184,6 +222,23 @@ fn runtime_auto_decodes_table_and_dir() {
         field(field(&dir, "codec/config"), "enabled"),
         &Expr::Bool(true)
     );
+}
+
+#[test]
+fn runtime_default_decode_keeps_config_eval_text_inert() {
+    let mut cx = cx();
+    let codec = Symbol::qualified("codec", "config");
+    let eval_text = "#(config/eval v1 :codec codec/lisp :source nil)";
+
+    let decoded = decode_with_codec(
+        &mut cx,
+        &codec,
+        Input::Text(format!("eval_node = \"{eval_text}\"\n")),
+        ReadPolicy::default(),
+    )
+    .unwrap();
+
+    assert_eq!(field(&decoded, "eval_node"), &text(eval_text));
 }
 
 #[test]

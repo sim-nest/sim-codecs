@@ -1,14 +1,16 @@
 use std::sync::Arc;
 
+// conformance: domain syntax grammars round-trip JSON values.
+
 use serde_json::{Value as JsonValue, json};
 use sim_codec::{
-    DecodeBudget, DecodeLimits, DecodePosition, DecodedForm, Input, decode_datum_with_codec,
-    decode_default_with_codec, decode_with_codec_and_limits, encode_datum_with_codec,
-    encode_tree_with_codec,
+    CodecRuntime, DecodeBudget, DecodeLimits, DecodePosition, DecodedForm, Input,
+    decode_datum_with_codec, decode_default_with_codec, decode_with_codec,
+    decode_with_codec_and_limits, encode_datum_with_codec, encode_tree_with_codec,
 };
 use sim_kernel::{
     Datum, DefaultFactory, EagerPolicy, EncodeOptions, Expr, LocatedExpr, LocatedExprTree,
-    NumberLiteral, Origin, QuoteMode, SourceId, Span, Symbol, Trivia,
+    NumberLiteral, Origin, QuoteMode, ReadPolicy, SourceId, Span, Symbol, Trivia,
 };
 
 use crate::helpers::base64_encode;
@@ -33,6 +35,44 @@ fn codec_registers() {
             .codec_by_symbol(&Symbol::qualified("codec", "json"))
             .is_some()
     );
+}
+
+fn codec_id(cx: &mut sim_kernel::Cx, symbol: &Symbol) -> sim_kernel::CodecId {
+    cx.resolve_codec(symbol)
+        .unwrap()
+        .object()
+        .as_any()
+        .downcast_ref::<CodecRuntime>()
+        .unwrap()
+        .id
+}
+
+fn assert_codec_error(err: sim_kernel::Error, expected: sim_kernel::CodecId, needle: &str) {
+    match err {
+        sim_kernel::Error::CodecError { codec, message } => {
+            assert_eq!(codec, expected);
+            assert_ne!(codec, sim_kernel::CodecId(0));
+            assert!(message.contains(needle), "{message}");
+        }
+        other => panic!("unexpected error {other:?}"),
+    }
+}
+
+#[test]
+fn invalid_utf8_input_reports_json_codec_id() {
+    let mut cx = cx();
+    let symbol = Symbol::qualified("codec", "json");
+    let expected = codec_id(&mut cx, &symbol);
+
+    let err = decode_with_codec(
+        &mut cx,
+        &symbol,
+        Input::Bytes(vec![0xff]),
+        ReadPolicy::default(),
+    )
+    .unwrap_err();
+
+    assert_codec_error(err, expected, "not valid UTF-8");
 }
 
 #[test]
@@ -217,10 +257,10 @@ fn slash_named_symbols_round_trip_structurally() {
 }
 
 #[test]
-fn legacy_string_operator_still_decodes() {
+fn compatibility_string_operator_still_decodes() {
     // Old payloads encoded operators/tags as bare strings; decode must remain
     // backward compatible with that flattened form.
-    let legacy = json!({
+    let compatibility_form = json!({
         "$expr": "infix",
         "operator": "+",
         "left": { "$expr": "symbol", "name": "a" },
@@ -228,7 +268,7 @@ fn legacy_string_operator_still_decodes() {
     });
     let decoded = json_to_expr(
         sim_kernel::CodecId(1),
-        &legacy,
+        &compatibility_form,
         &mut DecodeBudget::new(DecodeLimits::default()),
         0,
     )

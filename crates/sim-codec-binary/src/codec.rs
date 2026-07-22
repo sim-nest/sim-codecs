@@ -14,6 +14,7 @@ use sim_kernel::{
     Linker, LocatedExpr, LocatedExprTree, Result, Symbol, Version, WriteCx,
 };
 
+use crate::cookbook::{BinaryRoundtripReport, roundtrip_report_symbol};
 use crate::reader::BinaryReader;
 use crate::writer::BinaryWriter;
 use crate::{BinaryFrame, DecodeLimits, FLAG_NONE, FLAG_ORIGIN, FLAG_TREE_ORIGIN, FrameTables};
@@ -251,14 +252,20 @@ impl Lib for BinaryCodecLib {
             target: LibTarget::HostRegistered,
             requires: Vec::<Dependency>::new(),
             capabilities: Vec::new(),
-            exports: vec![Export::Codec {
-                symbol: self.symbol.clone(),
-                codec_id: Some(self.codec_id),
-            }],
+            exports: vec![
+                Export::Codec {
+                    symbol: self.symbol.clone(),
+                    codec_id: Some(self.codec_id),
+                },
+                Export::Function {
+                    symbol: roundtrip_report_symbol(),
+                    function_id: None,
+                },
+            ],
         }
     }
 
-    fn load(&self, _cx: &mut sim_kernel::LoadCx, linker: &mut Linker) -> Result<()> {
+    fn load(&self, cx: &mut sim_kernel::LoadCx, linker: &mut Linker) -> Result<()> {
         let _factory = DefaultFactory;
         let expr_shape =
             sim_codec::resolve_expr_shape(linker, &Symbol::qualified("codec", "BinaryFrame"))?;
@@ -279,6 +286,10 @@ impl Lib for BinaryCodecLib {
                 options_shape,
                 default_decode: CodecDefaultDecode::Datum,
             }),
+        )?;
+        linker.function_value(
+            roundtrip_report_symbol(),
+            cx.factory().opaque(Arc::new(BinaryRoundtripReport))?,
         )?;
         Ok(())
     }

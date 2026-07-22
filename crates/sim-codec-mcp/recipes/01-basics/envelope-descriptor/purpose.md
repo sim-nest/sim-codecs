@@ -1,5 +1,5 @@
-# MCP envelope codec (descriptor)
+# MCP envelope codec
 
-The MCP codec shapes Model Context Protocol envelopes: request, response, notification, and
-error frames. This recipe documents that envelope structure; the codec frames a transport
-envelope, not an evaluable surface expression, so it is documented rather than run.
+The MCP codec decodes one JSON-RPC envelope into the canonical MCP expression
+shape and encodes that expression back to JSON-RPC text. This recipe uses a
+`tools/list` request with a tagged nil params value.

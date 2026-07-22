@@ -3,6 +3,7 @@
 use std::sync::Arc;
 
 use crate::LispCodecLib;
+use sim_lib_numbers_f64::F64NumbersLib;
 
 #[sim::sim_lib(id = "codec/lisp", version = "0.1.0", native_export = true)]
 mod lisp_native {
@@ -37,6 +38,7 @@ mod lisp_native {
 
     fn with_lisp_context<T>(f: impl FnOnce(&mut Cx, &Symbol) -> Result<T>) -> Result<T> {
         let mut cx = Cx::new(Arc::new(NoopEvalPolicy), Arc::new(DefaultFactory));
+        cx.load_lib(&F64NumbersLib::new())?;
         let codec = Symbol::qualified("codec", "lisp");
         let lib = LispCodecLib::new(cx.registry_mut().fresh_codec_id())?;
         cx.load_lib(&lib)?;

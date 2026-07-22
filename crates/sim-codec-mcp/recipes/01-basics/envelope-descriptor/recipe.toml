@@ -1,8 +1,8 @@
 id = "envelope-descriptor"
 title = "Envelope descriptor"
-codec = "lisp"
-setup = "setup.siml"
+codec = "mcp"
+setup = "setup.json"
 purpose = "purpose.md"
 order = 10
-tags = ["codec", "mcp", "json-rpc", "sandbox-descriptor"]
-requires = ["core", "codec/lisp"]
+tags = ["codec", "mcp", "json-rpc", "roundtrip"]
+requires = ["codec/mcp"]

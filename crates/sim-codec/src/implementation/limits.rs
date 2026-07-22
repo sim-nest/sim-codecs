@@ -134,7 +134,7 @@ impl DecodeBudget {
 pub struct ReadCx<'a> {
     /// The kernel context the decode runs against.
     pub cx: &'a mut Cx,
-    /// Id of the codec performing the decode (used to tag errors).
+    /// Id of the codec performing the decode for error tagging.
     pub codec: CodecId,
     /// The read policy governing what the decode may admit.
     pub read_policy: ReadPolicy,

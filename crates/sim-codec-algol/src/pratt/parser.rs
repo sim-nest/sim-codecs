@@ -1,7 +1,6 @@
-//! Pratt parser root, aggregating the `core` driver loop and the `builders`
-//! node-construction helpers and re-exporting `PrattParser`.
+//! Pratt parser root, re-exporting the Algol token source and compatibility
+//! `PrattParser` wrapper over the shared Pratt codec parser.
 
-mod builders;
 mod core;
 
-pub use core::PrattParser;
+pub use core::{AlgolTokenSource, PrattParser};

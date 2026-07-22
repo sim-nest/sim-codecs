@@ -1,5 +1,145 @@
 {
-  "schema": "sim.rustdoc-index.v1",
-  "repo": "sim-codecs",
-  "target_doc": "target/doc/"
+  "generator": "xtask repo-contract v1",
+  "packages": [
+    {
+      "crate_name": "sim_codec",
+      "group": "workspace",
+      "manifest": "crates/sim-codec/Cargo.toml",
+      "package": "sim-codec",
+      "summary": "Core decoder/encoder and output-position contracts for the SIM codec layer."
+    },
+    {
+      "crate_name": "sim_codec_algol",
+      "group": "workspace",
+      "manifest": "crates/sim-codec-algol/Cargo.toml",
+      "package": "sim-codec-algol",
+      "summary": "General-purpose Algol codec for the SIM runtime: the infix, Pratt-parsed surface that round-trips every expression through the shared Expr graph."
+    },
+    {
+      "crate_name": "sim_codec_binary",
+      "group": "workspace",
+      "manifest": "crates/sim-codec-binary/Cargo.toml",
+      "package": "sim-codec-binary",
+      "summary": "Binary wire codec for the SIM runtime."
+    },
+    {
+      "crate_name": "sim_codec_binary_base64",
+      "group": "workspace",
+      "manifest": "crates/sim-codec-binary-base64/Cargo.toml",
+      "package": "sim-codec-binary-base64",
+      "summary": "Base64 text framing over the SIM binary codec."
+    },
+    {
+      "crate_name": "sim_codec_bitwise",
+      "group": "workspace",
+      "manifest": "crates/sim-codec-bitwise/Cargo.toml",
+      "package": "sim-codec-bitwise",
+      "summary": "Canonical minimal bit-packed wire codec for the SIM runtime."
+    },
+    {
+      "crate_name": "sim_codec_bitwise_base64",
+      "group": "workspace",
+      "manifest": "crates/sim-codec-bitwise-base64/Cargo.toml",
+      "package": "sim-codec-bitwise-base64",
+      "summary": "Base64 text framing over the SIM bitwise codec."
+    },
+    {
+      "crate_name": "sim_codec_bridge",
+      "group": "workspace",
+      "manifest": "crates/sim-codec-bridge/Cargo.toml",
+      "package": "sim-codec-bridge",
+      "summary": "BRIDGE packet line codec for SIM."
+    },
+    {
+      "crate_name": "sim_codec_chat",
+      "group": "workspace",
+      "manifest": "crates/sim-codec-chat/Cargo.toml",
+      "package": "sim-codec-chat",
+      "summary": "Canonical chat transcript codec for SIM."
+    },
+    {
+      "crate_name": "sim_codec_compare",
+      "group": "workspace",
+      "manifest": "crates/sim-codec-compare/Cargo.toml",
+      "package": "sim-codec-compare",
+      "summary": "Developer harness: sim-codec-bitwise vs sim-codec-binary, measured."
+    },
+    {
+      "crate_name": "sim_codec_config",
+      "group": "workspace",
+      "manifest": "crates/sim-codec-config/Cargo.toml",
+      "package": "sim-codec-config",
+      "summary": "Configuration codec for the SIM runtime."
+    },
+    {
+      "crate_name": "sim_codec_doc",
+      "group": "workspace",
+      "manifest": "crates/sim-codec-doc/Cargo.toml",
+      "package": "sim-codec-doc",
+      "summary": "Markup document domain codec for SIM."
+    },
+    {
+      "crate_name": "sim_codec_index",
+      "group": "workspace",
+      "manifest": "crates/sim-codec-index/Cargo.toml",
+      "package": "sim-codec-index",
+      "summary": "SIM Index codec over the shared IndexDoc graph."
+    },
+    {
+      "crate_name": "sim_codec_json",
+      "group": "workspace",
+      "manifest": "crates/sim-codec-json/Cargo.toml",
+      "package": "sim-codec-json",
+      "summary": "General-purpose JSON codec for the SIM runtime."
+    },
+    {
+      "crate_name": "sim_codec_lisp",
+      "group": "workspace",
+      "manifest": "crates/sim-codec-lisp/Cargo.toml",
+      "package": "sim-codec-lisp",
+      "summary": "SIM workspace package for sim codec lisp."
+    },
+    {
+      "crate_name": "sim_codec_lua",
+      "group": "workspace",
+      "manifest": "crates/sim-codec-lua/Cargo.toml",
+      "package": "sim-codec-lua",
+      "summary": "Lua chunk codec for SIM codec surfaces."
+    },
+    {
+      "crate_name": "sim_codec_mcp",
+      "group": "workspace",
+      "manifest": "crates/sim-codec-mcp/Cargo.toml",
+      "package": "sim-codec-mcp",
+      "summary": "MCP JSON-RPC envelope codec for SIM."
+    },
+    {
+      "crate_name": "sim_codec_pratt",
+      "group": "workspace",
+      "manifest": "crates/sim-codec-pratt/Cargo.toml",
+      "package": "sim-codec-pratt",
+      "summary": "Shared Pratt parser substrate for SIM codecs."
+    },
+    {
+      "crate_name": "sim_test_support",
+      "group": "workspace",
+      "manifest": "crates/sim-test-support/Cargo.toml",
+      "package": "sim-test-support",
+      "summary": "Shared test harness for SIM crates."
+    },
+    {
+      "crate_name": "sim_wasm_abi",
+      "group": "workspace",
+      "manifest": "crates/sim-wasm-abi/Cargo.toml",
+      "package": "sim-wasm-abi",
+      "summary": "Wasm ABI transport for SIM."
+    },
+    {
+      "crate_name": "xtask",
+      "group": "workspace",
+      "manifest": "xtask/Cargo.toml",
+      "package": "xtask",
+      "summary": "SIM workspace package for xtask."
+    }
+  ]
 }

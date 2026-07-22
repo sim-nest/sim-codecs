@@ -3,16 +3,22 @@
 //! back into canonical chat transcript `Expr` values.
 
 use serde_json::{Map, Value, json};
-use sim_codec::{DecodeBudget, DecodeLimits};
+use std::sync::Arc;
+
+use sim_codec::{
+    DecodeBudget, DecodeLimits, Decoder, DomainCodecLib, Encoder, Input, Output, ReadCx,
+    domain_input_text,
+};
 use sim_codec_json::{JsonProjectionMode, json_number_to_u64, project_json_to_expr_budgeted};
-use sim_kernel::{CodecId, Error, Expr, Result, Symbol};
+use sim_kernel::{CodecId, Error, Expr, Lib, LibManifest, Linker, LoadCx, Result, Symbol, WriteCx};
 use sim_value::access;
 
+use crate::output_grammar::{OutputGrammarDialect, output_grammar_text};
 use crate::{
     is_model_request_expr, model_response_expr, text_part, usage_record, validate_chat_transcript,
 };
 
-/// Codec id used to tag decode-budget errors raised while projecting an Ollama
+/// Codec id tagging decode-budget errors raised while projecting an Ollama
 /// provider response. The Ollama bridge is a set of free functions with no
 /// registered codec id of its own; the value only appears in budget-exceeded
 /// error messages on hostile input.
@@ -28,6 +34,87 @@ pub struct OllamaRequestOptions {
     pub stream: bool,
     /// Whether to include a (currently empty) `tools` array in the request.
     pub tools: bool,
+}
+
+/// Runtime codec for Ollama chat JSON and NDJSON response bodies.
+pub struct OllamaCodec;
+
+impl Decoder for OllamaCodec {
+    fn decode(&self, cx: &mut ReadCx<'_>, input: Input) -> Result<Expr> {
+        let source = domain_input_text(cx.codec, input)?;
+        let model = first_model_name(&source).unwrap_or_else(|| "ollama".to_owned());
+        let body = source.as_bytes();
+        if source
+            .lines()
+            .filter(|line| !line.trim().is_empty())
+            .count()
+            > 1
+        {
+            decode_ollama_stream_for_codec_with_limits(
+                cx.codec,
+                Symbol::qualified("runner", "ollama"),
+                &model,
+                body,
+                false,
+                cx.limits,
+            )
+        } else {
+            decode_ollama_response_for_codec_with_limits(
+                cx.codec,
+                Symbol::qualified("runner", "ollama"),
+                &model,
+                body,
+                false,
+                cx.limits,
+            )
+        }
+    }
+}
+
+impl Encoder for OllamaCodec {
+    fn encode(&self, _cx: &mut WriteCx<'_>, expr: &Expr) -> Result<Output> {
+        let options = OllamaRequestOptions::new(request_model(expr), false, false);
+        let bytes = encode_ollama_request(expr, &options)?;
+        String::from_utf8(bytes)
+            .map(Output::Text)
+            .map_err(|err| Error::Eval(format!("ollama codec encoded invalid utf-8: {err}")))
+    }
+}
+
+/// Host-registered lib for `codec:ollama`.
+pub struct OllamaCodecLib {
+    symbol: Symbol,
+    codec_id: CodecId,
+}
+
+impl OllamaCodecLib {
+    /// Creates the lib bound to the given runtime-assigned codec id.
+    pub fn new(id: CodecId) -> Self {
+        Self {
+            symbol: Symbol::qualified("codec", "ollama"),
+            codec_id: id,
+        }
+    }
+
+    fn domain_lib(&self) -> DomainCodecLib {
+        DomainCodecLib::new(
+            self.symbol.clone(),
+            self.codec_id,
+            Arc::new(OllamaCodec),
+            Arc::new(OllamaCodec),
+            Symbol::qualified("codec", "OllamaTranscript"),
+        )
+    }
+}
+
+impl Lib for OllamaCodecLib {
+    fn manifest(&self) -> LibManifest {
+        self.domain_lib().manifest()
+    }
+
+    fn load(&self, cx: &mut LoadCx, linker: &mut Linker<'_>) -> Result<()> {
+        self.domain_lib().load(cx, linker)
+    }
 }
 
 impl OllamaRequestOptions {
@@ -71,6 +158,7 @@ pub fn encode_ollama_request(expr: &Expr, options: &OllamaRequestOptions) -> Res
         ));
     }
     validate_chat_transcript(expr)?;
+    let entries = request_entries(expr)?;
     let mut payload = Map::new();
     payload.insert("model".to_owned(), Value::String(options.model.clone()));
     payload.insert("stream".to_owned(), Value::Bool(options.stream));
@@ -81,8 +169,26 @@ pub fn encode_ollama_request(expr: &Expr, options: &OllamaRequestOptions) -> Res
     if options.tools {
         payload.insert("tools".to_owned(), Value::Array(Vec::new()));
     }
+    attach_output_grammar(entries, &mut payload)?;
     serde_json::to_vec(&Value::Object(payload))
         .map_err(|err| Error::Eval(format!("ollama codec failed to encode request: {err}")))
+}
+
+fn attach_output_grammar(entries: &[(Expr, Expr)], payload: &mut Map<String, Value>) -> Result<()> {
+    let Some(grammar) = output_grammar_text(entries, OutputGrammarDialect::Gbnf)? else {
+        return Ok(());
+    };
+    payload.insert("grammar".to_owned(), Value::String(grammar));
+    Ok(())
+}
+
+fn request_entries(expr: &Expr) -> Result<&[(Expr, Expr)]> {
+    let Expr::Map(entries) = expr else {
+        return Err(Error::Eval(
+            "ollama codec expects request transcript as a map".to_owned(),
+        ));
+    };
+    Ok(entries)
 }
 
 /// Decodes a non-streamed Ollama JSON response `body` into a canonical
@@ -97,11 +203,40 @@ pub fn decode_ollama_response(
     body: &[u8],
     include_raw: bool,
 ) -> Result<Expr> {
-    let mut budget = DecodeBudget::new(DecodeLimits::default());
-    budget.check_input_bytes(OLLAMA_CODEC_ID, body.len())?;
+    decode_ollama_response_with_limits(runner, model, body, include_raw, DecodeLimits::default())
+}
+
+/// Decodes a non-streamed Ollama JSON response under caller-supplied limits.
+pub fn decode_ollama_response_with_limits(
+    runner: Symbol,
+    model: &str,
+    body: &[u8],
+    include_raw: bool,
+    limits: DecodeLimits,
+) -> Result<Expr> {
+    decode_ollama_response_for_codec_with_limits(
+        OLLAMA_CODEC_ID,
+        runner,
+        model,
+        body,
+        include_raw,
+        limits,
+    )
+}
+
+fn decode_ollama_response_for_codec_with_limits(
+    codec: CodecId,
+    runner: Symbol,
+    model: &str,
+    body: &[u8],
+    include_raw: bool,
+    limits: DecodeLimits,
+) -> Result<Expr> {
+    let mut budget = DecodeBudget::new(limits);
+    budget.check_input_bytes(codec, body.len())?;
     let value: Value = serde_json::from_slice(body)
         .map_err(|err| Error::Eval(format!("ollama codec returned invalid json: {err}")))?;
-    response_expr_from_json(runner, model, &value, include_raw, &mut budget)
+    response_expr_from_json(codec, runner, model, &value, include_raw, &mut budget)
 }
 
 /// Decodes a newline-delimited Ollama streaming response `body` into a single
@@ -117,8 +252,37 @@ pub fn decode_ollama_stream(
     body: &[u8],
     include_raw: bool,
 ) -> Result<Expr> {
-    let mut budget = DecodeBudget::new(DecodeLimits::default());
-    budget.check_input_bytes(OLLAMA_CODEC_ID, body.len())?;
+    decode_ollama_stream_with_limits(runner, model, body, include_raw, DecodeLimits::default())
+}
+
+/// Decodes a newline-delimited Ollama stream under caller-supplied limits.
+pub fn decode_ollama_stream_with_limits(
+    runner: Symbol,
+    model: &str,
+    body: &[u8],
+    include_raw: bool,
+    limits: DecodeLimits,
+) -> Result<Expr> {
+    decode_ollama_stream_for_codec_with_limits(
+        OLLAMA_CODEC_ID,
+        runner,
+        model,
+        body,
+        include_raw,
+        limits,
+    )
+}
+
+fn decode_ollama_stream_for_codec_with_limits(
+    codec: CodecId,
+    runner: Symbol,
+    model: &str,
+    body: &[u8],
+    include_raw: bool,
+    limits: DecodeLimits,
+) -> Result<Expr> {
+    let mut budget = DecodeBudget::new(limits);
+    budget.check_input_bytes(codec, body.len())?;
     let text = std::str::from_utf8(body)
         .map_err(|err| Error::Eval(format!("ollama stream is not valid utf-8: {err}")))?;
     let mut chunks = Vec::new();
@@ -141,6 +305,7 @@ pub fn decode_ollama_stream(
         } else if value.get("done").and_then(Value::as_bool).unwrap_or(false) {
             stop_reason = Symbol::new("stop");
         }
+        budget.check_collection_len(codec, chunks.len() + 1)?;
         chunks.push(value);
     }
     if chunks.is_empty() {
@@ -165,7 +330,7 @@ pub fn decode_ollama_stream(
                 project_json_to_expr_budgeted(
                     chunk,
                     JsonProjectionMode::UntaggedInterop,
-                    OLLAMA_CODEC_ID,
+                    codec,
                     &mut budget,
                     0,
                 )
@@ -180,6 +345,7 @@ pub fn decode_ollama_stream(
 }
 
 fn response_expr_from_json(
+    codec: CodecId,
     runner: Symbol,
     model: &str,
     value: &Value,
@@ -212,7 +378,7 @@ fn response_expr_from_json(
             project_json_to_expr_budgeted(
                 value,
                 JsonProjectionMode::UntaggedInterop,
-                OLLAMA_CODEC_ID,
+                codec,
                 budget,
                 0,
             )?,
@@ -333,6 +499,35 @@ fn map_field<'a>(entries: &'a [(Expr, Expr)], key: &str) -> Result<&'a Expr> {
             _ => None,
         })
         .ok_or_else(|| Error::Eval(format!("ollama codec missing {key} field")))
+}
+
+fn request_model(expr: &Expr) -> String {
+    let Expr::Map(entries) = expr else {
+        return "ollama".to_owned();
+    };
+    entries
+        .iter()
+        .find_map(|(field, value)| match (field, value) {
+            (Expr::Symbol(symbol), Expr::String(model)) if symbol.name.as_ref() == "model" => {
+                Some(model.clone())
+            }
+            _ => None,
+        })
+        .unwrap_or_else(|| "ollama".to_owned())
+}
+
+fn first_model_name(source: &str) -> Option<String> {
+    source
+        .lines()
+        .map(str::trim)
+        .find(|line| !line.is_empty())
+        .and_then(|line| serde_json::from_str::<Value>(line).ok())
+        .and_then(|value| {
+            value
+                .get("model")
+                .and_then(Value::as_str)
+                .map(str::to_owned)
+        })
 }
 
 fn flatten_expr(expr: &Expr) -> String {

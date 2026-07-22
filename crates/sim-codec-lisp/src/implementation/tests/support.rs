@@ -1,8 +1,8 @@
 pub(super) use std::sync::Arc;
 
 pub(super) use sim_codec::{
-    DecodeLimits, Input, ReadCx, decode_tree_with_codec_and_limits, decode_with_codec,
-    decode_with_codec_and_limits, encode_with_codec,
+    CodecRuntime, DecodeLimits, Input, ReadCx, decode_tree_with_codec_and_limits,
+    decode_with_codec, decode_with_codec_and_limits, encode_with_codec,
 };
 pub(super) use sim_kernel::{
     Args, Callable, Class, ClassId, ClassRef, Cx, DefaultFactory, EagerPolicy, EncodePosition,
@@ -317,6 +317,31 @@ pub(super) fn cx() -> Cx {
 pub(super) fn register_lisp_codec(cx: &mut Cx) {
     let lib = LispCodecLib::new(cx.registry_mut().fresh_codec_id()).unwrap();
     cx.load_lib(&lib).unwrap();
+}
+
+pub(super) fn runtime_codec_id(cx: &mut Cx, symbol: &Symbol) -> sim_kernel::CodecId {
+    cx.resolve_codec(symbol)
+        .unwrap()
+        .object()
+        .as_any()
+        .downcast_ref::<CodecRuntime>()
+        .unwrap()
+        .id
+}
+
+pub(super) fn assert_codec_error(
+    err: sim_kernel::Error,
+    expected: sim_kernel::CodecId,
+    needle: &str,
+) {
+    match err {
+        sim_kernel::Error::CodecError { codec, message } => {
+            assert_eq!(codec, expected);
+            assert_ne!(codec, sim_kernel::CodecId(0));
+            assert!(message.contains(needle), "{message}");
+        }
+        other => panic!("unexpected error {other:?}"),
+    }
 }
 
 pub(super) fn policy_with(capabilities: Vec<sim_kernel::CapabilityName>) -> ReadPolicy {

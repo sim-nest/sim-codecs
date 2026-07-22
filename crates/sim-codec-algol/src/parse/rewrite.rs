@@ -1,18 +1,8 @@
 //! Post-parse rewriting for Algol: carries raw number literals as a tagged
 //! extension form and lowers them into concrete number domains via the context.
 
-use sim_kernel::{Expr, LocatedExprTree, Result, Symbol};
-
-pub(crate) fn raw_number_tag() -> Symbol {
-    Symbol::qualified("codec", "algol-number-literal")
-}
-
-pub(crate) fn raw_number_expr(raw: String) -> Expr {
-    Expr::Extension {
-        tag: raw_number_tag(),
-        payload: Box::new(Expr::String(raw)),
-    }
-}
+use sim_codec_pratt::{raw_number_expr, raw_number_tag};
+use sim_kernel::{Expr, LocatedExprTree, Result};
 
 pub(crate) fn rewrite_number_domains_tree_lossy(
     cx: &mut sim_kernel::Cx,

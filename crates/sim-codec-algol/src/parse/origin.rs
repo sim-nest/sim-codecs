@@ -2,21 +2,7 @@
 //! spans and surrounding trivia to located expression trees so source layout
 //! round-trips.
 
-use sim_kernel::{Error, LocatedExprTree, Origin, Result, SourceId, Span, Trivia};
-
-pub(crate) fn with_origin_span(mut tree: LocatedExprTree, origin: Origin) -> LocatedExprTree {
-    tree.origin = Some(origin);
-    tree
-}
-
-pub(crate) fn extend_tree_trivia(tree: &mut LocatedExprTree, trivia: Vec<Trivia>) {
-    if trivia.is_empty() {
-        return;
-    }
-    if let Some(origin) = &mut tree.origin {
-        origin.trivia.extend(trivia);
-    }
-}
+use sim_kernel::{Error, Origin, Result, SourceId, Span, Trivia};
 
 pub(crate) fn origin_from_algol_source(
     codec: sim_kernel::CodecId,
@@ -33,22 +19,6 @@ pub(crate) fn origin_from_algol_source(
         span: Span { start, end },
         trivia,
     })
-}
-
-pub(crate) fn tree_origin(
-    codec: sim_kernel::CodecId,
-    source: SourceId,
-    _raw: &str,
-    start: usize,
-    end: usize,
-    trivia: Vec<Trivia>,
-) -> Origin {
-    Origin {
-        codec,
-        source,
-        span: Span { start, end },
-        trivia,
-    }
 }
 
 fn scan_algol_prefix_trivia(source: &str) -> Result<(usize, Vec<Trivia>)> {

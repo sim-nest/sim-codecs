@@ -12,6 +12,7 @@ homepage = "https://github.com/sim-nest/sim-codecs"
 [dependencies]
 sim-cookbook = { version = "0.1.0" }
 sim-codec = { version = "0.1.0", path = "../sim-codec" }
+sim-codec-pratt = { version = "0.1.0", path = "../sim-codec-pratt" }
 sim-codec-lisp = { version = "0.1.0", path = "../sim-codec-lisp" }
 sim-kernel = { version = "0.1.0" }
 sim-shape = { version = "0.1.0" }

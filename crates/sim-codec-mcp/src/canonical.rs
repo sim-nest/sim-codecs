@@ -17,6 +17,7 @@ use crate::{
     },
     error::codec_error,
     expr::{envelope_to_expr, expr_to_envelope},
+    wire_keys::reject_duplicate_mcp_wire_keys,
 };
 
 const JSONRPC_VERSION: &str = "2.0";
@@ -33,6 +34,7 @@ impl Decoder for McpCodec {
         let source = input_text(cx.codec, input)?;
         let mut budget = DecodeBudget::new(cx.limits);
         budget.check_input_bytes(cx.codec, source.len())?;
+        reject_duplicate_mcp_wire_keys(cx.codec, &source)?;
         let value = serde_json::from_str::<JsonValue>(&source)
             .map_err(|err| codec_error(cx.codec, format!("MCP JSON parse error: {err}")))?;
         let envelope = json_to_envelope(cx.codec, &value, &mut budget)?;

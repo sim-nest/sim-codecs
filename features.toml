@@ -1,0 +1,265 @@
+schema = "sim.features"
+
+[enforcement.audience]
+framework = "strict"
+code = "strict"
+
+[enforcement.surface]
+syntax = "strict"
+wire = "strict"
+
+[enforcement.specimen]
+user = "strict"
+framework = "strict"
+code = "advisory"
+
+[enforcement.route]
+major_entrypoints = "advisory"
+frameworks = "advisory"
+
+[[feature]]
+id = "feature/sim-codecs/codec"
+title = "Codec framework"
+summary = "Define codec positions, limits, syntax surfaces, wire surfaces, and loadable codec runtime libraries."
+owner = "crate/sim-codec"
+audiences = ["code", "framework"]
+guidance = "Use this row when adding a codec or checking how codec positions are represented."
+claims_anchors = [
+  "anchor/crate/sim-codec",
+  "anchor/crate/sim-codec-algol",
+  "anchor/crate/sim-codec-binary",
+  "anchor/crate/sim-codec-binary-base64",
+  "anchor/crate/sim-codec-bitwise",
+  "anchor/crate/sim-codec-bitwise-base64",
+  "anchor/crate/sim-codec-chat",
+  "anchor/crate/sim-codec-compare",
+  "anchor/crate/sim-codec-config",
+  "anchor/crate/sim-codec-doc",
+  "anchor/crate/sim-codec-index",
+  "anchor/crate/sim-codec-json",
+  "anchor/crate/sim-codec-lisp",
+  "anchor/crate/sim-codec-lua",
+  "anchor/crate/sim-codec-mcp",
+  "anchor/crate/sim-test-support",
+  "anchor/crate/sim-wasm-abi",
+  "anchor/export/sim-codec-binary-base64/codec/binary-base64",
+  "anchor/export/sim-codec-binary/codec/binary",
+  "anchor/export/sim-codec-bitwise-base64/codec/bitwise-base64",
+  "anchor/export/sim-codec-bitwise/codec/bitwise",
+  "anchor/export/sim-codec-chat/codec/chat",
+  "anchor/export/sim-codec-lisp/codec/lisp",
+  "anchor/export/sim-codec-mcp/mcp/error",
+  "anchor/export/sim-codec-mcp/mcp/error-envelope",
+  "anchor/export/sim-codec-mcp/mcp/notification",
+  "anchor/export/sim-codec-mcp/mcp/request",
+  "anchor/export/sim-codec-mcp/mcp/response",
+  "anchor/runtime-lib/sim-codec-algol/algol-codec-lib",
+  "anchor/runtime-lib/sim-codec-binary-base64/binary-base64-codec-lib",
+  "anchor/runtime-lib/sim-codec-binary/binary-codec-lib",
+  "anchor/runtime-lib/sim-codec-bitwise-base64/bitwise-base64-codec-lib",
+  "anchor/runtime-lib/sim-codec-bitwise/bitwise-codec-lib",
+  "anchor/runtime-lib/sim-codec-chat/anthropic-codec-lib",
+  "anchor/runtime-lib/sim-codec-chat/chat-codec-lib",
+  "anchor/runtime-lib/sim-codec-chat/lemonade-codec-lib",
+  "anchor/runtime-lib/sim-codec-chat/lm-studio-codec-lib",
+  "anchor/runtime-lib/sim-codec-chat/ollama-codec-lib",
+  "anchor/runtime-lib/sim-codec-chat/open-ai-codec-lib",
+  "anchor/runtime-lib/sim-codec-config/config-codec-lib",
+  "anchor/runtime-lib/sim-codec-doc/doc-codec-lib",
+  "anchor/runtime-lib/sim-codec-doc/markup-codec-lib",
+  "anchor/runtime-lib/sim-codec-index/index-codec-lib",
+  "anchor/runtime-lib/sim-codec-json/json-codec-lib",
+  "anchor/runtime-lib/sim-codec-lisp/lisp-codec-lib",
+  "anchor/runtime-lib/sim-codec-lua/lua-codec-lib",
+  "anchor/runtime-lib/sim-codec-mcp/mcp-codec-lib",
+  "anchor/runtime-lib/sim-codec/domain-codec-lib",
+  "anchor/runtime-lib/sim-wasm-abi/wasm-lib",
+]
+claims_specimens = [
+  "spec-test/sim-codecs/crates/sim-codec/src/implementation/runtime",
+]
+
+[[feature]]
+id = "feature/sim-codecs/expression-syntax-grammars"
+title = "Expression syntax grammars"
+summary = "Read and write Lisp, JSON, Algol, Lua, Compare, and Bridge rendered expression grammars."
+owner = "crate/sim-codec-lisp"
+audiences = ["code", "framework"]
+guidance = "Use this row when finding an expression syntax grammar or adding a language-shaped codec surface."
+claims_surfaces = [
+  "syntax/algol",
+  "syntax/bridge",
+  "syntax/compare",
+  "syntax/json",
+  "syntax/lisp",
+  "syntax/lua",
+]
+claims_specimens = [
+  "spec-test/sim-codecs/crates/sim-codec-lisp/src/implementation/tests/basics",
+]
+supports = [
+  "feature/sim-codecs/codec",
+]
+
+[[feature]]
+id = "feature/sim-codecs/domain-syntax-grammars"
+title = "Domain syntax grammars"
+summary = "Read and write binary, bitwise, chat, config, document, index, and MCP grammar surfaces."
+owner = "crate/sim-codec"
+audiences = ["code", "framework"]
+guidance = "Use this row when finding a domain codec grammar for data, packets, configuration, or generated index text."
+claims_surfaces = [
+  "syntax/binary",
+  "syntax/binary-base64",
+  "syntax/bitwise",
+  "syntax/bitwise-base64",
+  "syntax/chat",
+  "syntax/config",
+  "syntax/doc",
+  "syntax/index",
+  "syntax/mcp",
+]
+claims_specimens = [
+  "spec-test/sim-codecs/crates/sim-codec-json/src/tests",
+]
+supports = [
+  "feature/sim-codecs/codec",
+]
+
+[[feature]]
+id = "feature/sim-codecs/wire-protocol-grammars"
+title = "Wire protocol grammars"
+summary = "Read and write binary, bitwise, chat, config, document, index, and MCP wire protocols."
+owner = "crate/sim-codec"
+audiences = ["code", "framework"]
+guidance = "Use this row when checking the grammar contract for a packet or byte-level wire surface."
+claims_surfaces = [
+  "wire/binary",
+  "wire/binary-base64",
+  "wire/bitwise",
+  "wire/bitwise-base64",
+  "wire/chat",
+  "wire/config",
+  "wire/doc",
+  "wire/index",
+  "wire/mcp",
+]
+claims_specimens = [
+  "spec-test/sim-codecs/crates/sim-codec-binary/src/tests",
+]
+supports = [
+  "feature/sim-codecs/codec",
+]
+
+[[feature]]
+id = "feature/sim-codecs/pratt"
+title = "Pratt operator parser"
+summary = "Parse operator-oriented expression languages through the Pratt codec surface."
+owner = "crate/sim-codec-pratt"
+audiences = ["code", "framework"]
+guidance = "Use this row when building a parser for an operator language."
+claims_anchors = [
+  "anchor/crate/sim-codec-pratt",
+  "anchor/grammar/syntax/pratt",
+]
+claims_surfaces = [
+  "syntax/pratt",
+]
+claims_specimens = [
+  "spec-test/sim-codecs/crates/sim-codec-pratt/src/tests",
+]
+
+[[feature]]
+id = "feature/sim-codecs/bridge-packet-codec"
+title = "Bridge packet codec"
+summary = "Encode and decode Bridge packet workflow data through the Bridge wire grammar."
+owner = "crate/sim-codec-bridge"
+audiences = ["code", "framework"]
+guidance = "Use this row when following packet-shaped model workflow data at the codec layer."
+claims_anchors = [
+  "anchor/crate/sim-codec-bridge",
+  "anchor/export/sim-codec-bridge/bridge/attest",
+  "anchor/export/sim-codec-bridge/bridge/evidence",
+  "anchor/export/sim-codec-bridge/bridge/patch",
+  "anchor/export/sim-codec-bridge/bridge/receipt",
+  "anchor/export/sim-codec-bridge/bridge/review",
+  "anchor/export/sim-codec-bridge/bridge/score",
+  "anchor/export/sim-codec-bridge/bridge/vote",
+  "anchor/export/sim-codec-bridge/bridge/weave-row",
+  "anchor/grammar/wire/bridge",
+  "anchor/runtime-lib/sim-codec-bridge/bridge-codec-lib",
+]
+claims_surfaces = [
+  "wire/bridge",
+]
+claims_specimens = [
+  "spec-test/sim-codecs/crates/sim-codec-doc/tests/conformance",
+]
+
+[[feature]]
+id = "feature/sim-codecs/contract-emitter"
+title = "Codec contract emitter"
+summary = "Emit generated repository contract and index fragments for codec crates."
+owner = "crate/xtask"
+audiences = ["code"]
+guidance = "Use this row when refreshing generated codec contract evidence."
+claims_anchors = [
+  "anchor/crate/xtask",
+]
+supports = [
+  "feature/sim-codecs/codec",
+]
+
+[[route]]
+id = "route/add-a-codec"
+task = "Add a codec"
+audiences = ["code", "framework"]
+steps = [
+  { feature = "feature/sim-codecs/codec", why = "Start with the shared codec contract and position rules." },
+  { feature = "feature/sim-codecs/contract-emitter", why = "The emitter row keeps generated codec contract evidence current." },
+]
+
+[[route]]
+id = "route/parse-operator-language"
+task = "Parse an operator language"
+audiences = ["code", "framework"]
+steps = [
+  { feature = "feature/sim-codecs/pratt", why = "The Pratt codec is the operator-language parser surface." },
+]
+
+[[route]]
+id = "route/add-a-language"
+task = "Add a language"
+audiences = ["code", "framework"]
+steps = [
+  { feature = "feature/sim-codecs/codec", why = "The codec row owns shared positions, limits, and loadable codec contracts." },
+  { feature = "feature/sim-codecs/expression-syntax-grammars", why = "Expression syntax rows expose language and grammar subjects with round-trip contracts." },
+  { feature = "feature/sim-codecs/pratt", why = "Operator-shaped languages reuse the Pratt syntax surface." },
+]
+
+[[route]]
+id = "route/add-a-packet-codec"
+task = "Add a packet codec"
+audiences = ["code", "framework"]
+steps = [
+  { feature = "feature/sim-codecs/bridge-packet-codec", why = "The Bridge packet codec owns the Bridge wire grammar." },
+  { feature = "feature/sim-codecs/wire-protocol-grammars", why = "The wire grammar row groups packet and byte-level protocol contracts." },
+]
+
+[[route]]
+id = "route/add-bridge-packet-codec"
+task = "Add a Bridge packet codec"
+audiences = ["code", "framework"]
+steps = [
+  { feature = "feature/sim-codecs/bridge-packet-codec", why = "The Bridge packet codec owns the Bridge wire grammar." },
+]
+
+[[route]]
+id = "route/find-a-grammar"
+task = "Find a grammar"
+audiences = ["code", "framework"]
+steps = [
+  { feature = "feature/sim-codecs/expression-syntax-grammars", why = "The expression syntax row carries language and grammar subjects." },
+  { feature = "feature/sim-codecs/domain-syntax-grammars", why = "The domain syntax row carries data, document, config, and packet syntax contracts." },
+  { feature = "feature/sim-codecs/wire-protocol-grammars", why = "The wire row carries packet and byte-level grammar contracts." },
+]

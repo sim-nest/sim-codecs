@@ -1,1 +1,6 @@
-(quote (codec eval quote data pattern limits))
+(expr:map
+  [kind codec/positions-and-limits]
+  [positions [eval quote data pattern]]
+  [decode-targets [term datum]]
+  [limits [input-bytes string-bytes collection-len expr-nodes depth]]
+  [contract "decoders fail closed and encoders know their output position"])

@@ -5,6 +5,8 @@
 //! and the `CodecRuntime` glue that registers a codec as a runtime
 //! object.
 
+// conformance: codec runtime installs codec objects with position-aware decode.
+
 use std::sync::Arc;
 
 use sim_kernel::{
@@ -17,7 +19,7 @@ use super::limits::ReadCx;
 /// Raw input handed to a [`Decoder`]: source text or source bytes.
 ///
 /// Text codecs take [`Input::Text`]; binary codecs take [`Input::Bytes`]. A text
-/// codec given bytes interprets them as UTF-8 (see [`Input::into_string`]).
+/// codec given bytes interprets them as UTF-8 (see [`Input::into_string_for`]).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Input {
     /// Source text.
@@ -30,14 +32,39 @@ impl Input {
     /// Take the input as UTF-8 text, decoding [`Input::Bytes`] and failing closed
     /// with a codec error if the bytes are not valid UTF-8.
     pub fn into_string(self) -> Result<String> {
+        self.into_string_for(CodecId(0))
+    }
+
+    /// Take the input as UTF-8 text, tagging invalid bytes with `codec`.
+    pub fn into_string_for(self, codec: CodecId) -> Result<String> {
         match self {
             Self::Text(text) => Ok(text),
             Self::Bytes(bytes) => {
                 String::from_utf8(bytes).map_err(|err| sim_kernel::Error::CodecError {
-                    codec: CodecId(0),
-                    message: err.to_string(),
+                    codec,
+                    message: format!("codec input is not valid UTF-8: {err}"),
                 })
             }
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn input_utf8_error_uses_supplied_codec_id() {
+        let err = Input::Bytes(vec![0xff])
+            .into_string_for(CodecId(42))
+            .unwrap_err();
+
+        match err {
+            sim_kernel::Error::CodecError { codec, message } => {
+                assert_eq!(codec, CodecId(42));
+                assert!(message.contains("not valid UTF-8"), "{message}");
+            }
+            other => panic!("unexpected error {other:?}"),
         }
     }
 }

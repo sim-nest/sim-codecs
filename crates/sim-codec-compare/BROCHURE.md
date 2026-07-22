@@ -1,7 +1,6 @@
 # sim-codec-compare
 
-In one line: the honest scoreboard that tells you when the bit-packed wire format
-actually beats the plain one, and when it just wastes your time.
+In one line: the honest scoreboard that tells you when the bit-packed wire format actually beats the plain one, and when it just wastes your time.
 
 ## What it gives you
 

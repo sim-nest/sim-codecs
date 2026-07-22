@@ -1,5 +1,5 @@
-//! A test-only `numbers/f64` number-domain fixture and its registration helper,
-//! used to exercise codec number-literal handling at the codec boundary.
+//! A test-only `numbers/f64` number-domain fixture and registration helper for
+//! codec number-literal handling at the codec boundary.
 
 use std::sync::Arc;
 
@@ -10,7 +10,8 @@ use sim_kernel::{
 
 #[non_citizen(
     reason = "test-only f64 number-domain fixture for codec boundary tests",
-    kind = "test-fixture"
+    kind = "test-fixture",
+    descriptor = "numbers/f64"
 )]
 struct TestF64NumberDomain;
 

@@ -1,1 +1,1 @@
-(quote (binary slb8 frame symbols values origin))
+(binary/roundtrip-report)

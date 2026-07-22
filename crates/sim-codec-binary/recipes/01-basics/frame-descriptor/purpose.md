@@ -1,5 +1,5 @@
-# Binary frame codec (descriptor)
+# Binary frame codec
 
-The binary codec encodes expressions as SLB8 byte frames: a symbol table, a value table, and
-origin metadata. This recipe documents that frame structure; the codec round-trips bytes, not
-an evaluable surface expression, so it is documented rather than run in the sandbox.
+The binary codec encodes an expression as an SLB8 byte frame and decodes the
+same bytes back to the original expression. The recipe reports the byte length,
+symbol table size, decoded expression, and round-trip check for a small sample.

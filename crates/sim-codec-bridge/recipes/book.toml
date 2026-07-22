@@ -1,0 +1,5 @@
+book = "codec/bridge"
+title = "BRIDGE Codec"
+summary = "Strict packet envelopes for checked exchanges."
+order = 260
+chapters = ["01-basics"]

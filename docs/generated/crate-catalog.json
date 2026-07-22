@@ -1,6 +1,6 @@
 {
   "generator": "xtask crate-catalog v1",
-  "package_count": 16,
+  "package_count": 20,
   "packages": [
     {
       "description": "SIM workspace package for sim codec algol.",
@@ -68,6 +68,19 @@
       ]
     },
     {
+      "description": "BRIDGE packet line codec for SIM.",
+      "generated_readme": true,
+      "manifest": "crates/sim-codec-bridge/Cargo.toml",
+      "name": "sim-codec-bridge",
+      "publish": "true",
+      "readme": "crates/sim-codec-bridge/README.md",
+      "root": "crates/sim-codec-bridge",
+      "target_kinds": [
+        "custom-build",
+        "lib"
+      ]
+    },
+    {
       "description": "Canonical chat transcript codec for SIM.",
       "generated_readme": true,
       "manifest": "crates/sim-codec-chat/Cargo.toml",
@@ -122,6 +135,18 @@
       ]
     },
     {
+      "description": "SIM Index codec for checked s-expression and JSON index graph forms.",
+      "generated_readme": true,
+      "manifest": "crates/sim-codec-index/Cargo.toml",
+      "name": "sim-codec-index",
+      "publish": "true",
+      "readme": "crates/sim-codec-index/README.md",
+      "root": "crates/sim-codec-index",
+      "target_kinds": [
+        "lib"
+      ]
+    },
+    {
       "description": "SIM workspace package for sim codec json.",
       "generated_readme": true,
       "manifest": "crates/sim-codec-json/Cargo.toml",
@@ -131,7 +156,8 @@
       "root": "crates/sim-codec-json",
       "target_kinds": [
         "custom-build",
-        "lib"
+        "lib",
+        "test"
       ]
     },
     {
@@ -149,6 +175,19 @@
       ]
     },
     {
+      "description": "Lua chunk codec with expression, located, and tree round-trip lanes.",
+      "generated_readme": true,
+      "manifest": "crates/sim-codec-lua/Cargo.toml",
+      "name": "sim-codec-lua",
+      "publish": "true",
+      "readme": "crates/sim-codec-lua/README.md",
+      "root": "crates/sim-codec-lua",
+      "target_kinds": [
+        "custom-build",
+        "lib"
+      ]
+    },
+    {
       "description": "MCP JSON-RPC envelope codec for SIM.",
       "generated_readme": true,
       "manifest": "crates/sim-codec-mcp/Cargo.toml",
@@ -156,6 +195,19 @@
       "publish": "true",
       "readme": "crates/sim-codec-mcp/README.md",
       "root": "crates/sim-codec-mcp",
+      "target_kinds": [
+        "custom-build",
+        "lib"
+      ]
+    },
+    {
+      "description": "Shared Pratt expression parser substrate for SIM codecs.",
+      "generated_readme": true,
+      "manifest": "crates/sim-codec-pratt/Cargo.toml",
+      "name": "sim-codec-pratt",
+      "publish": "true",
+      "readme": "crates/sim-codec-pratt/README.md",
+      "root": "crates/sim-codec-pratt",
       "target_kinds": [
         "custom-build",
         "lib"

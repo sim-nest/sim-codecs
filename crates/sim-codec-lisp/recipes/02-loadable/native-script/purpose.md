@@ -1,5 +1,6 @@
 # Load a native codec script
 
-Loading a native codec plugin needs a filesystem .so, which the sandbox has no capability for. This recipe is a **descriptor** (tagged `sandbox-descriptor`): it shows the real
-surface shape rather than a live result, because that result cannot be reproduced in
-the cookbook's read-eval sandbox.
+The loadable Lisp codec exposes a CLI entrypoint that can decode and evaluate
+source supplied by the host. This recipe sends source through that entrypoint
+without touching the filesystem and checks that the decoded source returns the
+expected symbol.

@@ -5,12 +5,15 @@ of repos that build together; contributions of all sizes are welcome.
 
 ## Building and testing
 
-This repo is self-contained and builds against the published SIM crates on
-crates.io -- no extra tooling or sibling checkouts are required:
+This repo builds standalone against the published SIM crates on crates.io:
 
 - Clone this repo and run `cargo build` and `cargo test --workspace`.
 - Cross-repo dependencies resolve from crates.io; dependencies within this repo
   resolve locally.
+- The generated-docs gate uses the shared `sim-tooling` encoder. In a
+  constellation checkout, `cargo run -p xtask -- simdoc --check` finds
+  `../sim-tooling`; in a lone checkout, set `SIMDOC_TOOLING_MANIFEST` to a
+  checked-out `sim-tooling/Cargo.toml`.
 
 ## What a pull request must pass
 
@@ -20,6 +23,8 @@ Every PR runs these gates in CI, and they must be green before merge:
 - `cargo clippy --workspace --all-targets -- -D warnings`
 - `cargo test --workspace`
 - `cargo doc --workspace --no-deps`
+- `cargo run -p xtask -- check-file-sizes`
+- `cargo run -p xtask -- simdoc --check`
 
 Please keep source and Markdown ASCII-only, and add or update tests for behavior
 you change. Public APIs carry `#![deny(missing_docs)]`; document new public items.

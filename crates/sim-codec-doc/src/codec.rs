@@ -20,7 +20,7 @@ use crate::backend::{
     default_backend_registry,
 };
 use crate::document::DocValue;
-use crate::functions::{CHUNK_FUNCTIONS, DocChunkFunction};
+use crate::functions::{CATALOG_FUNCTIONS, CHUNK_FUNCTIONS, DocCatalogFunction, DocChunkFunction};
 use crate::markdown::MarkdownBackend;
 use crate::markup::MarkupDoc;
 
@@ -51,7 +51,7 @@ impl MarkupCodec {
 
 impl Decoder for MarkupCodec {
     fn decode(&self, cx: &mut ReadCx<'_>, input: Input) -> Result<sim_kernel::Expr> {
-        let source = input.into_string()?;
+        let source = input.into_string_for(cx.codec)?;
         let budget = DecodeBudget::new(cx.limits);
         budget.check_input_bytes(cx.codec, source.len())?;
         let (doc, _fidelity) = self
@@ -92,7 +92,7 @@ pub struct DocCodec;
 
 impl Decoder for DocCodec {
     fn decode(&self, cx: &mut ReadCx<'_>, input: Input) -> Result<sim_kernel::Expr> {
-        let source = input.into_string()?;
+        let source = input.into_string_for(cx.codec)?;
         let budget = DecodeBudget::new(cx.limits);
         budget.check_input_bytes(cx.codec, source.len())?;
         let (doc, _fidelity) = MarkdownBackend
@@ -224,10 +224,18 @@ impl Lib for DocCodecLib {
             symbol: self.symbol.clone(),
             codec_id: Some(self.codec_id),
         }];
-        exports.extend(CHUNK_FUNCTIONS.iter().map(|kind| Export::Function {
-            symbol: kind.symbol(),
-            function_id: None,
-        }));
+        exports.extend(
+            CHUNK_FUNCTIONS
+                .iter()
+                .map(|kind| Export::Function {
+                    symbol: kind.symbol(),
+                    function_id: None,
+                })
+                .chain(CATALOG_FUNCTIONS.iter().map(|kind| Export::Function {
+                    symbol: kind.symbol(),
+                    function_id: None,
+                })),
+        );
         LibManifest {
             id: self.symbol.clone(),
             version: Version(env!("CARGO_PKG_VERSION").to_owned()),
@@ -267,6 +275,13 @@ impl Lib for DocCodecLib {
                 kind.symbol(),
                 cx.factory()
                     .opaque(Arc::new(DocChunkFunction::new(*kind)))?,
+            )?;
+        }
+        for kind in CATALOG_FUNCTIONS {
+            linker.function_value(
+                kind.symbol(),
+                cx.factory()
+                    .opaque(Arc::new(DocCatalogFunction::new(*kind)))?,
             )?;
         }
         Ok(())

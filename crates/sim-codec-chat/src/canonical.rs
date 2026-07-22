@@ -7,8 +7,12 @@ use std::sync::Arc;
 use sim_codec::{
     DecodeBudget, Decoder, DomainCodecLib, Encoder, Input, Output, ReadCx, domain_input_text,
 };
-use sim_kernel::{CodecId, Lib, LibManifest, Linker, LoadCx, Result, Symbol, WriteCx};
+use sim_kernel::{CodecId, Export, Lib, LibManifest, Linker, LoadCx, Result, Symbol, WriteCx};
 
+use crate::cookbook::{
+    ChatProviderProfilesReport, ChatTranscriptRoundtripReport, provider_profiles_symbol,
+    transcript_roundtrip_symbol,
+};
 use crate::{
     expr::{decode_chat_text, encode_chat_text},
     validate_chat_transcript,
@@ -64,10 +68,31 @@ impl ChatCodecLib {
 
 impl Lib for ChatCodecLib {
     fn manifest(&self) -> LibManifest {
-        self.domain_lib().manifest()
+        let mut manifest = self.domain_lib().manifest();
+        manifest.exports.extend([
+            Export::Function {
+                symbol: transcript_roundtrip_symbol(),
+                function_id: None,
+            },
+            Export::Function {
+                symbol: provider_profiles_symbol(),
+                function_id: None,
+            },
+        ]);
+        manifest
     }
 
     fn load(&self, cx: &mut LoadCx, linker: &mut Linker<'_>) -> Result<()> {
-        self.domain_lib().load(cx, linker)
+        self.domain_lib().load(cx, linker)?;
+        linker.function_value(
+            transcript_roundtrip_symbol(),
+            cx.factory()
+                .opaque(Arc::new(ChatTranscriptRoundtripReport))?,
+        )?;
+        linker.function_value(
+            provider_profiles_symbol(),
+            cx.factory().opaque(Arc::new(ChatProviderProfilesReport))?,
+        )?;
+        Ok(())
     }
 }

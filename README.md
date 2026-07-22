@@ -85,9 +85,12 @@ self-contained, but those protocol types are the kernel's, not this repo's.
 | `sim-codec-bitwise` | `codec:bitwise`, a general-purpose expression codec over a canonical, minimal, bit-packed self-delimiting frame -- the canonical/minimal sibling of `codec:binary`, and the smallest canonical byte string for an `Expr` value. It also offers an opt-in dense structural-sharing mode. |
 | `sim-codec-bitwise-base64` | `codec:bitwise-base64`, a general-purpose expression codec that wraps the bitwise frame in ASCII Base64 text -- the text-transport analog of `codec:bitwise`, sharing one base64 implementation with `sim-codec-binary-base64`. |
 | `sim-codec-algol` | `codec:algol`, a general-purpose expression codec over an Algol-style infix surface with registered Pratt operators. |
-| `sim-codec-chat` | `codec:chat`, a domain codec for provider-neutral model transcripts, with OpenAI-compatible and Ollama projection helpers. |
+| `sim-codec-pratt` | Shared Pratt parser substrate for codec lexers: a token-source driven precedence parser that builds located `Expr` trees while preserving spans, trivia, calls, and prefix, infix, and postfix operators. |
+| `sim-codec-lua` | `codec:lua`, a Lua chunk codec that reads statements and expressions into `lua/*` forms, preserves source origins through located/tree lanes, and renders chunks back to Lua text. |
+| `sim-codec-chat` | `codec:chat`, a domain codec for provider-neutral model transcripts, with native OpenAI, Anthropic, Ollama, LM Studio, and Lemonade projection helpers. |
 | `sim-codec-config` | `codec:config`, a config codec that decodes per-library settings as one table map and shared launcher files as a directory of library id to table map. |
 | `sim-codec-doc` | `codec:doc`, a document codec that reads and writes Markdown, Typst, AsciiDoc, and LaTeX through one semantic markup value, catalogs tracked formats that fail closed until implemented, and provides fixed, recursive, and heading-aware chunk operations. |
+| `sim-codec-index` | `codec:index`, a domain codec that validates the SIM Index graph through one `IndexDoc` model and writes semantically equivalent s-expression and JSON surfaces. |
 | `sim-codec-mcp` | `codec:mcp`, a domain codec for one MCP JSON-RPC 2.0 envelope per frame. |
 | `sim-wasm-abi` | The wasm guest ABI: byte-frame value/manifest/exports transport and a wasm-backed `Lib`. This is the plugin ABI surface, not an expression codec. |
 | `sim-test-support` | Shared test harness (`install_core_runtime`-style `Cx`, `roundtrip` helper). Used only as a `dev-dependency`; depends only on `sim-kernel`, `sim-value`, and `sim-codec`, so it forms no dependency cycle. |
@@ -131,8 +134,8 @@ otherwise. Decode mirrors this with `DecodePosition`.
   `preserve-input` pass that never overrides codec grammar limits.
 - `lossless_origin`: request origin/trivia retention. This only binds for
   codecs with located/tree encoder support.
-- `read_construct` / `read_eval`: govern whether constructor and read-eval
-  forms may be emitted.
+- `read_construct` / `read_eval`: govern whether constructor forms and
+  explicitly declared read-eval forms may be emitted.
 
 ### Two codec classes
 
@@ -202,16 +205,18 @@ shared expression machinery.
 
 ### Capability gating is part of decode
 
-Read-construct and read-eval are decode-time behaviors, not optional
-post-processing.
+Read-construct is a decode-time behavior. Read-eval is explicit diminished eval:
+the ordinary decode path stays inert, and hosts that accept eval-shaped holes
+route those requests through the runtime read-eval broker.
 
 - `#(...)` read-construct decodes constructor arguments as data and builds a
   runtime object. It requires `read-construct` in the `ReadPolicy` **and** the
   matching capability at runtime (`Cx::read_construct`).
-- Broad read-eval forms (`#eval(...)`, `#.expr`) are decode-only, are
+- Explicit read-eval forms (`#eval(...)`, `#.expr`) are decode-only,
   capability-gated, and additionally require a trusted `ReadPolicy`: an
-  untrusted policy denies them even when the capability is present. The
-  canonical Lisp encoder never emits them.
+  untrusted policy denies them even when the capability is present. Surfaces
+  that admit them use a declared result shape and diminished allowed
+  capabilities. The canonical Lisp encoder never emits them by default.
 
 Capability checks use the same `CapabilityName` model across `ReadPolicy`,
 `Cx::require`, loader manifests, and eval requests; capability names are
@@ -257,8 +262,8 @@ expression.
   `#(core/AnyShape)`, `#(core/ClassShape core/String)`, and
   `#(core/ListShape (...))`; decoded shapes rebuild equivalent values that
   expose `as_shape()` and `as_callable()` (pointer identity is not preserved).
-- `#eval(...)` and `#.expr` are decode-only and never emitted by the canonical
-  encoder.
+- `#eval(...)` and `#.expr` are explicit read-eval forms. They are never emitted
+  by the canonical encoder under default options.
 
 ### JSON (`codec:json`)
 
@@ -320,10 +325,11 @@ Canonical output is compact JSON with `jsonrpc` set to `"2.0"`. The in-process
 surface is an `Expr::Map` with an `mcp` version field plus the envelope fields
 `id`, `method`, `params`, `result`, or `error`. Request ids round-trip as
 strings, numbers, or `nil`. `params`, `result`, and error `data` reuse the
-tagged JSON expression mapping from `codec:json`. Unknown fields, duplicate
-fields, invalid field combinations, unsupported versions, malformed ids, and
-non-envelope expressions fail closed. MCP is not a total codec for arbitrary
-`Expr`.
+tagged JSON expression mapping from `codec:json`. Unknown envelope fields,
+duplicate envelope fields, duplicate structured error fields, invalid field
+combinations, unsupported versions, malformed ids, and non-envelope expressions
+fail closed. Duplicate policy inside tagged expression payloads belongs to
+`codec:json`. MCP is not a total codec for arbitrary `Expr`.
 
 ## What round-trip guarantees
 
@@ -347,12 +353,21 @@ is stronger than a compile-only claim and weaker than a byte-exact source claim.
 
 ## Validation
 
-These commands run in the constellation workspace; only `sim-kernel` builds from a lone clone today (see `DEVELOPING.md` in `sim-sdk`). A single-repo build lands with the first crates.io publish.
+This repo builds standalone against the published SIM crates on crates.io.
+The validation gates are:
 
 ```bash
-cargo fmt --check && cargo test --workspace && cargo clippy --workspace -- -D warnings && cargo doc --workspace --no-deps
+cargo fmt --all --check
+cargo test --workspace
+cargo clippy --workspace --all-targets -- -D warnings
+RUSTDOCFLAGS="-D warnings" cargo doc --workspace --no-deps
+cargo run -p xtask -- check-file-sizes
 cargo run -p xtask -- simdoc --check
 ```
+
+The simdoc launcher uses `../sim-tooling` in a constellation checkout. In a
+lone checkout, set `SIMDOC_TOOLING_MANIFEST` to the checked-out
+`sim-tooling/Cargo.toml`; CI checks out `sim-tooling` and sets that variable.
 
 ## Documentation lanes
 

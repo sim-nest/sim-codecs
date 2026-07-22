@@ -1,5 +1,6 @@
-# Chat transcript codec (descriptor)
+# Chat transcript codec
 
-The chat codec encodes a conversation transcript: request/response messages, roles, and token
-usage. This recipe documents that transcript structure; the codec shapes a transcript record,
-not an evaluable expression, so it is documented rather than run in the sandbox.
+The chat codec encodes a provider-neutral transcript as `SIMCHAT1` text and
+decodes it back to the same transcript expression. The recipe builds a modeled
+response transcript, runs it through the codec pair, and reports the recovered
+value.

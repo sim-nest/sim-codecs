@@ -71,6 +71,7 @@
 #![deny(missing_docs)]
 
 mod codec;
+mod cookbook;
 #[cfg(test)]
 mod tests;
 

@@ -1,5 +1,5 @@
 # Config codec descriptor
 
-The config codec reads small configuration files into map values. A per-library
-file decodes as one table, and a shared file decodes as a directory whose keys
-are library ids and whose values are tables.
+The config codec reads a small configuration file into map values and encodes
+the resulting data back to canonical config text. This recipe uses a cookbook
+directory fragment with minimum-loaded libs, ordering, and loadable codec rows.

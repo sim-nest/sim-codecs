@@ -1,5 +1,7 @@
 use super::*;
 
+// conformance: expression syntax grammars round-trip Lisp forms.
+
 #[test]
 fn decodes_lists_vectors_and_quotes() {
     let mut cx = cx();
@@ -29,6 +31,24 @@ fn codec_is_registered_as_lib_export() {
             .codec_by_symbol(&Symbol::qualified("codec", "lisp"))
             .is_some()
     );
+}
+
+#[test]
+fn invalid_utf8_input_reports_lisp_codec_id() {
+    let mut cx = cx();
+    register_lisp_codec(&mut cx);
+    let symbol = Symbol::qualified("codec", "lisp");
+    let expected = runtime_codec_id(&mut cx, &symbol);
+
+    let err = decode_with_codec(
+        &mut cx,
+        &symbol,
+        Input::Bytes(vec![0xff]),
+        ReadPolicy::default(),
+    )
+    .unwrap_err();
+
+    assert_codec_error(err, expected, "not valid UTF-8");
 }
 
 #[test]
@@ -433,6 +453,25 @@ fn encoder_can_escape_non_native_exprs() {
 }
 
 #[test]
+fn default_encoder_never_emits_read_eval_syntax() {
+    let mut cx = cx();
+    register_lisp_codec(&mut cx);
+    let encoded = encode_with_codec(
+        &mut cx,
+        &Symbol::qualified("codec", "lisp"),
+        &Expr::Symbol(Symbol::new("#eval")),
+        Default::default(),
+    )
+    .unwrap()
+    .into_text()
+    .unwrap();
+
+    assert_eq!(encoded, "(expr:symbol nil \"#eval\")");
+    assert!(!encoded.contains("#eval("));
+    assert!(!encoded.contains("#."));
+}
+
+#[test]
 fn constructor_values_encode_as_read_construct_in_quote_position() {
     let mut cx = cx();
     let point = cx
@@ -456,6 +495,37 @@ fn constructor_values_encode_as_read_construct_in_quote_position() {
         codec: sim_kernel::CodecId(1),
         options: sim_kernel::EncodeOptions {
             position: EncodePosition::Quote,
+            ..Default::default()
+        },
+    };
+    let encoded = encode_object_lisp(&mut write, point).unwrap();
+    assert_eq!(encoded, "#(Point 1 2)");
+}
+
+#[test]
+fn constructor_values_encode_as_read_construct_in_data_position() {
+    let mut cx = cx();
+    let point = cx
+        .factory()
+        .opaque(Arc::new(PointValue {
+            args: vec![
+                Expr::Number(NumberLiteral {
+                    domain: Symbol::qualified("numbers", "f64"),
+                    canonical: "1".to_owned(),
+                }),
+                Expr::Number(NumberLiteral {
+                    domain: Symbol::qualified("numbers", "f64"),
+                    canonical: "2".to_owned(),
+                }),
+            ],
+            fields: Vec::new(),
+        }))
+        .unwrap();
+    let mut write = KernelWriteCx {
+        cx: &mut cx,
+        codec: sim_kernel::CodecId(1),
+        options: sim_kernel::EncodeOptions {
+            position: EncodePosition::Data,
             ..Default::default()
         },
     };

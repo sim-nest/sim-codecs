@@ -9,8 +9,8 @@
 use std::sync::Arc;
 
 use sim_kernel::{
-    AbiVersion, CodecId, DefaultFactory, Dependency, Error, Export, Factory, Lib, LibManifest,
-    LibTarget, Linker, LoadCx, Result, ShapeRef, Symbol, Version,
+    AbiVersion, CodecId, DefaultFactory, Dependency, Export, Factory, Lib, LibManifest, LibTarget,
+    Linker, LoadCx, Result, ShapeRef, Symbol, Version,
 };
 
 use crate::{CodecDefaultDecode, CodecRuntime, Decoder, Encoder, Input, codec_value};
@@ -18,13 +18,7 @@ use crate::{CodecDefaultDecode, CodecRuntime, Decoder, Encoder, Input, codec_val
 /// Read a codec `Input` as UTF-8 text, tagging any error with `codec`. The
 /// shared body of every domain codec's `input_text` helper.
 pub fn domain_input_text(codec: CodecId, input: Input) -> Result<String> {
-    match input {
-        Input::Text(text) => Ok(text),
-        Input::Bytes(bytes) => String::from_utf8(bytes).map_err(|err| Error::CodecError {
-            codec,
-            message: format!("codec input is not valid UTF-8: {err}"),
-        }),
-    }
+    input.into_string_for(codec)
 }
 
 /// Resolve a general codec's expression shape: the `primary` symbol, then

@@ -1,9 +1,1 @@
-(quote
-  (backend-catalog
-    (implemented markdown read write)
-    (implemented typst read write)
-    (implemented asciidoc read write)
-    (implemented latex read write)
-    (external-site-candidate texinfo no-read no-write)
-    (tracked djot rest myst org wikitext creole textile bbcode)
-    (decode tracked-backends fail-closed)))
+(doc/backend-catalog)

@@ -1,0 +1,10 @@
+minimum_loaded = ["codec/lisp", "core"]
+order = ["codec/json", "codec/doc"]
+
+[loadable.codec-json]
+id = "codec/json"
+source = "symbol:codec/json"
+
+[loadable.codec-doc]
+id = "codec/doc"
+source = "symbol:codec/doc"

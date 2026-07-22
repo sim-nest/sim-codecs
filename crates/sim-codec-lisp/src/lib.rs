@@ -66,6 +66,7 @@
 #![deny(unsafe_code)]
 #![deny(missing_docs)]
 
+mod grammar;
 mod implementation;
 #[cfg(feature = "native-export")]
 mod loaders;
@@ -88,4 +89,5 @@ use sim_macros::{sim_codec, sim_lib};
 pub static RECIPES: sim_cookbook::EmbeddedDir =
     include!(concat!(env!("OUT_DIR"), "/cookbook_recipes.rs"));
 
+pub use grammar::LispGrammarRenderer;
 pub use implementation::*;

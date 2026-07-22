@@ -1,6 +1,6 @@
 [package]
 name = "sim-codec"
-version = "0.1.4"
+version = "0.1.5"
 edition = "2024"
 license = "MPL-2.0"
 description = "SIM workspace package for sim codec."
@@ -11,11 +11,10 @@ homepage = "https://github.com/sim-nest/sim-codecs"
 
 [dependencies]
 sim-cookbook = { version = "0.1.0" }
+sim-citizen = { version = "0.1.0" }
 sim-citizen-derive = { version = "0.1.0" }
 sim-kernel = { version = "0.1.0" }
 sim-lib-net-core = { version = "0.1.4" }
-
-[dev-dependencies]
 sim-shape = { version = "0.1.0" }
 
 [build-dependencies]

@@ -1,0 +1,18 @@
+[package]
+name = "sim-codec-pratt"
+version = "0.1.1"
+edition = "2024"
+license = "MPL-2.0"
+description = "Shared Pratt expression parser substrate for SIM codecs."
+readme = "README.md"
+publish = true
+repository = "https://github.com/sim-nest/sim-codecs"
+homepage = "https://github.com/sim-nest/sim-codecs"
+
+[dependencies]
+sim-cookbook = { version = "0.1.0" }
+sim-codec = { version = "0.1.0", path = "../sim-codec" }
+sim-kernel = { version = "0.1.0" }
+
+[build-dependencies]
+sim-cookbook = { version = "0.1.0" }

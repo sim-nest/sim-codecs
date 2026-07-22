@@ -1,6 +1,6 @@
-# Markdown to Typst (descriptor)
+# Markdown to Typst
 
-The document codec imports Markdown through `codec:markup/markdown`, lowers it to the shared
-markup document value, and exports the same value through `codec:markup/typst`. This recipe
-records the transcode shape and the installed backends involved; the sandbox descriptor names
-the workflow rather than running a renderer.
+The document codec imports Markdown through the Markdown backend, lowers it to
+the shared markup document value, and exports the same value through the Typst
+backend. The recipe reports the source text, rendered Typst text, and fidelity
+loss counts.

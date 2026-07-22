@@ -8,7 +8,7 @@ SIM workspace package for sim codec json.
 
 - Manifest: `crates/sim-codec-json/Cargo.toml`
 - Publish: `true`
-- Targets: `custom-build, lib`
+- Targets: `custom-build, lib, test`
 
 ## Crate Documentation
 

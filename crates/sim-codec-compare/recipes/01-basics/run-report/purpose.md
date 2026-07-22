@@ -1,5 +1,6 @@
-# Codec comparison report (descriptor)
+# Codec comparison report
 
-This records a comparison run between the bitwise and binary codecs over a corpus -- size and
-speed per codec. Producing the report runs the codecs over a corpus and measures them, work
-outside the sandbox eval stack, so the report shape is documented rather than generated live.
+This report names the comparison corpus and measurements used by the developer
+harness for the binary and bitwise codecs: byte size, dense size, encode time,
+and decode time. The recipe is a modeled report shape for the non-runtime
+comparison crate.
