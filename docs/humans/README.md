@@ -23,6 +23,7 @@ This generated lane consumes `docs/generated/sim-index-fragment.sx`. Global inde
 | `feature/sim-codecs/wire-protocol-grammars` | `crate/sim-codec` | 0 | Read and write binary, bitwise, chat, config, document, index, and MCP wire protocols. |
 | `feature/sim-codecs/pratt` | `crate/sim-codec-pratt` | 0 | Parse operator-oriented expression languages through the Pratt codec surface. |
 | `feature/sim-codecs/bridge-packet-codec` | `crate/sim-codec-bridge` | 1 | Encode and decode Bridge packet workflow data through the Bridge wire grammar. |
+| `feature/sim-codecs/contract-emitter` | `crate/xtask` | 0 | Emit generated repository contract and index fragments for codec crates. |
 
 ## Surfaces
 

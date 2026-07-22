@@ -2,6 +2,7 @@ schema = "sim.features"
 
 [enforcement.audience]
 framework = "strict"
+code = "strict"
 
 [enforcement.surface]
 syntax = "strict"
@@ -20,6 +21,33 @@ audiences = ["code", "framework"]
 guidance = "Use this row when adding a codec or checking how codec positions are represented."
 claims_anchors = [
   "anchor/crate/sim-codec",
+  "anchor/crate/sim-codec-algol",
+  "anchor/crate/sim-codec-binary",
+  "anchor/crate/sim-codec-binary-base64",
+  "anchor/crate/sim-codec-bitwise",
+  "anchor/crate/sim-codec-bitwise-base64",
+  "anchor/crate/sim-codec-chat",
+  "anchor/crate/sim-codec-compare",
+  "anchor/crate/sim-codec-config",
+  "anchor/crate/sim-codec-doc",
+  "anchor/crate/sim-codec-index",
+  "anchor/crate/sim-codec-json",
+  "anchor/crate/sim-codec-lisp",
+  "anchor/crate/sim-codec-lua",
+  "anchor/crate/sim-codec-mcp",
+  "anchor/crate/sim-test-support",
+  "anchor/crate/sim-wasm-abi",
+  "anchor/export/sim-codec-binary-base64/codec/binary-base64",
+  "anchor/export/sim-codec-binary/codec/binary",
+  "anchor/export/sim-codec-bitwise-base64/codec/bitwise-base64",
+  "anchor/export/sim-codec-bitwise/codec/bitwise",
+  "anchor/export/sim-codec-chat/codec/chat",
+  "anchor/export/sim-codec-lisp/codec/lisp",
+  "anchor/export/sim-codec-mcp/mcp/error",
+  "anchor/export/sim-codec-mcp/mcp/error-envelope",
+  "anchor/export/sim-codec-mcp/mcp/notification",
+  "anchor/export/sim-codec-mcp/mcp/request",
+  "anchor/export/sim-codec-mcp/mcp/response",
   "anchor/runtime-lib/sim-codec-algol/algol-codec-lib",
   "anchor/runtime-lib/sim-codec-binary-base64/binary-base64-codec-lib",
   "anchor/runtime-lib/sim-codec-binary/binary-codec-lib",
@@ -130,6 +158,14 @@ audiences = ["code", "framework"]
 guidance = "Use this row when following packet-shaped model workflow data at the codec layer."
 claims_anchors = [
   "anchor/crate/sim-codec-bridge",
+  "anchor/export/sim-codec-bridge/bridge/attest",
+  "anchor/export/sim-codec-bridge/bridge/evidence",
+  "anchor/export/sim-codec-bridge/bridge/patch",
+  "anchor/export/sim-codec-bridge/bridge/receipt",
+  "anchor/export/sim-codec-bridge/bridge/review",
+  "anchor/export/sim-codec-bridge/bridge/score",
+  "anchor/export/sim-codec-bridge/bridge/vote",
+  "anchor/export/sim-codec-bridge/bridge/weave-row",
   "anchor/grammar/wire/bridge",
   "anchor/runtime-lib/sim-codec-bridge/bridge-codec-lib",
 ]
@@ -140,12 +176,27 @@ claims_specimens = [
   "spec-test/sim-codecs/crates/sim-codec-doc/tests/conformance",
 ]
 
+[[feature]]
+id = "feature/sim-codecs/contract-emitter"
+title = "Codec contract emitter"
+summary = "Emit generated repository contract and index fragments for codec crates."
+owner = "crate/xtask"
+audiences = ["code"]
+guidance = "Use this row when refreshing generated codec contract evidence."
+claims_anchors = [
+  "anchor/crate/xtask",
+]
+supports = [
+  "feature/sim-codecs/codec",
+]
+
 [[route]]
 id = "route/add-a-codec"
 task = "Add a codec"
 audiences = ["code", "framework"]
 steps = [
   { feature = "feature/sim-codecs/codec", why = "Start with the shared codec contract and position rules." },
+  { feature = "feature/sim-codecs/contract-emitter", why = "The emitter row keeps generated codec contract evidence current." },
 ]
 
 [[route]]
