@@ -10,6 +10,7 @@ pub mod anthropic;
 pub mod lemonade;
 /// LM Studio OpenAI-compatible provider wire codec.
 pub mod lm_studio;
+pub(in crate::providers) mod model_params;
 /// OpenAI-compatible chat-completion provider wire codec.
 pub mod openai;
 /// Shared helpers for OpenAI-compatible provider wire codecs.

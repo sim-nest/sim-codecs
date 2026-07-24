@@ -3,10 +3,10 @@
   "generated_by": "cargo run -p xtask -- simdoc",
   "generation_timestamp": "2026-07-16T02:55:26+02:00",
   "generator": "xtask repo-contract v1",
-  "git_commit": "1b0fe9b1fbe6a3eaea43d2cf95f8d098fa3b02fd",
+  "git_commit": "7649ff394870a008d8d0b4d1181ca236a187defa",
   "repo": "sim-codecs",
   "schema": "sim.provenance.v1",
-  "source_commit": "1b0fe9b1fbe6a3eaea43d2cf95f8d098fa3b02fd",
+  "source_commit": "7649ff394870a008d8d0b4d1181ca236a187defa",
   "source_remote": "https://github.com/sim-nest/sim-codecs",
   "validation_commands": [
     "cargo fmt --all --check",
@@ -19,9 +19,9 @@
     "cargo run -p xtask -- validation-matrix --check --repo .",
     "cargo run -p xtask -- crate-catalog --check --repo ."
   ],
-  "workspace_hash": "a0195863c8fa3297",
+  "workspace_hash": "55916964b5410f96",
   "workspace_hash_algorithm": "fnv1a64",
-  "workspace_hash_input_count": 304,
+  "workspace_hash_input_count": 305,
   "workspace_hash_inputs": [
     "Cargo.toml",
     "crates/sim-codec/Cargo.toml",
@@ -160,6 +160,7 @@
     "crates/sim-codec-chat/src/providers/lemonade.rs",
     "crates/sim-codec-chat/src/providers/lm_studio.rs",
     "crates/sim-codec-chat/src/providers/mod.rs",
+    "crates/sim-codec-chat/src/providers/model_params.rs",
     "crates/sim-codec-chat/src/providers/openai/common.rs",
     "crates/sim-codec-chat/src/providers/openai/decode.rs",
     "crates/sim-codec-chat/src/providers/openai/encode.rs",
