@@ -9,6 +9,17 @@ use super::common::{
     codec_error, codec_eval_to_codec, expr_entries, flatten_expr, optional_expr, optional_string,
     required_list, required_string, required_symbol, sim_expr_to_json,
 };
+use crate::providers::model_params::attach_bridge_model_params;
+
+const RESERVED_MODEL_PARAM_FIELDS: &[&str] = &[
+    "model",
+    "max_tokens",
+    "stream",
+    "system",
+    "messages",
+    "tools",
+    "tool_choice",
+];
 
 /// Encodes a model-request transcript into Anthropic Messages JSON.
 pub fn encode_anthropic_request(expr: &Expr, options: &AnthropicRequestOptions) -> Result<Vec<u8>> {
@@ -35,6 +46,12 @@ pub fn encode_anthropic_request(expr: &Expr, options: &AnthropicRequestOptions) 
     if let Some(tool_choice) = optional_expr(entries, "tool-choice") {
         payload.insert("tool_choice".to_owned(), sim_expr_to_json(tool_choice));
     }
+    attach_bridge_model_params(
+        entries,
+        &mut payload,
+        RESERVED_MODEL_PARAM_FIELDS,
+        "anthropic",
+    )?;
     serde_json::to_vec(&Value::Object(payload))
         .map_err(|err| Error::Eval(format!("anthropic codec failed to encode request: {err}")))
 }

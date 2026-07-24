@@ -1,6 +1,8 @@
 use sim_kernel::{Expr, Symbol};
 
-use crate::{OpenAiRequestOptions, encode_openai_request};
+use crate::{
+    AnthropicRequestOptions, OpenAiRequestOptions, encode_anthropic_request, encode_openai_request,
+};
 
 use super::request_expr_with_extra;
 
@@ -81,4 +83,69 @@ fn openai_request_encoder_rejects_unsupported_output_grammar() {
     .unwrap_err();
 
     assert!(format!("{err:?}").contains("Gbnf"));
+}
+
+#[test]
+fn openai_request_encoder_attaches_bridge_model_params() {
+    let body = encode_openai_request(
+        &request_expr_with_extra(vec![bridge_calls_model_params()]),
+        &OpenAiRequestOptions::new("gpt-5-mini", false, false),
+    )
+    .unwrap();
+    let json: serde_json::Value = serde_json::from_slice(&body).unwrap();
+
+    assert_eq!(json["temperature"], 0);
+    assert_eq!(json["top_p"], 1);
+}
+
+#[test]
+fn anthropic_request_encoder_attaches_bridge_model_params() {
+    let body = encode_anthropic_request(
+        &request_expr_with_extra(vec![bridge_calls_model_params()]),
+        &AnthropicRequestOptions::new("claude-sonnet-latest", 512, false, false),
+    )
+    .unwrap();
+    let json: serde_json::Value = serde_json::from_slice(&body).unwrap();
+
+    assert_eq!(json["temperature"], 0);
+    assert_eq!(json["top_p"], 1);
+}
+
+#[test]
+fn openai_request_encoder_rejects_structural_bridge_model_param_override() {
+    let err = encode_openai_request(
+        &request_expr_with_extra(vec![(
+            Expr::Symbol(Symbol::new("bridge-calls")),
+            Expr::Vector(vec![Expr::Map(vec![(
+                Expr::Symbol(Symbol::new("model-params")),
+                Expr::Map(vec![(
+                    Expr::Symbol(Symbol::new("messages")),
+                    Expr::String("bad".to_owned()),
+                )]),
+            )])]),
+        )]),
+        &OpenAiRequestOptions::new("gpt-5-mini", false, false),
+    )
+    .unwrap_err();
+
+    assert!(format!("{err:?}").contains("cannot override provider request field"));
+}
+
+fn bridge_calls_model_params() -> (Expr, Expr) {
+    (
+        Expr::Symbol(Symbol::new("bridge-calls")),
+        Expr::Vector(vec![Expr::Map(vec![(
+            Expr::Symbol(Symbol::new("model-params")),
+            Expr::Map(vec![
+                (
+                    Expr::Symbol(Symbol::new("temperature")),
+                    Expr::String("0".to_owned()),
+                ),
+                (
+                    Expr::Symbol(Symbol::new("top-p")),
+                    Expr::String("1".to_owned()),
+                ),
+            ]),
+        )])]),
+    )
 }

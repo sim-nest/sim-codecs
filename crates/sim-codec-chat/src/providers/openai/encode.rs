@@ -9,6 +9,16 @@ use super::common::{
     codec_error, codec_eval_to_codec, flatten_expr, list_field, map_field, marker_is_true,
     optional_u64_field, string_field, symbol_field,
 };
+use crate::providers::model_params::attach_bridge_model_params;
+
+const RESERVED_MODEL_PARAM_FIELDS: &[&str] = &[
+    "model",
+    "stream",
+    "messages",
+    "tools",
+    "response_format",
+    "stream_options",
+];
 
 /// Encodes a model-request transcript into OpenAI chat-completion JSON.
 pub fn encode_openai_request(expr: &Expr, options: &OpenAiRequestOptions) -> Result<Vec<u8>> {
@@ -30,6 +40,9 @@ pub fn encode_openai_request(expr: &Expr, options: &OpenAiRequestOptions) -> Res
         && let Some(object) = payload.as_object_mut()
     {
         object.insert("stream_options".to_owned(), json!({"include_usage": true}));
+    }
+    if let Some(object) = payload.as_object_mut() {
+        attach_bridge_model_params(entries, object, RESERVED_MODEL_PARAM_FIELDS, "openai")?;
     }
     serde_json::to_vec(&payload)
         .map_err(|err| Error::Eval(format!("openai codec failed to encode request: {err}")))
