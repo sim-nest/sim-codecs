@@ -1,6 +1,6 @@
 [package]
 name = "sim-codec-bridge"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2024"
 license = "MPL-2.0"
 description = "BRIDGE packet line codec for SIM."
@@ -14,17 +14,17 @@ path = "src/lib.rs"
 
 [dependencies]
 serde_json = "1"
-sim-codec = { version = "0.1.0", path = "../sim-codec" }
-sim-codec-json = { version = "0.1.0", path = "../sim-codec-json" }
-sim-cookbook = { version = "0.1.0" }
-sim-kernel = { version = "0.1.0" }
-sim-value = { version = "0.1.0" }
+sim-codec = { version = "0.1.7", path = "../sim-codec" }
+sim-codec-json = { version = "0.2.0", path = "../sim-codec-json" }
+sim-cookbook = { version = "0.2.0" }
+sim-kernel = { version = "0.2.0" }
+sim-value = { version = "0.2.0" }
 
 [dev-dependencies]
-sim-test-support = { version = "0.1.0", path = "../sim-test-support" }
+sim-test-support = { version = "0.1.1", path = "../sim-test-support" }
 
 [build-dependencies]
-sim-cookbook = { version = "0.1.0" }
+sim-cookbook = { version = "0.2.0" }
 
 [lints]
 workspace = true
