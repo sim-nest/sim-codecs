@@ -101,6 +101,18 @@ fn valid_doc() -> IndexDoc {
     }
 }
 
+fn large_doc() -> IndexDoc {
+    let mut doc = IndexDoc::public("sim-codec-index-tests/large");
+    doc.subjects = (0..20_000)
+        .map(|index| SubjectRecord {
+            id: SubjectId::new(format!("crate/subject-{index:05}")),
+            kind: "crate".to_owned(),
+            title: format!("subject-{index:05}"),
+        })
+        .collect();
+    doc
+}
+
 #[test]
 fn roundtrip_sx_and_json_include_specimens() {
     let codec = IndexCodec;
@@ -132,6 +144,24 @@ fn roundtrip_sx_and_json_include_specimens() {
     assert!(sx.contains("why"));
     assert!(json.contains("specimens"));
     assert!(json.contains("audiences"));
+}
+
+#[test]
+fn roundtrip_large_index_docs_over_default_expr_limit() {
+    let codec = IndexCodec;
+    let doc = large_doc();
+    let sx = codec
+        .encode(&doc, EncodePosition::Data, IndexForm::Sx)
+        .expect("encode sx");
+    let json = codec
+        .encode(&doc, EncodePosition::Data, IndexForm::Json)
+        .expect("encode json");
+
+    let from_sx = codec.decode(IndexForm::Sx, &sx).expect("decode sx");
+    let from_json = codec.decode(IndexForm::Json, &json).expect("decode json");
+
+    assert_eq!(from_sx.subjects.len(), doc.subjects.len());
+    assert_eq!(from_json.subjects.len(), doc.subjects.len());
 }
 
 #[test]
