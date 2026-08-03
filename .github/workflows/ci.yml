@@ -46,12 +46,16 @@ jobs:
     needs: scope
     if: ${{ needs.scope.outputs.run-heavy == 'true' }}
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: sim-codecs
     env:
       SIMDOC_TOOLING_MANIFEST: ${{ github.workspace }}/sim-tooling/Cargo.toml
     steps:
       - uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          path: sim-codecs
       - uses: actions/checkout@v4
         with:
           repository: sim-nest/sim-tooling
@@ -73,8 +77,6 @@ jobs:
         with:
           repository: sim-nest/sim-shape
           path: sim-shape
-      - name: Expose the current repo as a simdoc sibling
-        run: ln -s "$GITHUB_WORKSPACE" sim-codecs
       - id: toolchain
         shell: bash
         run: |
