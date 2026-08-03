@@ -13,6 +13,8 @@ use sim_kernel::{
 
 use crate::{CodecError, expr_from_index_doc, index_doc_from_expr, index_shape};
 
+const INDEX_MAX_EXPR_NODES: usize = 500_000;
+
 /// Text forms emitted by `codec/index`.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum IndexForm {
@@ -70,7 +72,7 @@ fn decode_sx_expr(source: &str) -> Result<Expr, CodecError> {
         cx: &mut cx,
         codec: CodecId(0),
         read_policy: ReadPolicy::default(),
-        limits: DecodeLimits::default(),
+        limits: index_decode_limits(),
     };
     LispProcMacroDecoder
         .decode(&mut read_cx, Input::Text(source.to_owned()))
@@ -79,9 +81,16 @@ fn decode_sx_expr(source: &str) -> Result<Expr, CodecError> {
 
 fn decode_json_expr(source: &str) -> Result<Expr, CodecError> {
     let value = serde_json::from_str(source).map_err(|err| CodecError::Decode(err.to_string()))?;
-    let mut budget = DecodeBudget::new(DecodeLimits::default());
+    let mut budget = DecodeBudget::new(index_decode_limits());
     json_to_expr(CodecId(0), &value, &mut budget, 0)
         .map_err(|err| CodecError::Decode(err.to_string()))
+}
+
+fn index_decode_limits() -> DecodeLimits {
+    DecodeLimits {
+        max_expr_nodes: INDEX_MAX_EXPR_NODES,
+        ..DecodeLimits::default()
+    }
 }
 
 fn encode_sx_expr(expr: &Expr, position: EncodePosition) -> Result<String, CodecError> {
