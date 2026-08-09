@@ -6,6 +6,8 @@ use crate::{
 use sim_codec::{DecodeBudget, DecodeLimits, Input, Output, ReadCx};
 use sim_kernel::{Expr, ReadPolicy, SourceId};
 
+// conformance: TypeScript and TSX notation parses losslessly and erases only the admitted subset.
+
 #[test]
 fn freezes_typescript_7_identity() {
     assert_eq!(TYPESCRIPT_VERSION, "7.0.2");
