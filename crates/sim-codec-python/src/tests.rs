@@ -268,3 +268,53 @@ fn codec_decode_limits_bound_source_tokens_and_fallback_depth() {
         .is_err()
     );
 }
+
+#[test]
+fn crate_has_no_foreign_python_dependency_or_artifact() {
+    use std::{fs, path::Path};
+
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+    let manifest = fs::read_to_string(root.join("Cargo.toml"))
+        .unwrap()
+        .to_ascii_lowercase();
+    for forbidden in ["pyo3", "cpython =", "python3-sys", "python27-sys"] {
+        assert!(
+            !manifest.contains(forbidden),
+            "foreign Python dependency {forbidden}"
+        );
+    }
+    fn scan(path: &Path) {
+        for entry in fs::read_dir(path).unwrap() {
+            let path = entry.unwrap().path();
+            if path.is_dir() {
+                scan(&path);
+                continue;
+            }
+            let extension = path
+                .extension()
+                .and_then(|value| value.to_str())
+                .unwrap_or("");
+            assert!(
+                !matches!(extension, "pyc" | "pyo" | "pickle"),
+                "foreign Python artifact {}",
+                path.display()
+            );
+        }
+    }
+    scan(root);
+    let sources = ["src/lib.rs", "src/lower.rs", "src/parser.rs"]
+        .into_iter()
+        .map(|path| fs::read_to_string(root.join(path)).unwrap())
+        .collect::<String>();
+    for forbidden in [
+        "Py_CompileString",
+        "PyEval_",
+        "Command::new(\"python\"",
+        "Command::new(\"python3\"",
+    ] {
+        assert!(
+            !sources.contains(forbidden),
+            "compiler/VM fallback marker {forbidden}"
+        );
+    }
+}
