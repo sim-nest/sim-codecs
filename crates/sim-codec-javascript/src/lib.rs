@@ -3,6 +3,10 @@
 //! The public model is deliberately neutral syntax data. It has no compiler IR,
 //! runtime, TypeScript, Shape, or kernel dependency. Parser extensions can wrap
 //! [`Node`] and attach their own [`Origin`] without changing JavaScript syntax.
+//!
+//! The frozen downstream extension seam is exactly [`Token`], [`SyntaxTree`],
+//! [`Node`], [`Origin`], and [`JavascriptBuilder`]. It carries syntax and
+//! lowering data only; TypeScript policy remains a one-way downstream concern.
 
 #![forbid(unsafe_code)]
 #![deny(missing_docs)]
