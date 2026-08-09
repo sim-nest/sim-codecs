@@ -26,6 +26,7 @@ This generated lane consumes `docs/generated/sim-index-fragment.sx`. Global inde
 | `feature/sim-codecs/pratt` | `crate/sim-codec-pratt` | 1 | Parse operator-oriented expression languages through the Pratt codec surface. |
 | `feature/sim-codecs/bridge-packet-codec` | `crate/sim-codec-bridge` | 1 | Encode and decode Bridge packet workflow data through the Bridge wire grammar. |
 | `feature/sim-codecs/contract-emitter` | `crate/xtask` | 0 | Emit generated repository contract and index fragments for codec crates. |
+| `feature/sim-codecs/typescript-syntax` | `crate/sim-codec-typescript` | 0 | Represent bounded, lossless TypeScript 7.0.2 and TSX notation as a downstream extension of JavaScript syntax. |
 
 ## Surfaces
 
@@ -53,6 +54,7 @@ This generated lane consumes `docs/generated/sim-index-fragment.sx`. Global inde
 | `syntax/mcp` | `syntax` | `language/mcp` |
 | `syntax/pratt` | `syntax` | `language/pratt` |
 | `syntax/python` | `syntax` | `language/python` |
+| `syntax/typescript` | `syntax` | `language/typescript` |
 | `wire/binary` | `wire` | `language/binary` |
 | `wire/binary-base64` | `wire` | `language/binary-base64` |
 | `wire/bitwise` | `wire` | `language/bitwise` |
@@ -161,6 +163,8 @@ This generated lane consumes `docs/generated/sim-index-fragment.sx`. Global inde
 - `crates/sim-codec-python/recipes/01-basics/lossless-source/recipe.toml`
 - `crates/sim-codec-python/recipes/01-basics/lossless-source/setup.py`
 - `crates/sim-codec-python/recipes/book.toml`
+- `crates/sim-codec-typescript/recipes/01-basics.md`
+- `crates/sim-codec-typescript/recipes/book.toml`
 - `crates/sim-codec/recipes/01-basics/chapter.toml`
 - `crates/sim-codec/recipes/01-basics/positions-and-limits/purpose.md`
 - `crates/sim-codec/recipes/01-basics/positions-and-limits/recipe.toml`

@@ -255,6 +255,20 @@ supports = [
   "feature/sim-codecs/codec",
 ]
 
+[[feature]]
+id = "feature/sim-codecs/typescript-syntax"
+title = "TypeScript and TSX syntax frontend"
+summary = "Represent bounded, lossless TypeScript 7.0.2 and TSX notation as a downstream extension of JavaScript syntax."
+owner = "crate/sim-codec-typescript"
+audiences = ["code", "framework"]
+guidance = "Use this frontend for TypeScript or TSX source identity and metadata; it intentionally provides no checker or compiler behavior."
+claims_anchors = [
+  "anchor/crate/sim-codec-typescript",
+]
+supports = [
+  "feature/sim-codecs/expression-syntax-grammars",
+]
+
 [[route]]
 id = "route/add-a-codec"
 task = "Add a codec"

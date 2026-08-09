@@ -1,5 +1,5 @@
 {
-  "card_count": 20,
+  "card_count": 21,
   "cards": [
     {
       "id": "browse/catalog",
@@ -114,6 +114,12 @@
       "kind": "cookbook-recipe",
       "owner": "sim-codec-python",
       "summary": "Bounded lossless Python source parsing."
+    },
+    {
+      "id": "cookbook/sim-codec-typescript",
+      "kind": "cookbook-recipe",
+      "owner": "sim-codec-typescript",
+      "summary": "Bounded, lossless TypeScript and TSX source parsing."
     },
     {
       "id": "registry/catalog",

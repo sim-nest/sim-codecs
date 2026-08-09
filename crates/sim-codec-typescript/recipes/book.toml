@@ -1,0 +1,3 @@
+title = "TypeScript 7 Source Frontend"
+summary = "Bounded, lossless TypeScript and TSX source parsing."
+chapters = ["01-basics"]

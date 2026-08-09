@@ -135,6 +135,13 @@
       "summary": "Bounded, lossless Python 3.14 syntax and general-purpose codec."
     },
     {
+      "crate_name": "sim_codec_typescript",
+      "group": "workspace",
+      "manifest": "crates/sim-codec-typescript/Cargo.toml",
+      "package": "sim-codec-typescript",
+      "summary": "Bounded, lossless TypeScript 7 and TSX syntax layered on JavaScript."
+    },
+    {
       "crate_name": "sim_test_support",
       "group": "workspace",
       "manifest": "crates/sim-test-support/Cargo.toml",

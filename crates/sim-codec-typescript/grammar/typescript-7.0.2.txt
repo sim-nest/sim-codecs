@@ -1,0 +1,6 @@
+authority = https://github.com/microsoft/TypeScript/tree/v7.0.2/src/compiler
+tests = microsoft/TypeScript v7.0.2 parser and conformance tests
+language = TypeScript 7.0.2
+modes = TypeScript, TSX, type, JSX tag, JSX children
+scope = lexical modes; declarations; annotations; type nodes; modifiers; TSX nodes
+excluded = checker, compiler, binder, emitter, lowering, module resolver, project model

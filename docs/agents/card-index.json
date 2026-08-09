@@ -96,6 +96,8 @@
     "crates/sim-codec-python/recipes/01-basics/lossless-source/recipe.toml",
     "crates/sim-codec-python/recipes/01-basics/lossless-source/setup.py",
     "crates/sim-codec-python/recipes/book.toml",
+    "crates/sim-codec-typescript/recipes/01-basics.md",
+    "crates/sim-codec-typescript/recipes/book.toml",
     "crates/sim-codec/recipes/01-basics/chapter.toml",
     "crates/sim-codec/recipes/01-basics/positions-and-limits/purpose.md",
     "crates/sim-codec/recipes/01-basics/positions-and-limits/recipe.toml",
