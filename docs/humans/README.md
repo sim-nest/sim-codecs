@@ -26,7 +26,7 @@ This generated lane consumes `docs/generated/sim-index-fragment.sx`. Global inde
 | `feature/sim-codecs/pratt` | `crate/sim-codec-pratt` | 1 | Parse operator-oriented expression languages through the Pratt codec surface. |
 | `feature/sim-codecs/bridge-packet-codec` | `crate/sim-codec-bridge` | 1 | Encode and decode Bridge packet workflow data through the Bridge wire grammar. |
 | `feature/sim-codecs/contract-emitter` | `crate/xtask` | 0 | Emit generated repository contract and index fragments for codec crates. |
-| `feature/sim-codecs/typescript-syntax` | `crate/sim-codec-typescript` | 0 | Represent bounded, lossless TypeScript 7.0.2 and TSX notation and directly erase the compiler-independent subset to JavaScript forms. |
+| `feature/sim-codecs/typescript-syntax` | `crate/sim-codec-typescript` | 0 | TypeScript notation; does not type-check. Represent bounded, lossless TypeScript 7.0.2 and TSX notation and directly erase the compiler-independent subset to JavaScript forms. |
 
 ## Surfaces
 

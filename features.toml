@@ -258,7 +258,7 @@ supports = [
 [[feature]]
 id = "feature/sim-codecs/typescript-syntax"
 title = "TypeScript and TSX syntax frontend"
-summary = "Represent bounded, lossless TypeScript 7.0.2 and TSX notation and directly erase the compiler-independent subset to JavaScript forms."
+summary = "TypeScript notation; does not type-check. Represent bounded, lossless TypeScript 7.0.2 and TSX notation and directly erase the compiler-independent subset to JavaScript forms."
 owner = "crate/sim-codec-typescript"
 audiences = ["code", "framework"]
 guidance = "Use this frontend for TypeScript or TSX source identity and for direct JavaScript lowering only when erasure needs no checker, emitter transform, helper, target, or module-resolution decision; all other forms remain located, lossless evaluation gaps."
