@@ -1,0 +1,4 @@
+id = "python-lossless-source"
+title = "Preserve Python source"
+summary = "A Python 3.14 source specimen retained byte-for-byte by the syntax tree."
+files = ["setup.py"]

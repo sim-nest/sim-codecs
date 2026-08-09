@@ -1,5 +1,5 @@
 {
-  "card_count": 18,
+  "card_count": 19,
   "cards": [
     {
       "id": "browse/catalog",
@@ -102,6 +102,12 @@
       "kind": "cookbook-recipe",
       "owner": "sim-codec-pratt",
       "summary": "Shared Pratt parsing substrate for codec lexers."
+    },
+    {
+      "id": "cookbook/sim-codec-python",
+      "kind": "cookbook-recipe",
+      "owner": "sim-codec-python",
+      "summary": "Bounded lossless Python source parsing."
     },
     {
       "id": "registry/catalog",

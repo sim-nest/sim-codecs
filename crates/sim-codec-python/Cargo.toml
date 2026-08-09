@@ -1,0 +1,19 @@
+[package]
+name = "sim-codec-python"
+version = "0.1.0"
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+description = "Bounded, lossless Python 3.14 source frontend for SIM"
+
+[dependencies]
+sim-cookbook = { version = "0.2.0" }
+sim-codec-pratt = { path = "../sim-codec-pratt", version = "0.1.2" }
+sim-kernel = { version = "0.2.0" }
+
+[build-dependencies]
+sim-cookbook = { version = "0.2.0" }
+
+[lints]
+workspace = true

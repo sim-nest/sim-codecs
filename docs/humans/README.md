@@ -18,7 +18,8 @@ This generated lane consumes `docs/generated/sim-index-fragment.sx`. Global inde
 | Feature | Subject | Specimens | Summary |
 | --- | --- | ---: | --- |
 | `feature/sim-codecs/codec` | `crate/sim-codec` | 1 | Define codec positions, limits, syntax surfaces, wire surfaces, and loadable codec runtime libraries. |
-| `feature/sim-codecs/expression-syntax-grammars` | `crate/sim-codec-lisp` | 1 | Read and write Lisp, JSON, Algol, Lua, Compare, and Bridge rendered expression grammars. |
+| `feature/sim-codecs/expression-syntax-grammars` | `crate/sim-codec-lisp` | 1 | Read and write Lisp, JSON, Algol, Lua, Python, Compare, and Bridge rendered expression grammars. |
+| `feature/sim-codecs/python-source-frontend` | `crate/sim-codec-python` | 1 | Tokenize and parse frozen Python 3.14.6 syntax into byte-preserving concrete source trees. |
 | `feature/sim-codecs/domain-syntax-grammars` | `crate/sim-codec` | 1 | Read and write binary, bitwise, chat, config, document, index, and MCP grammar surfaces. |
 | `feature/sim-codecs/wire-protocol-grammars` | `crate/sim-codec` | 1 | Read and write binary, bitwise, chat, config, document, index, and MCP wire protocols. |
 | `feature/sim-codecs/pratt` | `crate/sim-codec-pratt` | 1 | Parse operator-oriented expression languages through the Pratt codec surface. |
@@ -49,6 +50,7 @@ This generated lane consumes `docs/generated/sim-index-fragment.sx`. Global inde
 | `syntax/lua` | `syntax` | `language/lua` |
 | `syntax/mcp` | `syntax` | `language/mcp` |
 | `syntax/pratt` | `syntax` | `language/pratt` |
+| `syntax/python` | `syntax` | `language/python` |
 | `wire/binary` | `wire` | `language/binary` |
 | `wire/binary-base64` | `wire` | `language/binary-base64` |
 | `wire/bitwise` | `wire` | `language/bitwise` |
@@ -147,6 +149,11 @@ This generated lane consumes `docs/generated/sim-index-fragment.sx`. Global inde
 - `crates/sim-codec-mcp/recipes/book.toml`
 - `crates/sim-codec-pratt/recipes/01-basics/chapter.toml`
 - `crates/sim-codec-pratt/recipes/book.toml`
+- `crates/sim-codec-python/recipes/01-basics/chapter.toml`
+- `crates/sim-codec-python/recipes/01-basics/lossless-source/purpose.md`
+- `crates/sim-codec-python/recipes/01-basics/lossless-source/recipe.toml`
+- `crates/sim-codec-python/recipes/01-basics/lossless-source/setup.py`
+- `crates/sim-codec-python/recipes/book.toml`
 - `crates/sim-codec/recipes/01-basics/chapter.toml`
 - `crates/sim-codec/recipes/01-basics/positions-and-limits/purpose.md`
 - `crates/sim-codec/recipes/01-basics/positions-and-limits/recipe.toml`
@@ -1213,6 +1220,124 @@ fn malformed_dispatch_is_rejected() {
     )
     .unwrap_err();
     assert!(matches!(error, sim_kernel::Error::CodecError { .. }));
+}
+```
+
+### `feature/sim-codecs/python-source-frontend`
+
+Specimen `spec-test/sim-codecs/crates/sim-codec-python/src/tests` is checked by `cargo test`.
+
+Source `crates/sim-codec-python/src/tests.rs`:
+
+```rust
+use super::*;
+
+// conformance: Python 3.14 syntax is bounded, located, deterministic, and byte-preserving.
+
+#[test]
+fn frozen_identity_and_production_inventory_are_stable() {
+    assert_eq!(PYTHON_VERSION, "3.14.6");
+    assert!(frozen_productions().len() >= 150);
+    let grammar = include_bytes!("../grammar/python-3.14.6.gram");
+    let corpus = include_bytes!("../grammar/corpus-3.14.6.txt");
+    assert!(!grammar.is_empty() && !corpus.is_empty());
+    for production in frozen_productions() {
+        assert!(
+            grammar
+                .windows(production.len())
+                .any(|w| w == production.as_bytes()),
+            "missing frozen production {production}"
+        );
+    }
+}
+
+#[test]
+fn corpus_is_byte_stable_and_covers_modern_tokens() {
+    let source = include_str!("../tests/corpus.py");
+    let tree = parse_module(source).unwrap();
+    assert_eq!(tree.preserve_source().as_bytes(), source.as_bytes());
+    assert!(tree.tokens.iter().any(|t| t.kind == TokenKind::FString));
+    assert!(
+        tree.tokens
+            .iter()
+            .any(|t| t.kind == TokenKind::TemplateString)
+    );
+    assert_eq!(tree.source(), source);
+}
+
+#[test]
+fn trivia_locations_soft_keywords_and_literals_are_lossless() {
+    let source = "# lead\nmatch = 0xCA_FE + 1.2e-3j\ncase = rb'bytes'\n";
+    let tokens = tokenize(source).unwrap();
+    assert_eq!(&source[tokens[0].span.start..tokens[0].span.end], "# lead");
+    assert!(tokens.iter().filter(|t| t.kind == TokenKind::Name).count() >= 2);
+    assert!(tokens.iter().any(|t| t.kind == TokenKind::Number));
+}
+
+#[test]
+fn malformed_layout_and_delimiters_are_located_and_deterministic() {
+    for source in [
+        "if True:\n    x = 1\n  y = 2\n",
+        "x = ([)]\n",
+        "x = f'{value'\n",
+    ] {
+        let first = parse_module(source).unwrap_err();
+        let second = parse_module(source).unwrap_err();
+        assert_eq!(first, second);
+        assert!(first.line >= 1);
+        assert!(first.span.start <= source.len());
+    }
+}
+
+#[test]
+fn every_resource_limit_fails_closed() {
+    let base = Limits {
+        max_bytes: 8,
+        max_tokens: 100,
+        max_nesting: 8,
+        max_lines: 8,
+    };
+    assert_eq!(
+        parse_module_with_limits("012345678", base)
+            .unwrap_err()
+            .code,
+        DiagnosticCode::ResourceLimit
+    );
+    let token_limited = Limits {
+        max_bytes: 100,
+        max_tokens: 2,
+        ..base
+    };
+    assert_eq!(
+        parse_module_with_limits("x = 1", token_limited)
+            .unwrap_err()
+            .code,
+        DiagnosticCode::ResourceLimit
+    );
+    let nested = Limits {
+        max_bytes: 100,
+        max_tokens: 100,
+        max_nesting: 2,
+        max_lines: 8,
+    };
+    assert_eq!(
+        parse_module_with_limits("x = (((1)))", nested)
+            .unwrap_err()
+            .code,
+        DiagnosticCode::ResourceLimit
+    );
+    let lines = Limits {
+        max_bytes: 100,
+        max_tokens: 100,
+        max_nesting: 8,
+        max_lines: 2,
+    };
+    assert_eq!(
+        parse_module_with_limits("x\ny\nz\n", lines)
+            .unwrap_err()
+            .code,
+        DiagnosticCode::ResourceLimit
+    );
 }
 ```
 

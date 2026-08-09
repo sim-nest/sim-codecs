@@ -82,7 +82,7 @@ claims_specimens = [
 [[feature]]
 id = "feature/sim-codecs/expression-syntax-grammars"
 title = "Expression syntax grammars"
-summary = "Read and write Lisp, JSON, Algol, Lua, Compare, and Bridge rendered expression grammars."
+summary = "Read and write Lisp, JSON, Algol, Lua, Python, Compare, and Bridge rendered expression grammars."
 owner = "crate/sim-codec-lisp"
 audiences = ["code", "framework"]
 guidance = "Use this row when finding an expression syntax grammar or adding a language-shaped codec surface."
@@ -93,12 +93,34 @@ claims_surfaces = [
   "syntax/json",
   "syntax/lisp",
   "syntax/lua",
+  "syntax/python",
 ]
 claims_specimens = [
   "spec-test/sim-codecs/crates/sim-codec-lisp/src/implementation/tests/basics",
 ]
 supports = [
   "feature/sim-codecs/codec",
+]
+
+[[feature]]
+id = "feature/sim-codecs/python-source-frontend"
+title = "Bounded Python 3.14 source frontend"
+summary = "Tokenize and parse frozen Python 3.14.6 syntax into byte-preserving concrete source trees."
+owner = "crate/sim-codec-python"
+audiences = ["code", "framework"]
+guidance = "Use this syntax-only frontend when Python source needs bounded layout, trivia, locations, soft keywords, literals, f-strings, template strings, or deterministic diagnostics without runtime behavior."
+claims_anchors = [
+  "anchor/crate/sim-codec-python",
+]
+claims_surfaces = [
+  "syntax/python",
+]
+claims_specimens = [
+  "spec-test/sim-codecs/crates/sim-codec-python/src/tests",
+]
+supports = [
+  "feature/sim-codecs/codec",
+  "feature/sim-codecs/pratt",
 ]
 
 [[feature]]

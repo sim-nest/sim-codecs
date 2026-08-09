@@ -83,6 +83,11 @@
 {"kind":"recipe","path":"crates/sim-codec-mcp/recipes/book.toml"}
 {"kind":"recipe","path":"crates/sim-codec-pratt/recipes/01-basics/chapter.toml"}
 {"kind":"recipe","path":"crates/sim-codec-pratt/recipes/book.toml"}
+{"kind":"recipe","path":"crates/sim-codec-python/recipes/01-basics/chapter.toml"}
+{"kind":"recipe","path":"crates/sim-codec-python/recipes/01-basics/lossless-source/purpose.md"}
+{"kind":"recipe","path":"crates/sim-codec-python/recipes/01-basics/lossless-source/recipe.toml"}
+{"kind":"recipe","path":"crates/sim-codec-python/recipes/01-basics/lossless-source/setup.py"}
+{"kind":"recipe","path":"crates/sim-codec-python/recipes/book.toml"}
 {"kind":"recipe","path":"crates/sim-codec/recipes/01-basics/chapter.toml"}
 {"kind":"recipe","path":"crates/sim-codec/recipes/01-basics/positions-and-limits/purpose.md"}
 {"kind":"recipe","path":"crates/sim-codec/recipes/01-basics/positions-and-limits/recipe.toml"}

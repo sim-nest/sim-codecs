@@ -1,5 +1,5 @@
 {
-  "card_count": 18,
+  "card_count": 19,
   "cards": [
     {
       "id": "browse/catalog",
@@ -104,6 +104,12 @@
       "summary": "Shared Pratt parsing substrate for codec lexers."
     },
     {
+      "id": "cookbook/sim-codec-python",
+      "kind": "cookbook-recipe",
+      "owner": "sim-codec-python",
+      "summary": "Bounded lossless Python source parsing."
+    },
+    {
       "id": "registry/catalog",
       "kind": "browse-registry",
       "owner": "workspace",
@@ -136,6 +142,7 @@
       "sim-codec-lua",
       "sim-codec-mcp",
       "sim-codec-pratt",
+      "sim-codec-python",
       "sim-test-support",
       "sim-wasm-abi",
       "xtask"
@@ -160,7 +167,7 @@
       "reason": "test-only f64 number-domain fixture for codec boundary tests"
     }
   ],
-  "package_count": 20,
+  "package_count": 21,
   "packages": [
     {
       "crate_name": "sim_codec",
@@ -1208,6 +1215,52 @@
       ]
     },
     {
+      "crate_name": "sim_codec_python",
+      "dependencies": [
+        {
+          "kind": "normal",
+          "optional": false,
+          "package": "sim-codec-pratt",
+          "rename": null,
+          "target": null
+        }
+      ],
+      "description": "Bounded, lossless Python 3.14 source frontend for SIM",
+      "features": [],
+      "group": "workspace",
+      "manifest": "crates/sim-codec-python/Cargo.toml",
+      "name": "sim-codec-python",
+      "publish": "true",
+      "root": "crates/sim-codec-python",
+      "rustdoc_summary": "Bounded, lossless Python 3.14 syntax frontend.",
+      "target_kinds": [
+        "custom-build",
+        "lib"
+      ],
+      "targets": [
+        {
+          "crate_types": [
+            "lib"
+          ],
+          "kind": [
+            "lib"
+          ],
+          "name": "sim_codec_python",
+          "src": "crates/sim-codec-python/src/lib.rs"
+        },
+        {
+          "crate_types": [
+            "bin"
+          ],
+          "kind": [
+            "custom-build"
+          ],
+          "name": "build-script-build",
+          "src": "crates/sim-codec-python/build.rs"
+        }
+      ]
+    },
+    {
       "crate_name": "sim_test_support",
       "dependencies": [
         {
@@ -1326,10 +1379,10 @@
     "generated_by": "cargo run -p xtask -- simdoc",
     "generation_timestamp": "2026-07-16T02:55:26+02:00",
     "generator": "xtask repo-contract v1",
-    "git_commit": "68f760f2f7366374717e9a741ac16a12b0261ec4",
+    "git_commit": "95ddab76546201e1929cfe05fb4ae8d598600640",
     "repo": "sim-codecs",
     "schema": "sim.provenance.v1",
-    "source_commit": "68f760f2f7366374717e9a741ac16a12b0261ec4",
+    "source_commit": "95ddab76546201e1929cfe05fb4ae8d598600640",
     "source_remote": "https://github.com/sim-nest/sim-codecs",
     "validation_commands": [
       "cargo fmt --all --check",
@@ -1342,9 +1395,9 @@
       "cargo run -p xtask -- validation-matrix --check --repo .",
       "cargo run -p xtask -- crate-catalog --check --repo ."
     ],
-    "workspace_hash": "581fa7ffaaa3ed24",
+    "workspace_hash": "9ba1ba3364b0d8ff",
     "workspace_hash_algorithm": "fnv1a64",
-    "workspace_hash_input_count": 305,
+    "workspace_hash_input_count": 316,
     "workspace_hash_inputs": [
       "Cargo.toml",
       "crates/sim-codec/Cargo.toml",
@@ -1634,6 +1687,17 @@
       "crates/sim-codec-pratt/src/parser.rs",
       "crates/sim-codec-pratt/src/tests.rs",
       "crates/sim-codec-pratt/src/token.rs",
+      "crates/sim-codec-python/Cargo.toml",
+      "crates/sim-codec-python/build.rs",
+      "crates/sim-codec-python/grammar/productions.rs",
+      "crates/sim-codec-python/recipes/01-basics/lossless-source/recipe.toml",
+      "crates/sim-codec-python/recipes/book.toml",
+      "crates/sim-codec-python/src/grammar.rs",
+      "crates/sim-codec-python/src/lexer.rs",
+      "crates/sim-codec-python/src/lib.rs",
+      "crates/sim-codec-python/src/parser.rs",
+      "crates/sim-codec-python/src/tests.rs",
+      "crates/sim-codec-python/src/types.rs",
       "crates/sim-test-support/Cargo.toml",
       "crates/sim-test-support/src/lib.rs",
       "crates/sim-test-support/src/number_domain.rs",
@@ -1653,7 +1717,7 @@
       "xtask/Cargo.toml"
     ]
   },
-  "recipe_book_count": 16,
+  "recipe_book_count": 17,
   "recipes": [
     {
       "book": "codec/core",
@@ -1997,6 +2061,26 @@
       "recipes": [],
       "summary": "Shared Pratt parsing substrate for codec lexers.",
       "title": "Pratt Codec Substrate"
+    },
+    {
+      "book": "sim-codec-python",
+      "book_toml": "crates/sim-codec-python/recipes/book.toml",
+      "card_id": "cookbook/sim-codec-python",
+      "group": "workspace",
+      "package": "sim-codec-python",
+      "recipe_count": 1,
+      "recipes": [
+        {
+          "card_id": "sim-codec-python/01-basics/python-lossless-source",
+          "codec": "",
+          "id": "python-lossless-source",
+          "package": "sim-codec-python",
+          "recipe_toml": "crates/sim-codec-python/recipes/01-basics/lossless-source/recipe.toml",
+          "title": "Preserve Python source"
+        }
+      ],
+      "summary": "Bounded lossless Python source parsing.",
+      "title": "Python 3.14 Source Frontend"
     }
   ]
 }

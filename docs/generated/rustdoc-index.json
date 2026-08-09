@@ -121,6 +121,13 @@
       "summary": "Shared Pratt parser substrate for SIM codecs."
     },
     {
+      "crate_name": "sim_codec_python",
+      "group": "workspace",
+      "manifest": "crates/sim-codec-python/Cargo.toml",
+      "package": "sim-codec-python",
+      "summary": "Bounded, lossless Python 3.14 syntax frontend."
+    },
+    {
       "crate_name": "sim_test_support",
       "group": "workspace",
       "manifest": "crates/sim-test-support/Cargo.toml",

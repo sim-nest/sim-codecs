@@ -1,0 +1,9 @@
+# SIM Python 3.14.6 syntax corpus, format version 1
+# Each CASE line names the grammar families exercised by tests/corpus.py.
+CASE module statements assignment function_def class_def decorators type_params
+CASE layout if_stmt elif_stmt else_block while_stmt for_stmt with_stmt try_stmt except_star_block finally_block match_stmt case_block guard
+CASE patterns as_pattern or_pattern sequence_pattern mapping_pattern class_pattern wildcard_pattern star_pattern
+CASE imports import_name import_from dotted_name global_stmt nonlocal_stmt
+CASE expressions lambda named_expression disjunction comparison bitwise_or shift_expr sum term factor power await_primary primary slices
+CASE comprehensions listcomp setcomp dictcomp genexp for_if_clauses
+CASE literals strings fstring tstring format_spec conversion tuple list set dict
