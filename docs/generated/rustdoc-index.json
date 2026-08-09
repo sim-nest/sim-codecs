@@ -86,6 +86,13 @@
       "summary": "SIM Index codec over the shared IndexDoc graph."
     },
     {
+      "crate_name": "sim_codec_javascript",
+      "group": "workspace",
+      "manifest": "crates/sim-codec-javascript/Cargo.toml",
+      "package": "sim-codec-javascript",
+      "summary": "Bounded, lossless ECMAScript 2026 Script and Module frontend."
+    },
+    {
       "crate_name": "sim_codec_json",
       "group": "workspace",
       "manifest": "crates/sim-codec-json/Cargo.toml",

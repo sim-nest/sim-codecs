@@ -18,8 +18,9 @@ This generated lane consumes `docs/generated/sim-index-fragment.sx`. Global inde
 | Feature | Subject | Specimens | Summary |
 | --- | --- | ---: | --- |
 | `feature/sim-codecs/codec` | `crate/sim-codec` | 1 | Define codec positions, limits, syntax surfaces, wire surfaces, and loadable codec runtime libraries. |
-| `feature/sim-codecs/expression-syntax-grammars` | `crate/sim-codec-lisp` | 1 | Read and write Lisp, JSON, Algol, Lua, Python, Compare, and Bridge rendered expression grammars. |
+| `feature/sim-codecs/expression-syntax-grammars` | `crate/sim-codec-lisp` | 1 | Read and write Lisp, JSON, Algol, JavaScript, Lua, Python, Compare, and Bridge rendered expression grammars. |
 | `feature/sim-codecs/python-source-frontend` | `crate/sim-codec-python` | 1 | Tokenize and parse frozen Python 3.14.6 syntax, lower every admitted source form to stable python/* expressions, and round-trip general SIM expressions through bounded plain, located, and tree lanes. |
+| `feature/sim-codecs/javascript-source-frontend` | `crate/sim-codec-javascript` | 1 | Tokenize and structurally parse frozen ECMAScript 2026 Script and Module goals with lossless source, lexical-goal and ASI evidence, early errors, and a neutral TypeScript extension seam. |
 | `feature/sim-codecs/domain-syntax-grammars` | `crate/sim-codec` | 1 | Read and write binary, bitwise, chat, config, document, index, and MCP grammar surfaces. |
 | `feature/sim-codecs/wire-protocol-grammars` | `crate/sim-codec` | 1 | Read and write binary, bitwise, chat, config, document, index, and MCP wire protocols. |
 | `feature/sim-codecs/pratt` | `crate/sim-codec-pratt` | 1 | Parse operator-oriented expression languages through the Pratt codec surface. |
@@ -45,6 +46,7 @@ This generated lane consumes `docs/generated/sim-index-fragment.sx`. Global inde
 | `syntax/config` | `syntax` | `language/config` |
 | `syntax/doc` | `syntax` | `language/doc` |
 | `syntax/index` | `syntax` | `language/index` |
+| `syntax/javascript` | `syntax` | `language/javascript` |
 | `syntax/json` | `syntax` | `language/json` |
 | `syntax/lisp` | `syntax` | `language/lisp` |
 | `syntax/lua` | `syntax` | `language/lua` |
@@ -123,6 +125,11 @@ This generated lane consumes `docs/generated/sim-index-fragment.sx`. Global inde
 - `crates/sim-codec-doc/recipes/01-basics/markdown-to-typst/recipe.toml`
 - `crates/sim-codec-doc/recipes/01-basics/markdown-to-typst/setup.siml`
 - `crates/sim-codec-doc/recipes/book.toml`
+- `crates/sim-codec-javascript/recipes/01-basics/chapter.toml`
+- `crates/sim-codec-javascript/recipes/01-basics/lossless-source/module.js`
+- `crates/sim-codec-javascript/recipes/01-basics/lossless-source/purpose.md`
+- `crates/sim-codec-javascript/recipes/01-basics/lossless-source/recipe.toml`
+- `crates/sim-codec-javascript/recipes/book.toml`
 - `crates/sim-codec-json/recipes/01-basics/chapter.toml`
 - `crates/sim-codec-json/recipes/01-basics/tagged-string/purpose.md`
 - `crates/sim-codec-json/recipes/01-basics/tagged-string/recipe.toml`
@@ -1499,6 +1506,38 @@ fn codec_decode_limits_bound_source_tokens_and_fallback_depth() {
         )
         .is_err()
     );
+}
+```
+
+### `feature/sim-codecs/javascript-source-frontend`
+
+Specimen `spec-test/sim-codecs/crates/sim-codec-javascript/tests/conformance` is checked by `cargo test`.
+
+Source `crates/sim-codec-javascript/tests/conformance.rs`:
+
+```rust
+use sim_codec_javascript::{Goal, LexicalGoal, NodeKind, TokenKind, parse_module, parse_script};
+
+// conformance: frozen ECMAScript source is bounded, located, and byte-preserving.
+#[test]
+fn lossless_script_and_module_frontend() {
+    let script = include_str!("corpus.js");
+    let tree = parse_script(script).expect("curated Script corpus");
+    assert_eq!(tree.preserve_source(), script);
+    assert_eq!(tree.goal, Goal::Script);
+    assert!(
+        tree.tokens
+            .iter()
+            .any(|token| token.kind == TokenKind::RegExp)
+    );
+    assert!(
+        tree.tokens
+            .iter()
+            .any(|token| token.goal == LexicalGoal::Div)
+    );
+
+    let module = parse_module("import x from 'x'; export default class C {}").unwrap();
+    assert_eq!(module.root.kind, NodeKind::Module);
 }
 ```
 

@@ -37,6 +37,7 @@ claims_anchors = [
   "anchor/crate/sim-codec-doc",
   "anchor/crate/sim-codec-index",
   "anchor/crate/sim-codec-json",
+  "anchor/crate/sim-codec-javascript",
   "anchor/crate/sim-codec-lisp",
   "anchor/crate/sim-codec-lua",
   "anchor/crate/sim-codec-mcp",
@@ -82,7 +83,7 @@ claims_specimens = [
 [[feature]]
 id = "feature/sim-codecs/expression-syntax-grammars"
 title = "Expression syntax grammars"
-summary = "Read and write Lisp, JSON, Algol, Lua, Python, Compare, and Bridge rendered expression grammars."
+summary = "Read and write Lisp, JSON, Algol, JavaScript, Lua, Python, Compare, and Bridge rendered expression grammars."
 owner = "crate/sim-codec-lisp"
 audiences = ["code", "framework"]
 guidance = "Use this row when finding an expression syntax grammar or adding a language-shaped codec surface."
@@ -91,6 +92,7 @@ claims_surfaces = [
   "syntax/bridge",
   "syntax/compare",
   "syntax/json",
+  "syntax/javascript",
   "syntax/lisp",
   "syntax/lua",
   "syntax/python",
@@ -117,6 +119,27 @@ claims_surfaces = [
 ]
 claims_specimens = [
   "spec-test/sim-codecs/crates/sim-codec-python/src/tests",
+]
+supports = [
+  "feature/sim-codecs/codec",
+  "feature/sim-codecs/pratt",
+]
+
+[[feature]]
+id = "feature/sim-codecs/javascript-source-frontend"
+title = "Bounded ECMAScript 2026 source frontend"
+summary = "Tokenize and structurally parse frozen ECMAScript 2026 Script and Module goals with lossless source, lexical-goal and ASI evidence, early errors, and a neutral TypeScript extension seam."
+owner = "crate/sim-codec-javascript"
+audiences = ["code", "framework"]
+guidance = "Use this frontend when JavaScript source needs bounded lexical goals, exact trivia and locations, deterministic diagnostics, Script/Module distinction, or a runtime-independent tree for a downstream syntax extension. It is a codec artifact, not compiler IR, and does not evaluate source."
+claims_anchors = [
+  "anchor/crate/sim-codec-javascript",
+]
+claims_surfaces = [
+  "syntax/javascript",
+]
+claims_specimens = [
+  "spec-test/sim-codecs/crates/sim-codec-javascript/tests/conformance",
 ]
 supports = [
   "feature/sim-codecs/codec",

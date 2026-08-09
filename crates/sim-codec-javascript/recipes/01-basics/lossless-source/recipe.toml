@@ -1,0 +1,4 @@
+id = "javascript-lossless-source"
+title = "Preserve JavaScript source"
+summary = "An ECMAScript 2026 module retained byte-for-byte by the syntax tree."
+files = ["module.js"]

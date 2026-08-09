@@ -1,0 +1,7 @@
+authority=https://tc39.es/ecma262/2026/multipage/
+edition=ECMA-262, 17th edition (ECMAScript 2026)
+frozen-on=2026-08-01
+oracle=https://github.com/tc39/test262
+oracle-revision=main as observed 2026-08-01
+scope=curated lexical-goal, Script, Module, early-error, malformed, and limit specimens
+claim=Test262 evidence is neither vendored nor a blanket conformance claim

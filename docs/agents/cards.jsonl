@@ -57,6 +57,11 @@
 {"kind":"recipe","path":"crates/sim-codec-doc/recipes/01-basics/markdown-to-typst/recipe.toml"}
 {"kind":"recipe","path":"crates/sim-codec-doc/recipes/01-basics/markdown-to-typst/setup.siml"}
 {"kind":"recipe","path":"crates/sim-codec-doc/recipes/book.toml"}
+{"kind":"recipe","path":"crates/sim-codec-javascript/recipes/01-basics/chapter.toml"}
+{"kind":"recipe","path":"crates/sim-codec-javascript/recipes/01-basics/lossless-source/module.js"}
+{"kind":"recipe","path":"crates/sim-codec-javascript/recipes/01-basics/lossless-source/purpose.md"}
+{"kind":"recipe","path":"crates/sim-codec-javascript/recipes/01-basics/lossless-source/recipe.toml"}
+{"kind":"recipe","path":"crates/sim-codec-javascript/recipes/book.toml"}
 {"kind":"recipe","path":"crates/sim-codec-json/recipes/01-basics/chapter.toml"}
 {"kind":"recipe","path":"crates/sim-codec-json/recipes/01-basics/tagged-string/purpose.md"}
 {"kind":"recipe","path":"crates/sim-codec-json/recipes/01-basics/tagged-string/recipe.toml"}
