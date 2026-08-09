@@ -127,11 +127,11 @@ supports = [
 
 [[feature]]
 id = "feature/sim-codecs/javascript-source-frontend"
-title = "Bounded ECMAScript 2026 source frontend"
-summary = "Tokenize and structurally parse frozen ECMAScript 2026 Script and Module goals with lossless source, lexical-goal and ASI evidence, early errors, and a neutral TypeScript extension seam."
+title = "Bounded ECMAScript 2026 codec"
+summary = "Tokenize and structurally parse frozen ECMAScript 2026 Script and Module goals, lower every accepted form to stable javascript/* expressions, and round-trip through plain, located, and tree codec lanes."
 owner = "crate/sim-codec-javascript"
 audiences = ["code", "framework"]
-guidance = "Use this frontend when JavaScript source needs bounded lexical goals, exact trivia and locations, deterministic diagnostics, Script/Module distinction, or a runtime-independent tree for a downstream syntax extension. It is a codec artifact, not compiler IR, and does not evaluate source."
+guidance = "Use codec/javascript when JavaScript source needs bounded lexical goals, exact trivia and source origins, deterministic diagnostics, Script/Module distinction, canonical expression encoding, or public builders for a downstream syntax extension. Parser coverage and runtime-support markers are independent; this codec does not execute JavaScript or construct bytecode, control-flow IR, an optimizer, or a text-emission target."
 claims_anchors = [
   "anchor/crate/sim-codec-javascript",
 ]

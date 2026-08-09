@@ -7,11 +7,18 @@
 #![forbid(unsafe_code)]
 #![deny(missing_docs)]
 
+mod codec;
 mod lexer;
+mod lower;
 mod parser;
 mod types;
 
+pub use codec::{JavascriptCodec, JavascriptCodecLib};
 pub use lexer::{tokenize, tokenize_with_limits};
+pub use lower::{
+    JavascriptBuilder, decode_javascript, decode_javascript_located, decode_javascript_tree,
+    encode_javascript, lower_javascript,
+};
 pub use parser::{parse_module, parse_module_with_limits, parse_script, parse_script_with_limits};
 pub use types::{
     Asi, Diagnostic, DiagnosticCode, Goal, LexicalGoal, Limits, Node, NodeKind, Origin, Span,
@@ -29,6 +36,9 @@ pub const TEST262_REVISION: &str = "tc39/test262@main as observed 2026-08-01";
 /// SHA-256 of the checked source corpus manifest.
 pub const CORPUS_MANIFEST_SHA256: &str =
     "88b15b687f3741ba7c0145d1e2f09e05f0b1d8bf95656f257656fe3aefe416da";
+
+/// Stable local id used before a host assigns `codec/javascript` an id.
+pub const JAVASCRIPT_CODEC_ID: sim_kernel::CodecId = sim_kernel::CodecId(0x4a_53_00_00);
 
 #[cfg(test)]
 mod tests;

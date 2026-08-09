@@ -20,7 +20,7 @@ This generated lane consumes `docs/generated/sim-index-fragment.sx`. Global inde
 | `feature/sim-codecs/codec` | `crate/sim-codec` | 1 | Define codec positions, limits, syntax surfaces, wire surfaces, and loadable codec runtime libraries. |
 | `feature/sim-codecs/expression-syntax-grammars` | `crate/sim-codec-lisp` | 1 | Read and write Lisp, JSON, Algol, JavaScript, Lua, Python, Compare, and Bridge rendered expression grammars. |
 | `feature/sim-codecs/python-source-frontend` | `crate/sim-codec-python` | 1 | Tokenize and parse frozen Python 3.14.6 syntax, lower every admitted source form to stable python/* expressions, and round-trip general SIM expressions through bounded plain, located, and tree lanes. |
-| `feature/sim-codecs/javascript-source-frontend` | `crate/sim-codec-javascript` | 1 | Tokenize and structurally parse frozen ECMAScript 2026 Script and Module goals with lossless source, lexical-goal and ASI evidence, early errors, and a neutral TypeScript extension seam. |
+| `feature/sim-codecs/javascript-source-frontend` | `crate/sim-codec-javascript` | 1 | Tokenize and structurally parse frozen ECMAScript 2026 Script and Module goals, lower every accepted form to stable javascript/* expressions, and round-trip through plain, located, and tree codec lanes. |
 | `feature/sim-codecs/domain-syntax-grammars` | `crate/sim-codec` | 1 | Read and write binary, bitwise, chat, config, document, index, and MCP grammar surfaces. |
 | `feature/sim-codecs/wire-protocol-grammars` | `crate/sim-codec` | 1 | Read and write binary, bitwise, chat, config, document, index, and MCP wire protocols. |
 | `feature/sim-codecs/pratt` | `crate/sim-codec-pratt` | 1 | Parse operator-oriented expression languages through the Pratt codec surface. |
