@@ -1,4 +1,9 @@
 use super::*;
+use sim_codec::{
+    DecodeLimits, Input, Output, decode_located_with_codec, decode_tree_with_codec,
+    decode_with_codec, decode_with_codec_and_limits, encode_tree_with_codec, encode_with_codec,
+};
+use sim_kernel::{EncodeOptions, Expr, ReadPolicy, SourceId, Symbol};
 
 // conformance: Python 3.14 syntax is bounded, located, deterministic, and byte-preserving.
 
@@ -105,5 +110,161 @@ fn every_resource_limit_fails_closed() {
             .unwrap_err()
             .code,
         DiagnosticCode::ResourceLimit
+    );
+}
+
+fn codec_cx() -> sim_kernel::Cx {
+    let mut cx = sim_test_support::core_cx();
+    let id = cx.registry_mut().fresh_codec_id();
+    cx.load_lib(&PythonCodecLib::new(id)).unwrap();
+    cx
+}
+
+fn python_symbol() -> Symbol {
+    Symbol::qualified("codec", "python")
+}
+
+fn output_text(output: Output) -> String {
+    match output {
+        Output::Text(text) => text,
+        Output::Bytes(_) => panic!("Python source must be textual"),
+    }
+}
+
+#[test]
+fn stable_forms_roundtrip_canonically_and_keep_support_metadata() {
+    let source = "answer = left + 0x2a\n";
+    let mut cx = codec_cx();
+    let symbol = python_symbol();
+    let lowered = decode_with_codec(
+        &mut cx,
+        &symbol,
+        Input::Text(source.to_owned()),
+        ReadPolicy::default(),
+    )
+    .unwrap();
+
+    let first = output_text(
+        encode_with_codec(&mut cx, &symbol, &lowered, EncodeOptions::default()).unwrap(),
+    );
+    let second = output_text(
+        encode_with_codec(&mut cx, &symbol, &lowered, EncodeOptions::default()).unwrap(),
+    );
+    assert_eq!(first, source);
+    assert_eq!(first, second);
+    assert_eq!(
+        sim_test_support::roundtrip(&mut cx, "python", &lowered),
+        lowered
+    );
+
+    let rendered = format!("{lowered:?}");
+    assert!(rendered.contains("python"));
+    assert!(rendered.contains("Bool(true)"));
+    assert!(rendered.contains("Bool(false)"));
+}
+
+#[test]
+fn located_and_tree_lanes_retain_source_chain_and_lossless_bytes() {
+    let source = "# origin\nvalue = (one + two)\n";
+    let mut cx = codec_cx();
+    let symbol = python_symbol();
+    let located = decode_located_with_codec(
+        &mut cx,
+        &symbol,
+        Input::Text(source.to_owned()),
+        ReadPolicy::default(),
+        "python-test.py".to_owned(),
+    )
+    .unwrap();
+    let origin = located.origin.unwrap();
+    assert_eq!(origin.source, SourceId("python-test.py".to_owned()));
+    assert_eq!(origin.span.start, 0);
+    assert_eq!(origin.span.end, source.len());
+
+    let tree = decode_tree_with_codec(
+        &mut cx,
+        &symbol,
+        Input::Text(source.to_owned()),
+        ReadPolicy::default(),
+        "python-tree.py".to_owned(),
+    )
+    .unwrap();
+    assert_eq!(tree.origin.as_ref().unwrap().span.end, source.len());
+    assert!(tree.children.iter().any(|child| child.origin.is_some()));
+    assert!(
+        tree.children
+            .iter()
+            .flat_map(|child| &child.children)
+            .any(|child| child.origin.is_some())
+    );
+
+    let encoded = encode_tree_with_codec(
+        &mut cx,
+        &symbol,
+        &tree,
+        EncodeOptions {
+            lossless_origin: true,
+            ..EncodeOptions::default()
+        },
+    )
+    .unwrap();
+    assert_eq!(output_text(encoded), source);
+}
+
+#[test]
+fn tagged_fallback_roundtrips_unspellable_expr_and_refuses_malformed_forms() {
+    let mut cx = codec_cx();
+    let symbol = python_symbol();
+    let unspellable = Expr::Bytes(vec![0, 1, 2, 255]);
+    assert_eq!(
+        sim_test_support::roundtrip(&mut cx, "python", &unspellable),
+        unspellable
+    );
+
+    let forged = Expr::Call {
+        operator: Box::new(Expr::Symbol(Symbol::qualified("python", "token"))),
+        args: vec![
+            Expr::Symbol(Symbol::new("name")),
+            Expr::String("1".to_owned()),
+            Expr::Bool(true),
+        ],
+    };
+    assert!(encode_with_codec(&mut cx, &symbol, &forged, EncodeOptions::default()).is_err());
+
+    for malformed in [
+        "__sim_expr__({not-json})",
+        "__sim_expr__({\"$expr\":\"unknown\"})",
+    ] {
+        assert!(
+            decode_with_codec(
+                &mut cx,
+                &symbol,
+                Input::Text(malformed.to_owned()),
+                ReadPolicy::default(),
+            )
+            .is_err()
+        );
+    }
+}
+
+#[test]
+fn codec_decode_limits_bound_source_tokens_and_fallback_depth() {
+    let mut cx = codec_cx();
+    let symbol = python_symbol();
+    let tiny = DecodeLimits {
+        max_input_bytes: 8,
+        max_tokens: 2,
+        max_depth: 2,
+        ..DecodeLimits::default()
+    };
+    assert!(
+        decode_with_codec_and_limits(
+            &mut cx,
+            &symbol,
+            Input::Text("long_name = 1\n".to_owned()),
+            ReadPolicy::default(),
+            tiny,
+        )
+        .is_err()
     );
 }

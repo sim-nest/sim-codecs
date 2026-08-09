@@ -104,11 +104,11 @@ supports = [
 
 [[feature]]
 id = "feature/sim-codecs/python-source-frontend"
-title = "Bounded Python 3.14 source frontend"
-summary = "Tokenize and parse frozen Python 3.14.6 syntax into byte-preserving concrete source trees."
+title = "Bounded Python 3.14 source codec"
+summary = "Tokenize and parse frozen Python 3.14.6 syntax, lower every admitted source form to stable python/* expressions, and round-trip general SIM expressions through bounded plain, located, and tree lanes."
 owner = "crate/sim-codec-python"
 audiences = ["code", "framework"]
-guidance = "Use this syntax-only frontend when Python source needs bounded layout, trivia, locations, soft keywords, literals, f-strings, template strings, or deterministic diagnostics without runtime behavior."
+guidance = "Use codec/python when Python source needs bounded layout, trivia, source-origin chains, soft keywords, literals, f-strings, template strings, canonical expression encoding, or deterministic diagnostics. Parser coverage and the explicit runtime-support marker are independent; this codec does not execute Python or construct bytecode or control-flow IR."
 claims_anchors = [
   "anchor/crate/sim-codec-python",
 ]

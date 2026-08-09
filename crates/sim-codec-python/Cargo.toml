@@ -8,12 +8,18 @@ homepage.workspace = true
 description = "Bounded, lossless Python 3.14 source frontend for SIM"
 
 [dependencies]
+serde_json = "1"
+sim-codec = { version = "0.1.7", path = "../sim-codec" }
+sim-codec-json = { version = "0.2.0", path = "../sim-codec-json" }
 sim-cookbook = { version = "0.2.0" }
 sim-codec-pratt = { path = "../sim-codec-pratt", version = "0.1.2" }
 sim-kernel = { version = "0.2.0" }
 
 [build-dependencies]
 sim-cookbook = { version = "0.2.0" }
+
+[dev-dependencies]
+sim-test-support = { version = "0.1.1", path = "../sim-test-support" }
 
 [lints]
 workspace = true
