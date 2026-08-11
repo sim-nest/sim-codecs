@@ -18,12 +18,15 @@ This generated lane consumes `docs/generated/sim-index-fragment.sx`. Global inde
 | Feature | Subject | Specimens | Summary |
 | --- | --- | ---: | --- |
 | `feature/sim-codecs/codec` | `crate/sim-codec` | 1 | Define codec positions, limits, syntax surfaces, wire surfaces, and loadable codec runtime libraries. |
-| `feature/sim-codecs/expression-syntax-grammars` | `crate/sim-codec-lisp` | 1 | Read and write Lisp, JSON, Algol, Lua, Compare, and Bridge rendered expression grammars. |
+| `feature/sim-codecs/expression-syntax-grammars` | `crate/sim-codec-lisp` | 1 | Read and write Lisp, JSON, Algol, JavaScript, Lua, Python, Compare, and Bridge rendered expression grammars. |
+| `feature/sim-codecs/python-source-frontend` | `crate/sim-codec-python` | 1 | Tokenize and parse frozen Python 3.14.6 syntax, lower every admitted source form to stable python/* expressions, and round-trip general SIM expressions through bounded plain, located, and tree lanes. |
+| `feature/sim-codecs/javascript-source-frontend` | `crate/sim-codec-javascript` | 1 | Tokenize and structurally parse frozen ECMAScript 2026 Script and Module goals, lower every accepted form to stable javascript/* expressions, and round-trip through plain, located, and tree codec lanes. |
 | `feature/sim-codecs/domain-syntax-grammars` | `crate/sim-codec` | 1 | Read and write binary, bitwise, chat, config, document, index, and MCP grammar surfaces. |
 | `feature/sim-codecs/wire-protocol-grammars` | `crate/sim-codec` | 1 | Read and write binary, bitwise, chat, config, document, index, and MCP wire protocols. |
 | `feature/sim-codecs/pratt` | `crate/sim-codec-pratt` | 1 | Parse operator-oriented expression languages through the Pratt codec surface. |
 | `feature/sim-codecs/bridge-packet-codec` | `crate/sim-codec-bridge` | 1 | Encode and decode Bridge packet workflow data through the Bridge wire grammar. |
 | `feature/sim-codecs/contract-emitter` | `crate/xtask` | 0 | Emit generated repository contract and index fragments for codec crates. |
+| `feature/sim-codecs/typescript-syntax` | `crate/sim-codec-typescript` | 1 | TypeScript notation; does not type-check. Represent bounded, lossless TypeScript 7.0.2 and TSX notation and directly erase the compiler-independent subset to JavaScript forms. |
 
 ## Surfaces
 
@@ -44,11 +47,14 @@ This generated lane consumes `docs/generated/sim-index-fragment.sx`. Global inde
 | `syntax/config` | `syntax` | `language/config` |
 | `syntax/doc` | `syntax` | `language/doc` |
 | `syntax/index` | `syntax` | `language/index` |
+| `syntax/javascript` | `syntax` | `language/javascript` |
 | `syntax/json` | `syntax` | `language/json` |
 | `syntax/lisp` | `syntax` | `language/lisp` |
 | `syntax/lua` | `syntax` | `language/lua` |
 | `syntax/mcp` | `syntax` | `language/mcp` |
 | `syntax/pratt` | `syntax` | `language/pratt` |
+| `syntax/python` | `syntax` | `language/python` |
+| `syntax/typescript` | `syntax` | `language/typescript` |
 | `wire/binary` | `wire` | `language/binary` |
 | `wire/binary-base64` | `wire` | `language/binary-base64` |
 | `wire/bitwise` | `wire` | `language/bitwise` |
@@ -121,6 +127,11 @@ This generated lane consumes `docs/generated/sim-index-fragment.sx`. Global inde
 - `crates/sim-codec-doc/recipes/01-basics/markdown-to-typst/recipe.toml`
 - `crates/sim-codec-doc/recipes/01-basics/markdown-to-typst/setup.siml`
 - `crates/sim-codec-doc/recipes/book.toml`
+- `crates/sim-codec-javascript/recipes/01-basics/chapter.toml`
+- `crates/sim-codec-javascript/recipes/01-basics/lossless-source/module.js`
+- `crates/sim-codec-javascript/recipes/01-basics/lossless-source/purpose.md`
+- `crates/sim-codec-javascript/recipes/01-basics/lossless-source/recipe.toml`
+- `crates/sim-codec-javascript/recipes/book.toml`
 - `crates/sim-codec-json/recipes/01-basics/chapter.toml`
 - `crates/sim-codec-json/recipes/01-basics/tagged-string/purpose.md`
 - `crates/sim-codec-json/recipes/01-basics/tagged-string/recipe.toml`
@@ -147,6 +158,13 @@ This generated lane consumes `docs/generated/sim-index-fragment.sx`. Global inde
 - `crates/sim-codec-mcp/recipes/book.toml`
 - `crates/sim-codec-pratt/recipes/01-basics/chapter.toml`
 - `crates/sim-codec-pratt/recipes/book.toml`
+- `crates/sim-codec-python/recipes/01-basics/chapter.toml`
+- `crates/sim-codec-python/recipes/01-basics/lossless-source/purpose.md`
+- `crates/sim-codec-python/recipes/01-basics/lossless-source/recipe.toml`
+- `crates/sim-codec-python/recipes/01-basics/lossless-source/setup.py`
+- `crates/sim-codec-python/recipes/book.toml`
+- `crates/sim-codec-typescript/recipes/01-basics.md`
+- `crates/sim-codec-typescript/recipes/book.toml`
 - `crates/sim-codec/recipes/01-basics/chapter.toml`
 - `crates/sim-codec/recipes/01-basics/positions-and-limits/purpose.md`
 - `crates/sim-codec/recipes/01-basics/positions-and-limits/recipe.toml`
@@ -1213,6 +1231,367 @@ fn malformed_dispatch_is_rejected() {
     )
     .unwrap_err();
     assert!(matches!(error, sim_kernel::Error::CodecError { .. }));
+}
+```
+
+### `feature/sim-codecs/python-source-frontend`
+
+Specimen `spec-test/sim-codecs/crates/sim-codec-python/src/tests` is checked by `cargo test`.
+
+Source `crates/sim-codec-python/src/tests.rs`:
+
+```rust
+use super::*;
+use sim_codec::{
+    DecodeLimits, Input, Output, decode_located_with_codec, decode_tree_with_codec,
+    decode_with_codec, decode_with_codec_and_limits, encode_tree_with_codec, encode_with_codec,
+};
+use sim_kernel::{EncodeOptions, Expr, ReadPolicy, SourceId, Symbol};
+
+// conformance: Python 3.14 syntax is bounded, located, deterministic, and byte-preserving.
+
+#[test]
+fn frozen_identity_and_production_inventory_are_stable() {
+    assert_eq!(PYTHON_VERSION, "3.14.6");
+    assert!(frozen_productions().len() >= 150);
+    let grammar = include_bytes!("../grammar/python-3.14.6.gram");
+    let corpus = include_bytes!("../grammar/corpus-3.14.6.txt");
+    assert!(!grammar.is_empty() && !corpus.is_empty());
+    for production in frozen_productions() {
+        assert!(
+            grammar
+                .windows(production.len())
+                .any(|w| w == production.as_bytes()),
+            "missing frozen production {production}"
+        );
+    }
+}
+
+#[test]
+fn corpus_is_byte_stable_and_covers_modern_tokens() {
+    let source = include_str!("../tests/corpus.py");
+    let tree = parse_module(source).unwrap();
+    assert_eq!(tree.preserve_source().as_bytes(), source.as_bytes());
+    assert!(tree.tokens.iter().any(|t| t.kind == TokenKind::FString));
+    assert!(
+        tree.tokens
+            .iter()
+            .any(|t| t.kind == TokenKind::TemplateString)
+    );
+    assert_eq!(tree.source(), source);
+}
+
+#[test]
+fn trivia_locations_soft_keywords_and_literals_are_lossless() {
+    let source = "# lead\nmatch = 0xCA_FE + 1.2e-3j\ncase = rb'bytes'\n";
+    let tokens = tokenize(source).unwrap();
+    assert_eq!(&source[tokens[0].span.start..tokens[0].span.end], "# lead");
+    assert!(tokens.iter().filter(|t| t.kind == TokenKind::Name).count() >= 2);
+    assert!(tokens.iter().any(|t| t.kind == TokenKind::Number));
+}
+
+#[test]
+fn malformed_layout_and_delimiters_are_located_and_deterministic() {
+    for source in [
+        "if True:\n    x = 1\n  y = 2\n",
+        "x = ([)]\n",
+        "x = f'{value'\n",
+    ] {
+        let first = parse_module(source).unwrap_err();
+        let second = parse_module(source).unwrap_err();
+        assert_eq!(first, second);
+        assert!(first.line >= 1);
+        assert!(first.span.start <= source.len());
+    }
+}
+
+#[test]
+fn every_resource_limit_fails_closed() {
+    let base = Limits {
+        max_bytes: 8,
+        max_tokens: 100,
+        max_nesting: 8,
+        max_lines: 8,
+    };
+    assert_eq!(
+        parse_module_with_limits("012345678", base)
+            .unwrap_err()
+            .code,
+        DiagnosticCode::ResourceLimit
+    );
+    let token_limited = Limits {
+        max_bytes: 100,
+        max_tokens: 2,
+        ..base
+    };
+    assert_eq!(
+        parse_module_with_limits("x = 1", token_limited)
+            .unwrap_err()
+            .code,
+        DiagnosticCode::ResourceLimit
+    );
+    let nested = Limits {
+        max_bytes: 100,
+        max_tokens: 100,
+        max_nesting: 2,
+        max_lines: 8,
+    };
+    assert_eq!(
+        parse_module_with_limits("x = (((1)))", nested)
+            .unwrap_err()
+            .code,
+        DiagnosticCode::ResourceLimit
+    );
+    let lines = Limits {
+        max_bytes: 100,
+        max_tokens: 100,
+        max_nesting: 8,
+        max_lines: 2,
+    };
+    assert_eq!(
+        parse_module_with_limits("x\ny\nz\n", lines)
+            .unwrap_err()
+            .code,
+        DiagnosticCode::ResourceLimit
+    );
+}
+
+fn codec_cx() -> sim_kernel::Cx {
+    let mut cx = sim_test_support::core_cx();
+    let id = cx.registry_mut().fresh_codec_id();
+    cx.load_lib(&PythonCodecLib::new(id)).unwrap();
+    cx
+}
+
+fn python_symbol() -> Symbol {
+    Symbol::qualified("codec", "python")
+}
+
+fn output_text(output: Output) -> String {
+    match output {
+        Output::Text(text) => text,
+        Output::Bytes(_) => panic!("Python source must be textual"),
+    }
+}
+
+#[test]
+fn stable_forms_roundtrip_canonically_and_keep_support_metadata() {
+    let source = "answer = left + 0x2a\n";
+    let mut cx = codec_cx();
+    let symbol = python_symbol();
+    let lowered = decode_with_codec(
+        &mut cx,
+        &symbol,
+        Input::Text(source.to_owned()),
+        ReadPolicy::default(),
+    )
+    .unwrap();
+
+    let first = output_text(
+        encode_with_codec(&mut cx, &symbol, &lowered, EncodeOptions::default()).unwrap(),
+    );
+    let second = output_text(
+        encode_with_codec(&mut cx, &symbol, &lowered, EncodeOptions::default()).unwrap(),
+    );
+    assert_eq!(first, source);
+    assert_eq!(first, second);
+    assert_eq!(
+        sim_test_support::roundtrip(&mut cx, "python", &lowered),
+        lowered
+    );
+
+    let rendered = format!("{lowered:?}");
+    assert!(rendered.contains("python"));
+    assert!(rendered.contains("Bool(true)"));
+    assert!(rendered.contains("Bool(false)"));
+}
+
+#[test]
+fn located_and_tree_lanes_retain_source_chain_and_lossless_bytes() {
+    let source = "# origin\nvalue = (one + two)\n";
+    let mut cx = codec_cx();
+    let symbol = python_symbol();
+    let located = decode_located_with_codec(
+        &mut cx,
+        &symbol,
+        Input::Text(source.to_owned()),
+        ReadPolicy::default(),
+        "python-test.py".to_owned(),
+    )
+    .unwrap();
+    let origin = located.origin.unwrap();
+    assert_eq!(origin.source, SourceId("python-test.py".to_owned()));
+    assert_eq!(origin.span.start, 0);
+    assert_eq!(origin.span.end, source.len());
+
+    let tree = decode_tree_with_codec(
+        &mut cx,
+        &symbol,
+        Input::Text(source.to_owned()),
+        ReadPolicy::default(),
+        "python-tree.py".to_owned(),
+    )
+    .unwrap();
+    assert_eq!(tree.origin.as_ref().unwrap().span.end, source.len());
+    assert!(tree.children.iter().any(|child| child.origin.is_some()));
+    assert!(
+        tree.children
+            .iter()
+            .flat_map(|child| &child.children)
+            .any(|child| child.origin.is_some())
+    );
+
+    let encoded = encode_tree_with_codec(
+        &mut cx,
+        &symbol,
+        &tree,
+        EncodeOptions {
+            lossless_origin: true,
+            ..EncodeOptions::default()
+        },
+    )
+    .unwrap();
+    assert_eq!(output_text(encoded), source);
+}
+
+#[test]
+fn tagged_fallback_roundtrips_unspellable_expr_and_refuses_malformed_forms() {
+    let mut cx = codec_cx();
+    let symbol = python_symbol();
+    let unspellable = Expr::Bytes(vec![0, 1, 2, 255]);
+    assert_eq!(
+        sim_test_support::roundtrip(&mut cx, "python", &unspellable),
+        unspellable
+    );
+
+    let forged = Expr::Call {
+        operator: Box::new(Expr::Symbol(Symbol::qualified("python", "token"))),
+        args: vec![
+            Expr::Symbol(Symbol::new("name")),
+            Expr::String("1".to_owned()),
+            Expr::Bool(true),
+        ],
+    };
+    assert!(encode_with_codec(&mut cx, &symbol, &forged, EncodeOptions::default()).is_err());
+
+    for malformed in [
+        "__sim_expr__({not-json})",
+        "__sim_expr__({\"$expr\":\"unknown\"})",
+    ] {
+        assert!(
+            decode_with_codec(
+                &mut cx,
+                &symbol,
+                Input::Text(malformed.to_owned()),
+                ReadPolicy::default(),
+            )
+            .is_err()
+        );
+    }
+}
+
+#[test]
+fn codec_decode_limits_bound_source_tokens_and_fallback_depth() {
+    let mut cx = codec_cx();
+    let symbol = python_symbol();
+    let tiny = DecodeLimits {
+        max_input_bytes: 8,
+        max_tokens: 2,
+        max_depth: 2,
+        ..DecodeLimits::default()
+    };
+    assert!(
+        decode_with_codec_and_limits(
+            &mut cx,
+            &symbol,
+            Input::Text("long_name = 1\n".to_owned()),
+            ReadPolicy::default(),
+            tiny,
+        )
+        .is_err()
+    );
+}
+
+#[test]
+fn crate_has_no_foreign_python_dependency_or_artifact() {
+    use std::{fs, path::Path};
+
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+    let manifest = fs::read_to_string(root.join("Cargo.toml"))
+        .unwrap()
+        .to_ascii_lowercase();
+    for forbidden in ["pyo3", "cpython =", "python3-sys", "python27-sys"] {
+        assert!(
+            !manifest.contains(forbidden),
+            "foreign Python dependency {forbidden}"
+        );
+    }
+    fn scan(path: &Path) {
+        for entry in fs::read_dir(path).unwrap() {
+            let path = entry.unwrap().path();
+            if path.is_dir() {
+                scan(&path);
+                continue;
+            }
+            let extension = path
+                .extension()
+                .and_then(|value| value.to_str())
+                .unwrap_or("");
+            assert!(
+                !matches!(extension, "pyc" | "pyo" | "pickle"),
+                "foreign Python artifact {}",
+                path.display()
+            );
+        }
+    }
+    scan(root);
+    let sources = ["src/lib.rs", "src/lower.rs", "src/parser.rs"]
+        .into_iter()
+        .map(|path| fs::read_to_string(root.join(path)).unwrap())
+        .collect::<String>();
+    for forbidden in [
+        "Py_CompileString",
+        "PyEval_",
+        "Command::new(\"python\"",
+        "Command::new(\"python3\"",
+    ] {
+        assert!(
+            !sources.contains(forbidden),
+            "compiler/VM fallback marker {forbidden}"
+        );
+    }
+}
+```
+
+### `feature/sim-codecs/javascript-source-frontend`
+
+Specimen `spec-test/sim-codecs/crates/sim-codec-javascript/tests/conformance` is checked by `cargo test`.
+
+Source `crates/sim-codec-javascript/tests/conformance.rs`:
+
+```rust
+use sim_codec_javascript::{Goal, LexicalGoal, NodeKind, TokenKind, parse_module, parse_script};
+
+// conformance: frozen ECMAScript source is bounded, located, and byte-preserving.
+#[test]
+fn lossless_script_and_module_frontend() {
+    let script = include_str!("corpus.js");
+    let tree = parse_script(script).expect("curated Script corpus");
+    assert_eq!(tree.preserve_source(), script);
+    assert_eq!(tree.goal, Goal::Script);
+    assert!(
+        tree.tokens
+            .iter()
+            .any(|token| token.kind == TokenKind::RegExp)
+    );
+    assert!(
+        tree.tokens
+            .iter()
+            .any(|token| token.goal == LexicalGoal::Div)
+    );
+
+    let module = parse_module("import x from 'x'; export default class C {}").unwrap();
+    assert_eq!(module.root.kind, NodeKind::Module);
 }
 ```
 
@@ -2533,5 +2912,199 @@ fn block_without_span(block: MarkupBlock) -> MarkupBlock {
             span: None,
         },
     }
+}
+```
+
+### `feature/sim-codecs/typescript-syntax`
+
+Specimen `spec-test/sim-codecs/crates/sim-codec-typescript/src/tests` is checked by `cargo test`.
+
+Source `crates/sim-codec-typescript/src/tests.rs`:
+
+```rust
+use crate::{
+    DiagnosticCode, Limits, SyntaxKind, SyntaxNode, TYPESCRIPT_CODEC_ID, TYPESCRIPT_VERSION,
+    decode_typescript, decode_typescript_located, decode_typescript_tree, encode_typescript,
+    lower_typescript, parse_module, parse_module_with_limits, parse_tsx,
+};
+use sim_codec::{DecodeBudget, DecodeLimits, Input, Output, ReadCx};
+use sim_kernel::{Expr, ReadPolicy, SourceId};
+
+// conformance: TypeScript and TSX notation parses losslessly and erases only the admitted subset.
+
+#[test]
+fn freezes_typescript_7_identity() {
+    assert_eq!(TYPESCRIPT_VERSION, "7.0.2");
+}
+
+#[test]
+fn represents_declarations_annotations_types_and_modifiers() {
+    let source = "declare namespace API { export interface Box<T> { readonly value: T } }\ntype Result<T> = T extends Error ? never : T;\nclass C { public override accessor value: unknown; }";
+    let tree = parse_module(source).unwrap();
+    for kind in [
+        SyntaxKind::Declaration,
+        SyntaxKind::Annotation,
+        SyntaxKind::TypeArguments,
+        SyntaxKind::TypeNode,
+        SyntaxKind::Modifier,
+    ] {
+        assert!(
+            tree.nodes.iter().any(
+                |node| matches!(node, SyntaxNode::TypeScript { kind: found, .. } if *found == kind)
+            ),
+            "missing {kind:?}"
+        );
+    }
+    assert!(matches!(tree.nodes[0], SyntaxNode::JavaScript(_)));
+    assert_eq!(tree.preserve_source(), source);
+}
+
+#[test]
+fn tsx_is_mode_bound_and_lossless_with_trivia() {
+    let source = "// lead\nconst view = <Panel title=\"x\">{value}</Panel>; // tail\n";
+    assert_eq!(
+        parse_module(source).unwrap_err().code,
+        DiagnosticCode::JsxInTypeScript
+    );
+    let tree = parse_tsx(source).unwrap();
+    assert_eq!(tree.preserve_source(), source);
+    assert!(tree.nodes.iter().any(|node| matches!(
+        node,
+        SyntaxNode::TypeScript {
+            kind: SyntaxKind::Jsx,
+            ..
+        }
+    )));
+    assert!(tree.tokens.iter().any(|token| token.line == 2));
+}
+
+#[test]
+fn locations_context_and_bounds_are_stable() {
+    let source = "interface Box<T> {\n  value: T\n}";
+    let tree = parse_module(source).unwrap();
+    let annotation = tree
+        .nodes
+        .iter()
+        .find_map(|node| match node {
+            SyntaxNode::TypeScript {
+                kind: SyntaxKind::Annotation,
+                span,
+                context,
+            } => Some((span, context)),
+            _ => None,
+        })
+        .unwrap();
+    assert_eq!(&source[annotation.0.start..annotation.0.end], ":");
+    assert_eq!(annotation.1, &["interface"]);
+    let error = parse_module_with_limits(
+        source,
+        Limits {
+            max_bytes: 4,
+            ..Limits::default()
+        },
+    )
+    .unwrap_err();
+    assert_eq!(error.code, DiagnosticCode::ResourceLimit);
+}
+
+#[test]
+fn admission_is_literally_no_compiler_decision() {
+    for (source, construct) in [
+        ("enum E { A }", "enum"),
+        ("namespace N { export const x = 1 }", "namespace"),
+        ("const x = value satisfies T;", "satisfies"),
+        ("const x = value as T;", "as"),
+        (
+            "class C { constructor(public x: number) {} }",
+            "parameter property",
+        ),
+    ] {
+        let gap = lower_typescript(&parse_module(source).unwrap()).unwrap_err();
+        assert_eq!(gap.construct, construct);
+        assert!(
+            gap.reason.contains("decision")
+                || gap.reason.contains("transform")
+                || gap.reason.contains("generation")
+                || gap.reason.contains("assignment")
+        );
+        assert_eq!(
+            &source[gap.span.start..gap.span.end],
+            if construct == "parameter property" {
+                "public"
+            } else {
+                construct
+            }
+        );
+    }
+    assert!(lower_typescript(&parse_module("export * as api from 'pkg';").unwrap()).is_ok());
+}
+
+#[test]
+fn direct_builder_erasure_retains_annotations_and_origin_chain() {
+    let source = "interface Box { value: number }\nfunction id<T>(value: T): T { return value; }";
+    let lowered = lower_typescript(&parse_module(source).unwrap()).unwrap();
+    assert!(!lowered.annotations.is_empty());
+    assert!(
+        lowered
+            .annotations
+            .iter()
+            .all(|annotation| annotation.origin.parent.is_some())
+    );
+    assert_eq!(lowered.source_tree.preserve_source(), source);
+    let encoded = match encode_typescript(&lowered.javascript).unwrap() {
+        Output::Text(x) => x,
+        Output::Bytes(_) => panic!("TypeScript must be text"),
+    };
+    assert!(!encoded.contains("interface"));
+    assert!(!encoded.contains(": T"));
+    assert!(encoded.contains("function"));
+    assert!(encoded.contains("return value"));
+}
+
+#[test]
+fn gaps_are_located_and_keep_the_lossless_tree() {
+    let source = "// lead\nconst view = <Panel title=\"x\">{value}</Panel>; // tail\n";
+    let tree = parse_tsx(source).unwrap();
+    let gap = lower_typescript(&tree).unwrap_err();
+    assert_eq!(gap.construct, "JSX/TSX");
+    assert_eq!(tree.preserve_source(), source);
+    assert_eq!(&source[gap.span.start..gap.span.end], "<");
+}
+
+#[test]
+fn decode_lanes_fallback_and_no_text_pipeline_are_deterministic() {
+    let source = "const answer: number = 42;";
+    let mut cx = sim_test_support::core_cx();
+    let limits = DecodeLimits::default();
+    let mut read = ReadCx {
+        cx: &mut cx,
+        codec: TYPESCRIPT_CODEC_ID,
+        read_policy: ReadPolicy::default(),
+        limits,
+    };
+    let mut budget = DecodeBudget::new(limits);
+    let plain = decode_typescript(&mut read, source, &mut budget).unwrap();
+    let located =
+        decode_typescript_located(&mut read, "fixture.ts", Input::Text(source.into())).unwrap();
+    let tree = decode_typescript_tree(&mut read, "tree.ts", Input::Text(source.into())).unwrap();
+    assert_eq!(located.expr, plain);
+    assert_eq!(
+        located.origin.unwrap().source,
+        SourceId("fixture.ts".into())
+    );
+    assert_eq!(tree.expr, plain);
+    let first = encode_typescript(&plain).unwrap();
+    let second = encode_typescript(&plain).unwrap();
+    assert_eq!(first, second);
+    let fallback = encode_typescript(&Expr::Bool(true)).unwrap();
+    let Output::Text(tagged) = fallback else {
+        panic!("fallback must be text")
+    };
+    assert!(tagged.starts_with("__sim_expr__("));
+    let mut fallback_budget = DecodeBudget::new(limits);
+    assert_eq!(
+        decode_typescript(&mut read, &tagged, &mut fallback_budget).unwrap(),
+        Expr::Bool(true)
+    );
 }
 ```

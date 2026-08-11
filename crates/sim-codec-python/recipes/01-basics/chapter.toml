@@ -1,0 +1,3 @@
+title = "Basics"
+summary = "Parse and preserve Python source without execution."
+recipes = ["lossless-source"]

@@ -57,6 +57,11 @@
 {"kind":"recipe","path":"crates/sim-codec-doc/recipes/01-basics/markdown-to-typst/recipe.toml"}
 {"kind":"recipe","path":"crates/sim-codec-doc/recipes/01-basics/markdown-to-typst/setup.siml"}
 {"kind":"recipe","path":"crates/sim-codec-doc/recipes/book.toml"}
+{"kind":"recipe","path":"crates/sim-codec-javascript/recipes/01-basics/chapter.toml"}
+{"kind":"recipe","path":"crates/sim-codec-javascript/recipes/01-basics/lossless-source/module.js"}
+{"kind":"recipe","path":"crates/sim-codec-javascript/recipes/01-basics/lossless-source/purpose.md"}
+{"kind":"recipe","path":"crates/sim-codec-javascript/recipes/01-basics/lossless-source/recipe.toml"}
+{"kind":"recipe","path":"crates/sim-codec-javascript/recipes/book.toml"}
 {"kind":"recipe","path":"crates/sim-codec-json/recipes/01-basics/chapter.toml"}
 {"kind":"recipe","path":"crates/sim-codec-json/recipes/01-basics/tagged-string/purpose.md"}
 {"kind":"recipe","path":"crates/sim-codec-json/recipes/01-basics/tagged-string/recipe.toml"}
@@ -83,6 +88,13 @@
 {"kind":"recipe","path":"crates/sim-codec-mcp/recipes/book.toml"}
 {"kind":"recipe","path":"crates/sim-codec-pratt/recipes/01-basics/chapter.toml"}
 {"kind":"recipe","path":"crates/sim-codec-pratt/recipes/book.toml"}
+{"kind":"recipe","path":"crates/sim-codec-python/recipes/01-basics/chapter.toml"}
+{"kind":"recipe","path":"crates/sim-codec-python/recipes/01-basics/lossless-source/purpose.md"}
+{"kind":"recipe","path":"crates/sim-codec-python/recipes/01-basics/lossless-source/recipe.toml"}
+{"kind":"recipe","path":"crates/sim-codec-python/recipes/01-basics/lossless-source/setup.py"}
+{"kind":"recipe","path":"crates/sim-codec-python/recipes/book.toml"}
+{"kind":"recipe","path":"crates/sim-codec-typescript/recipes/01-basics.md"}
+{"kind":"recipe","path":"crates/sim-codec-typescript/recipes/book.toml"}
 {"kind":"recipe","path":"crates/sim-codec/recipes/01-basics/chapter.toml"}
 {"kind":"recipe","path":"crates/sim-codec/recipes/01-basics/positions-and-limits/purpose.md"}
 {"kind":"recipe","path":"crates/sim-codec/recipes/01-basics/positions-and-limits/recipe.toml"}

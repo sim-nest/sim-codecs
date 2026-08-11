@@ -1,6 +1,6 @@
 [package]
 name = "sim-wasm-abi"
-version = "0.2.0"
+version = "0.3.0"
 edition = "2024"
 license = "MPL-2.0"
 description = "SIM workspace package for sim wasm abi."
@@ -15,7 +15,7 @@ audio = []
 model = []
 
 [dependencies]
-sim-codec-binary = { version = "0.2.0", path = "../sim-codec-binary" }
+sim-codec-binary = { version = "0.2.1", path = "../sim-codec-binary" }
 sim-kernel = { version = "0.2.0" }
 wasmi = "0.51.5"
 

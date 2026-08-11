@@ -64,6 +64,11 @@
     {
       "features": [],
       "group": "workspace",
+      "package": "sim-codec-javascript"
+    },
+    {
+      "features": [],
+      "group": "workspace",
       "package": "sim-codec-json"
     },
     {
@@ -100,6 +105,16 @@
       "features": [],
       "group": "workspace",
       "package": "sim-codec-pratt"
+    },
+    {
+      "features": [],
+      "group": "workspace",
+      "package": "sim-codec-python"
+    },
+    {
+      "features": [],
+      "group": "workspace",
+      "package": "sim-codec-typescript"
     },
     {
       "features": [],

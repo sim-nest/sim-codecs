@@ -82,7 +82,7 @@ claims_specimens = [
 [[feature]]
 id = "feature/sim-codecs/expression-syntax-grammars"
 title = "Expression syntax grammars"
-summary = "Read and write Lisp, JSON, Algol, Lua, Compare, and Bridge rendered expression grammars."
+summary = "Read and write Lisp, JSON, Algol, JavaScript, Lua, Python, Compare, and Bridge rendered expression grammars."
 owner = "crate/sim-codec-lisp"
 audiences = ["code", "framework"]
 guidance = "Use this row when finding an expression syntax grammar or adding a language-shaped codec surface."
@@ -99,6 +99,50 @@ claims_specimens = [
 ]
 supports = [
   "feature/sim-codecs/codec",
+]
+
+[[feature]]
+id = "feature/sim-codecs/python-source-frontend"
+title = "Bounded Python 3.14 source codec"
+summary = "Tokenize and parse frozen Python 3.14.6 syntax, lower every admitted source form to stable python/* expressions, and round-trip general SIM expressions through bounded plain, located, and tree lanes."
+owner = "crate/sim-codec-python"
+audiences = ["code", "framework"]
+guidance = "Use codec/python as the bounded source frontend for embedded, capability-scoped Python scripting, not as a CPython replacement. It provides layout, trivia, source origins, soft keywords, literals, f-strings, template strings, canonical expression encoding, and deterministic diagnostics. Parser coverage and direct-evaluation fidelity are independent; this codec never executes Python, imports CPython, or constructs bytecode, compiler IR, an optimizer, project graph, object model, or host-access fallback."
+claims_anchors = [
+  "anchor/crate/sim-codec-python",
+  "anchor/runtime-lib/sim-codec-python/python-codec-lib",
+]
+claims_surfaces = [
+  "syntax/python",
+]
+claims_specimens = [
+  "spec-test/sim-codecs/crates/sim-codec-python/src/tests",
+]
+supports = [
+  "feature/sim-codecs/codec",
+  "feature/sim-codecs/pratt",
+]
+
+[[feature]]
+id = "feature/sim-codecs/javascript-source-frontend"
+title = "Bounded ECMAScript 2026 codec"
+summary = "Tokenize and structurally parse frozen ECMAScript 2026 Script and Module goals, lower every accepted form to stable javascript/* expressions, and round-trip through plain, located, and tree codec lanes."
+owner = "crate/sim-codec-javascript"
+audiences = ["code", "framework"]
+guidance = "Use codec/javascript when JavaScript source needs bounded lexical goals, exact trivia and source origins, deterministic diagnostics, Script/Module distinction, canonical expression encoding, or public builders for a downstream syntax extension. Parser coverage and runtime-support markers are independent; this codec does not execute JavaScript or construct bytecode, control-flow IR, an optimizer, or a text-emission target."
+claims_anchors = [
+  "anchor/crate/sim-codec-javascript",
+  "anchor/runtime-lib/sim-codec-javascript/javascript-codec-lib",
+]
+claims_surfaces = [
+  "syntax/javascript",
+]
+claims_specimens = [
+  "spec-test/sim-codecs/crates/sim-codec-javascript/tests/conformance",
+]
+supports = [
+  "feature/sim-codecs/codec",
+  "feature/sim-codecs/pratt",
 ]
 
 [[feature]]
@@ -210,6 +254,23 @@ supports = [
   "feature/sim-codecs/codec",
 ]
 
+[[feature]]
+id = "feature/sim-codecs/typescript-syntax"
+title = "TypeScript and TSX syntax frontend"
+summary = "TypeScript notation; does not type-check. Represent bounded, lossless TypeScript 7.0.2 and TSX notation and directly erase the compiler-independent subset to JavaScript forms."
+owner = "crate/sim-codec-typescript"
+audiences = ["code", "framework"]
+guidance = "Use this frontend for TypeScript or TSX source identity and for direct JavaScript lowering only when erasure needs no checker, emitter transform, helper, target, or module-resolution decision; all other forms remain located, lossless evaluation gaps."
+claims_anchors = [
+  "anchor/crate/sim-codec-typescript",
+]
+claims_specimens = [
+  "spec-test/sim-codecs/crates/sim-codec-typescript/src/tests",
+]
+supports = [
+  "feature/sim-codecs/expression-syntax-grammars",
+]
+
 [[route]]
 id = "route/add-a-codec"
 task = "Add a codec"
@@ -235,6 +296,33 @@ steps = [
   { feature = "feature/sim-codecs/codec", why = "The codec row owns shared positions, limits, and loadable codec contracts." },
   { feature = "feature/sim-codecs/expression-syntax-grammars", why = "Expression syntax rows expose language and grammar subjects with round-trip contracts." },
   { feature = "feature/sim-codecs/pratt", why = "Operator-shaped languages reuse the Pratt syntax surface." },
+]
+
+[[route]]
+id = "route/parse-javascript-source"
+task = "Parse bounded JavaScript source"
+audiences = ["code", "framework"]
+steps = [
+  { feature = "feature/sim-codecs/javascript-source-frontend", why = "The JavaScript frontend owns bounded ECMAScript tokenization, structural parsing, source identity, and expression lowering." },
+  { specimen = "spec-test/sim-codecs/crates/sim-codec-javascript/tests/conformance", why = "The conformance specimen checks accepted syntax, stable lowering, round trips, and fail-closed limits." },
+]
+
+[[route]]
+id = "route/parse-python-source"
+task = "Parse bounded Python source"
+audiences = ["code", "framework"]
+steps = [
+  { feature = "feature/sim-codecs/python-source-frontend", why = "The Python frontend owns bounded Python tokenization, layout, source identity, and expression lowering." },
+  { specimen = "spec-test/sim-codecs/crates/sim-codec-python/src/tests", why = "The conformance specimen checks admitted syntax, stable lowering, round trips, and fail-closed limits." },
+]
+
+[[route]]
+id = "route/parse-typescript-notation"
+task = "Parse bounded TypeScript notation"
+audiences = ["code", "framework"]
+steps = [
+  { feature = "feature/sim-codecs/typescript-syntax", why = "The TypeScript frontend owns lossless notation and direct erasure of the compiler-independent subset." },
+  { specimen = "spec-test/sim-codecs/crates/sim-codec-typescript/src/tests", why = "The conformance specimen checks TypeScript and TSX parsing, lossless identity, and fail-closed erasure gaps." },
 ]
 
 [[route]]

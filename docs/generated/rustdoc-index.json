@@ -86,6 +86,13 @@
       "summary": "SIM Index codec over the shared IndexDoc graph."
     },
     {
+      "crate_name": "sim_codec_javascript",
+      "group": "workspace",
+      "manifest": "crates/sim-codec-javascript/Cargo.toml",
+      "package": "sim-codec-javascript",
+      "summary": "Bounded, lossless ECMAScript 2026 Script and Module frontend."
+    },
+    {
       "crate_name": "sim_codec_json",
       "group": "workspace",
       "manifest": "crates/sim-codec-json/Cargo.toml",
@@ -119,6 +126,20 @@
       "manifest": "crates/sim-codec-pratt/Cargo.toml",
       "package": "sim-codec-pratt",
       "summary": "Shared Pratt parser substrate for SIM codecs."
+    },
+    {
+      "crate_name": "sim_codec_python",
+      "group": "workspace",
+      "manifest": "crates/sim-codec-python/Cargo.toml",
+      "package": "sim-codec-python",
+      "summary": "Bounded, lossless Python 3.14 syntax and general-purpose codec."
+    },
+    {
+      "crate_name": "sim_codec_typescript",
+      "group": "workspace",
+      "manifest": "crates/sim-codec-typescript/Cargo.toml",
+      "package": "sim-codec-typescript",
+      "summary": "Bounded, lossless TypeScript 7 and TSX syntax layered on JavaScript."
     },
     {
       "crate_name": "sim_test_support",
