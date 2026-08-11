@@ -1,6 +1,6 @@
 [package]
 name = "sim-codec-config"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2024"
 license = "MPL-2.0"
 description = "SIM config codec for per-library and single-file config maps."
@@ -10,7 +10,7 @@ repository = "https://github.com/sim-nest/sim-codecs"
 homepage = "https://github.com/sim-nest/sim-codecs"
 
 [dependencies]
-sim-codec = { version = "0.1.7", path = "../sim-codec" }
+sim-codec = { version = "0.1.8", path = "../sim-codec" }
 sim-cookbook = { version = "0.2.0" }
 sim-kernel = { version = "0.2.0" }
 

@@ -1,6 +1,6 @@
 [package]
 name = "sim-codec-bitwise"
-version = "0.1.4"
+version = "0.1.5"
 edition = "2024"
 license = "MPL-2.0"
 description = "SIM workspace package for sim codec bitwise."
@@ -11,7 +11,7 @@ homepage = "https://github.com/sim-nest/sim-codecs"
 
 [dependencies]
 sim-cookbook = { version = "0.2.0" }
-sim-codec = { version = "0.1.7", path = "../sim-codec" }
+sim-codec = { version = "0.1.8", path = "../sim-codec" }
 sim-kernel = { version = "0.2.0" }
 sim-value = { version = "0.2.0" }
 

@@ -1,6 +1,6 @@
 [package]
 name = "sim-codec-index"
-version = "0.1.1"
+version = "0.2.0"
 edition = "2024"
 license = "MPL-2.0"
 description = "SIM Index codec for checked s-expression and JSON index graph forms."
@@ -15,9 +15,9 @@ reason = "The index codec is taught through rustdoc examples and fail-closed tes
 
 [dependencies]
 serde_json = "1"
-sim-codec = { version = "0.1.7", path = "../sim-codec" }
-sim-codec-json = { version = "0.2.0", path = "../sim-codec-json" }
-sim-codec-lisp = { version = "0.2.0", path = "../sim-codec-lisp" }
+sim-codec = { version = "0.1.8", path = "../sim-codec" }
+sim-codec-json = { version = "0.2.1", path = "../sim-codec-json" }
+sim-codec-lisp = { version = "0.2.1", path = "../sim-codec-lisp" }
 sim-index-core = { version = "0.1.0", git = "https://github.com/sim-nest/sim-foundation", rev = "d11442dccfb66699bb644f7c1074be19449112c8" }
 sim-kernel = { version = "0.2.0" }
 sim-value = "0.2.0"
