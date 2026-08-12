@@ -1,0 +1,8 @@
+id = "typescript-lossless-source"
+title = "Preserve TypeScript source"
+codec = "typescript"
+setup = "setup.ts"
+purpose = "purpose.md"
+order = 10
+tags = ["codec", "typescript", "source", "lossless", "sandbox-descriptor"]
+requires = ["codec/typescript"]

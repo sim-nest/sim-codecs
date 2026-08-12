@@ -1,3 +1,4 @@
+book = "codec/javascript"
 title = "ECMAScript 2026 Source Frontend"
 summary = "Bounded, lossless JavaScript source parsing."
 chapters = ["01-basics"]

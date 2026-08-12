@@ -1,3 +1,4 @@
+book = "codec/python"
 title = "Python 3.14 Source Frontend"
 summary = "Bounded lossless Python source parsing."
 chapters = ["01-basics"]

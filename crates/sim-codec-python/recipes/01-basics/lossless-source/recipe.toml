@@ -1,4 +1,10 @@
 id = "python-lossless-source"
 title = "Preserve Python source"
+codec = "python"
+setup = "setup.py"
+purpose = "purpose.md"
+order = 10
 summary = "A Python 3.14 source specimen retained byte-for-byte by the syntax tree."
 files = ["setup.py"]
+tags = ["codec", "python", "source", "lossless", "sandbox-descriptor"]
+requires = ["codec/python"]
