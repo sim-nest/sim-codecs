@@ -74,6 +74,12 @@
       "summary": "Document decoding and provenance-preserving chunk descriptors."
     },
     {
+      "id": "cookbook/codec/javascript",
+      "kind": "cookbook-recipe",
+      "owner": "sim-codec-javascript",
+      "summary": "Bounded, lossless JavaScript source parsing."
+    },
+    {
       "id": "cookbook/codec/json",
       "kind": "cookbook-recipe",
       "owner": "sim-codec-json",
@@ -104,19 +110,13 @@
       "summary": "Shared Pratt parsing substrate for codec lexers."
     },
     {
-      "id": "cookbook/sim-codec-javascript",
-      "kind": "cookbook-recipe",
-      "owner": "sim-codec-javascript",
-      "summary": "Bounded, lossless JavaScript source parsing."
-    },
-    {
-      "id": "cookbook/sim-codec-python",
+      "id": "cookbook/codec/python",
       "kind": "cookbook-recipe",
       "owner": "sim-codec-python",
       "summary": "Bounded lossless Python source parsing."
     },
     {
-      "id": "cookbook/sim-codec-typescript",
+      "id": "cookbook/codec/typescript",
       "kind": "cookbook-recipe",
       "owner": "sim-codec-typescript",
       "summary": "Bounded, lossless TypeScript and TSX source parsing."
