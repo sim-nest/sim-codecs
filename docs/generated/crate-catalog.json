@@ -1,6 +1,6 @@
 {
   "generator": "xtask crate-catalog v1",
-  "package_count": 20,
+  "package_count": 23,
   "packages": [
     {
       "description": "SIM workspace package for sim codec algol.",
@@ -147,6 +147,19 @@
       ]
     },
     {
+      "description": "Bounded, lossless ECMAScript 2026 source frontend for SIM.",
+      "generated_readme": false,
+      "manifest": "crates/sim-codec-javascript/Cargo.toml",
+      "name": "sim-codec-javascript",
+      "publish": "true",
+      "readme": "crates/sim-codec-javascript/README.md",
+      "root": "crates/sim-codec-javascript",
+      "target_kinds": [
+        "lib",
+        "test"
+      ]
+    },
+    {
       "description": "SIM workspace package for sim codec json.",
       "generated_readme": true,
       "manifest": "crates/sim-codec-json/Cargo.toml",
@@ -210,6 +223,31 @@
       "root": "crates/sim-codec-pratt",
       "target_kinds": [
         "custom-build",
+        "lib"
+      ]
+    },
+    {
+      "description": "Bounded, lossless Python 3.14 source frontend for SIM.",
+      "generated_readme": false,
+      "manifest": "crates/sim-codec-python/Cargo.toml",
+      "name": "sim-codec-python",
+      "publish": "true",
+      "readme": "crates/sim-codec-python/README.md",
+      "root": "crates/sim-codec-python",
+      "target_kinds": [
+        "custom-build",
+        "lib"
+      ]
+    },
+    {
+      "description": "Bounded, lossless TypeScript 7 and TSX syntax frontend for SIM.",
+      "generated_readme": false,
+      "manifest": "crates/sim-codec-typescript/Cargo.toml",
+      "name": "sim-codec-typescript",
+      "publish": "true",
+      "readme": "crates/sim-codec-typescript/README.md",
+      "root": "crates/sim-codec-typescript",
+      "target_kinds": [
         "lib"
       ]
     },

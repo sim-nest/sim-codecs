@@ -17,11 +17,14 @@ Generated from Cargo metadata by `xtask crate-catalog v1`.
 | `sim-codec-config` | `true` | `custom-build, lib` | SIM config codec for per-library and single-file config maps. |
 | `sim-codec-doc` | `true` | `custom-build, lib, test` | Markup document codec backends for SIM. |
 | `sim-codec-index` | `true` | `lib` | SIM Index codec for checked s-expression and JSON index graph forms. |
+| `sim-codec-javascript` | `true` | `lib, test` | Bounded, lossless ECMAScript 2026 source frontend for SIM. |
 | `sim-codec-json` | `true` | `custom-build, lib, test` | SIM workspace package for sim codec json. |
 | `sim-codec-lisp` | `true` | `cdylib, custom-build, rlib` | SIM workspace package for sim codec lisp. |
 | `sim-codec-lua` | `true` | `custom-build, lib` | Lua chunk codec with expression, located, and tree round-trip lanes. |
 | `sim-codec-mcp` | `true` | `custom-build, lib` | MCP JSON-RPC envelope codec for SIM. |
 | `sim-codec-pratt` | `true` | `custom-build, lib` | Shared Pratt expression parser substrate for SIM codecs. |
+| `sim-codec-python` | `true` | `custom-build, lib` | Bounded, lossless Python 3.14 source frontend for SIM. |
+| `sim-codec-typescript` | `true` | `lib` | Bounded, lossless TypeScript 7 and TSX syntax frontend for SIM. |
 | `sim-codec` | `true` | `custom-build, lib` | SIM workspace package for sim codec. |
 | `sim-test-support` | `true` | `lib` | Shared test harness for SIM crates. |
 | `sim-wasm-abi` | `true` | `lib` | SIM workspace package for sim wasm abi. |
