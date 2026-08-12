@@ -1,4 +1,10 @@
 id = "javascript-lossless-source"
 title = "Preserve JavaScript source"
+codec = "javascript"
+setup = "module.js"
+purpose = "purpose.md"
+order = 10
 summary = "An ECMAScript 2026 module retained byte-for-byte by the syntax tree."
 files = ["module.js"]
+tags = ["codec", "javascript", "source", "lossless", "sandbox-descriptor"]
+requires = ["codec/javascript"]

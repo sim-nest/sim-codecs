@@ -74,6 +74,12 @@
       "summary": "Document decoding and provenance-preserving chunk descriptors."
     },
     {
+      "id": "cookbook/codec/javascript",
+      "kind": "cookbook-recipe",
+      "owner": "sim-codec-javascript",
+      "summary": "Bounded, lossless JavaScript source parsing."
+    },
+    {
       "id": "cookbook/codec/json",
       "kind": "cookbook-recipe",
       "owner": "sim-codec-json",
@@ -104,19 +110,13 @@
       "summary": "Shared Pratt parsing substrate for codec lexers."
     },
     {
-      "id": "cookbook/sim-codec-javascript",
-      "kind": "cookbook-recipe",
-      "owner": "sim-codec-javascript",
-      "summary": "Bounded, lossless JavaScript source parsing."
-    },
-    {
-      "id": "cookbook/sim-codec-python",
+      "id": "cookbook/codec/python",
       "kind": "cookbook-recipe",
       "owner": "sim-codec-python",
       "summary": "Bounded lossless Python source parsing."
     },
     {
-      "id": "cookbook/sim-codec-typescript",
+      "id": "cookbook/codec/typescript",
       "kind": "cookbook-recipe",
       "owner": "sim-codec-typescript",
       "summary": "Bounded, lossless TypeScript and TSX source parsing."
@@ -1540,10 +1540,10 @@
     "generated_by": "cargo run -p xtask -- simdoc",
     "generation_timestamp": "2026-07-16T02:55:26+02:00",
     "generator": "xtask repo-contract v1",
-    "git_commit": "98b24cf72d3d26730988b7367859d8dfc9f9220a",
+    "git_commit": "35012f312e3dce8eb15bfe23bad2ce15751b9f22",
     "repo": "sim-codecs",
     "schema": "sim.provenance.v1",
-    "source_commit": "98b24cf72d3d26730988b7367859d8dfc9f9220a",
+    "source_commit": "35012f312e3dce8eb15bfe23bad2ce15751b9f22",
     "source_remote": "https://github.com/sim-nest/sim-codecs",
     "validation_commands": [
       "cargo fmt --all --check",
@@ -1556,9 +1556,9 @@
       "cargo run -p xtask -- validation-matrix --check --repo .",
       "cargo run -p xtask -- crate-catalog --check --repo ."
     ],
-    "workspace_hash": "21adca9a090ee67c",
+    "workspace_hash": "e6fde1249870e9c7",
     "workspace_hash_algorithm": "fnv1a64",
-    "workspace_hash_input_count": 337,
+    "workspace_hash_input_count": 338,
     "workspace_hash_inputs": [
       "Cargo.toml",
       "crates/sim-codec/Cargo.toml",
@@ -1874,6 +1874,7 @@
       "crates/sim-codec-python/src/tests.rs",
       "crates/sim-codec-python/src/types.rs",
       "crates/sim-codec-typescript/Cargo.toml",
+      "crates/sim-codec-typescript/recipes/01-basics/lossless-source/recipe.toml",
       "crates/sim-codec-typescript/recipes/book.toml",
       "crates/sim-codec-typescript/src/lib.rs",
       "crates/sim-codec-typescript/src/lower.rs",
@@ -2146,16 +2147,16 @@
       "title": "Document Codec"
     },
     {
-      "book": "sim-codec-javascript",
+      "book": "codec/javascript",
       "book_toml": "crates/sim-codec-javascript/recipes/book.toml",
-      "card_id": "cookbook/sim-codec-javascript",
+      "card_id": "cookbook/codec/javascript",
       "group": "workspace",
       "package": "sim-codec-javascript",
       "recipe_count": 1,
       "recipes": [
         {
-          "card_id": "sim-codec-javascript/01-basics/javascript-lossless-source",
-          "codec": "",
+          "card_id": "codec/javascript/01-basics/javascript-lossless-source",
+          "codec": "javascript",
           "id": "javascript-lossless-source",
           "package": "sim-codec-javascript",
           "recipe_toml": "crates/sim-codec-javascript/recipes/01-basics/lossless-source/recipe.toml",
@@ -2265,16 +2266,16 @@
       "title": "Pratt Codec Substrate"
     },
     {
-      "book": "sim-codec-python",
+      "book": "codec/python",
       "book_toml": "crates/sim-codec-python/recipes/book.toml",
-      "card_id": "cookbook/sim-codec-python",
+      "card_id": "cookbook/codec/python",
       "group": "workspace",
       "package": "sim-codec-python",
       "recipe_count": 1,
       "recipes": [
         {
-          "card_id": "sim-codec-python/01-basics/python-lossless-source",
-          "codec": "",
+          "card_id": "codec/python/01-basics/python-lossless-source",
+          "codec": "python",
           "id": "python-lossless-source",
           "package": "sim-codec-python",
           "recipe_toml": "crates/sim-codec-python/recipes/01-basics/lossless-source/recipe.toml",
@@ -2285,13 +2286,22 @@
       "title": "Python 3.14 Source Frontend"
     },
     {
-      "book": "sim-codec-typescript",
+      "book": "codec/typescript",
       "book_toml": "crates/sim-codec-typescript/recipes/book.toml",
-      "card_id": "cookbook/sim-codec-typescript",
+      "card_id": "cookbook/codec/typescript",
       "group": "workspace",
       "package": "sim-codec-typescript",
-      "recipe_count": 0,
-      "recipes": [],
+      "recipe_count": 1,
+      "recipes": [
+        {
+          "card_id": "codec/typescript/01-basics/typescript-lossless-source",
+          "codec": "typescript",
+          "id": "typescript-lossless-source",
+          "package": "sim-codec-typescript",
+          "recipe_toml": "crates/sim-codec-typescript/recipes/01-basics/lossless-source/recipe.toml",
+          "title": "Preserve TypeScript source"
+        }
+      ],
       "summary": "Bounded, lossless TypeScript and TSX source parsing.",
       "title": "TypeScript 7 Source Frontend"
     }
