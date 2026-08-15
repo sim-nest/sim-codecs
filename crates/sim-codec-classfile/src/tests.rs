@@ -5,7 +5,9 @@ use crate::{
     ByteErrorKind, ByteReader, ByteWriter, ConstantPool, ConstantPoolErrorKind, ConstantSlot,
     decode_modified_utf8, encode_modified_utf8,
 };
+use crate::{ClassShell, ShellBudget, ShellErrorKind};
 use crate::{FIXTURE_EXPECTATIONS, SCOPE};
+use sim_kernel::{CodecId, SourceId};
 use sim_text::CodeUnitString;
 
 const RETAINED_FIXTURES: &[(&str, &[u8])] = &[
@@ -215,4 +217,86 @@ fn constant_version_bounds_are_located() {
     let error = ConstantPool::decode(&mut ByteReader::new(&bytes, bytes.len()), 52).unwrap_err();
     assert_eq!(error.kind, ConstantPoolErrorKind::Version);
     assert_eq!(error.index, 1);
+}
+
+fn fixture_shell(bytes: &[u8]) -> ClassShell {
+    ClassShell::decode(
+        bytes,
+        bytes.len(),
+        ShellBudget {
+            interfaces: 64,
+            fields: 256,
+            methods: 256,
+            attributes: 1_024,
+            attribute_bytes: bytes.len(),
+        },
+        CodecId(73),
+        SourceId("fixture.class".into()),
+    )
+    .unwrap()
+}
+
+#[test]
+fn invalid_interface_index_is_structural_data_until_validation() {
+    let mut shell = fixture_shell(include_bytes!("../fixtures/positive.class"));
+    shell.interfaces.push(u16::MAX);
+    let error = shell.validate().unwrap_err();
+    assert_eq!(error.kind, ShellErrorKind::InvalidIndex);
+    assert_eq!(error.index, Some(u16::MAX));
+    assert_eq!(error.path, "interfaces[0]");
+    assert!(error.message.contains("65535"));
+}
+
+#[test]
+fn method_attribute_order_and_declaration_origins_are_exact() {
+    let bytes = vec![
+        0xca, 0xfe, 0xba, 0xbe, 0, 0, 0, 52, 0, 9, 1, 0, 1, b'C', 7, 0, 1, 1, 0, 16, b'j', b'a',
+        b'v', b'a', b'/', b'l', b'a', b'n', b'g', b'/', b'O', b'b', b'j', b'e', b'c', b't', 7, 0,
+        3, 1, 0, 1, b'm', 1, 0, 3, b'(', b')', b'V', 1, 0, 1, b'A', 1, 0, 1, b'B', 0, 0x21, 0, 2,
+        0, 4, 0, 0, 0, 0, 0, 1, 0, 1, 0, 5, 0, 6, 0, 2, 0, 7, 0, 0, 0, 1, 0xaa, 0, 8, 0, 0, 0, 2,
+        0xbb, 0xcc, 0, 0,
+    ];
+    let shell = fixture_shell(&bytes);
+    shell.validate().unwrap();
+    let method = &shell.methods[0];
+    assert_eq!(
+        method
+            .attributes
+            .iter()
+            .map(|attribute| attribute.name_index)
+            .collect::<Vec<_>>(),
+        [7, 8]
+    );
+    assert_eq!(method.attributes[0].bytes, [0xaa]);
+    assert_eq!(method.attributes[1].bytes, [0xbb, 0xcc]);
+    assert!(method.attributes[0].origin.span.end <= method.attributes[1].origin.span.start);
+    assert!(method.origin.span.start < method.origin.span.end);
+    assert_eq!(method.origin.source.0, "fixture.class");
+    assert_eq!(
+        shell.origin.span,
+        sim_kernel::Span {
+            start: 0,
+            end: bytes.len()
+        }
+    );
+}
+
+#[test]
+fn aggregate_attribute_budget_fails_before_retaining_excess() {
+    let bytes = include_bytes!("../fixtures/positive.class");
+    let error = ClassShell::decode(
+        bytes,
+        bytes.len(),
+        ShellBudget {
+            interfaces: 64,
+            fields: 256,
+            methods: 256,
+            attributes: 1_024,
+            attribute_bytes: 0,
+        },
+        CodecId(73),
+        SourceId("fixture.class".into()),
+    )
+    .unwrap_err();
+    assert_eq!(error.kind, ShellErrorKind::Budget);
 }
