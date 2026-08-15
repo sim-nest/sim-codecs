@@ -6,6 +6,7 @@
 #![forbid(unsafe_code)]
 #![deny(missing_docs)]
 
+mod attribute;
 mod bytes;
 mod constant;
 mod encode;
@@ -14,6 +15,10 @@ mod modified_utf8;
 mod opcode_generated;
 mod shell;
 
+pub use attribute::{
+    AttributeError, AttributeErrorKind, BootstrapMethod, BootstrapMethodsAttribute, CodeAttribute,
+    CodeException, NestedAttribute, StackMapFrame, StackMapTableAttribute, VerificationType,
+};
 pub use bytes::{ByteError, ByteErrorKind, ByteReader, ByteWriter};
 pub use constant::{
     Constant, ConstantPool, ConstantPoolError, ConstantPoolErrorKind, ConstantSlot,
