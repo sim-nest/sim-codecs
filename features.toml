@@ -80,6 +80,24 @@ claims_specimens = [
 ]
 
 [[feature]]
+id = "feature/sim-codecs/classfile-inspection"
+title = "JVM-free classfile inspection"
+summary = "Decode and re-encode retained JVM classfiles while browsing bounded constants, attributes, and byte-located instructions without starting a JVM."
+owner = "crate/sim-codec-classfile"
+audiences = ["code", "framework"]
+guidance = "Use codec/classfile to inspect or preserve classfile structure as inert data. Instruction browse rows carry absolute byte offsets back into retained bytes; execution, linking, verification, and JVM startup are deliberately outside this codec."
+claims_anchors = [
+  "anchor/crate/sim-codec-classfile",
+  "anchor/runtime-lib/sim-codec-classfile/classfile-codec-lib",
+]
+claims_specimens = [
+  "recipe/sim-codecs/crates/sim-codec-classfile/01-inspection/retained-classfile",
+]
+supports = [
+  "feature/sim-codecs/codec",
+]
+
+[[feature]]
 id = "feature/sim-codecs/expression-syntax-grammars"
 title = "Expression syntax grammars"
 summary = "Read and write Lisp, JSON, Algol, JavaScript, Lua, Python, Compare, and Bridge rendered expression grammars."

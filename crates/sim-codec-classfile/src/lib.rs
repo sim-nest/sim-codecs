@@ -13,6 +13,7 @@ mod encode;
 mod instruction;
 mod modified_utf8;
 mod opcode_generated;
+mod runtime;
 mod shell;
 
 pub use attribute::{
@@ -40,6 +41,7 @@ pub use instruction::{
 };
 pub use modified_utf8::{decode_modified_utf8, encode_modified_utf8};
 pub use opcode_generated::{OPCODES, Opcode, OpcodeMetadata};
+pub use runtime::{ClassfileCodec, ClassfileCodecLib, inspect_classfile};
 pub use shell::{
     AttributeLocation, AttributeOwner, AttributeShell, ClassIndex, ClassShell, EditReport,
     FieldShell, LayoutInvalidation, MethodShell, ShellBudget, ShellError, ShellErrorKind,
@@ -51,6 +53,10 @@ pub const SCOPE: &str = include_str!("../scope.toml");
 
 /// Independently authored expectations for every retained fixture.
 pub const FIXTURE_EXPECTATIONS: &str = include_str!("../fixtures/expectations.toml");
+
+/// Cookbook recipes embedded for runtime help and browse surfaces.
+pub static RECIPES: sim_cookbook::EmbeddedDir =
+    include!(concat!(env!("OUT_DIR"), "/cookbook_recipes.rs"));
 
 #[cfg(test)]
 mod tests;
