@@ -9,6 +9,7 @@
 mod bytes;
 mod constant;
 mod modified_utf8;
+mod opcode_generated;
 mod shell;
 
 pub use bytes::{ByteError, ByteErrorKind, ByteReader, ByteWriter};
@@ -16,6 +17,7 @@ pub use constant::{
     Constant, ConstantPool, ConstantPoolError, ConstantPoolErrorKind, ConstantSlot,
 };
 pub use modified_utf8::{decode_modified_utf8, encode_modified_utf8};
+pub use opcode_generated::{OPCODES, Opcode, OpcodeMetadata};
 pub use shell::{
     AttributeShell, ClassIndex, ClassShell, FieldShell, MethodShell, ShellBudget, ShellError,
     ShellErrorKind, Utf8Index, ValidatedClassShell, ValidatedFieldShell, ValidatedMethodShell,
