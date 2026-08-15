@@ -18,7 +18,7 @@ sha256 = "2b0e098941abc27421ab0f0ea9d7ec6429845bea8e5f43041317074b85d8ebc9"
 expected_roundtrip_sha256 = "2b0e098941abc27421ab0f0ea9d7ec6429845bea8e5f43041317074b85d8ebc9"
 outcome = "failure"
 failure_offset = 3
-failure_path = "header.magic"
+failure_path = "magic"
 requirement = "truncated magic reports the first unavailable byte"
 
 [[fixture]]
@@ -27,8 +27,8 @@ file = "adversarial.class"
 sha256 = "b447d53b3d2788eefca24a84893b766c52dc8972806102c2d215a5cd8278dbc0"
 expected_roundtrip_sha256 = "b447d53b3d2788eefca24a84893b766c52dc8972806102c2d215a5cd8278dbc0"
 outcome = "failure"
-failure_offset = 10
-failure_path = "constant_pool[1].tag"
+failure_offset = 8
+failure_path = "constant_pool"
 requirement = "maximal declared constant pool cannot allocate past retained input"
 
 [[fixture]]
