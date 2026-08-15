@@ -143,6 +143,16 @@ fn public_tree_is_dependency_neutral_and_bounded() {
 }
 
 #[test]
+fn public_tree_owns_f64_number_validation_and_rendering() {
+    let codec = sim_kernel::CodecId(42);
+    let number = JsonTree::number_from_f64(codec, 2.0).unwrap();
+    assert_eq!(number.number_as_f64(codec).unwrap(), 2.0);
+    assert_eq!(render_json(codec, &number).unwrap(), "2.0");
+    assert!(JsonTree::number_from_f64(codec, f64::NAN).is_err());
+    assert!(JsonTree::number_from_f64(codec, f64::INFINITY).is_err());
+}
+
+#[test]
 fn call_roundtrips() {
     let mut cx = cx();
     let expr = Expr::Call {

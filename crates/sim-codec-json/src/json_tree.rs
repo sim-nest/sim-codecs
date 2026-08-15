@@ -47,6 +47,26 @@ pub fn render_json(codec: CodecId, tree: &JsonTree) -> Result<String> {
 }
 
 impl JsonTree {
+    /// Constructs a JSON number from a finite binary floating-point value.
+    ///
+    /// Number validation and canonical text selection remain owned by the JSON
+    /// codec, so guest policies do not need their own number serializer.
+    pub fn number_from_f64(codec: CodecId, value: f64) -> Result<Self> {
+        Number::from_f64(value)
+            .map(|number| Self::Number(number.to_string()))
+            .ok_or_else(|| json_error(codec, "non-finite number"))
+    }
+
+    /// Reads a JSON number as a binary floating-point value.
+    pub fn number_as_f64(&self, codec: CodecId) -> Result<f64> {
+        let Self::Number(value) = self else {
+            return Err(json_error(codec, "JSON value is not a number"));
+        };
+        value
+            .parse::<f64>()
+            .map_err(|error| json_error(codec, error))
+    }
+
     pub(crate) fn from_json_value(value: Value) -> Self {
         match value {
             Value::Null => Self::Null,
