@@ -8,6 +8,7 @@
 
 mod bytes;
 mod constant;
+mod instruction;
 mod modified_utf8;
 mod opcode_generated;
 mod shell;
@@ -15,6 +16,10 @@ mod shell;
 pub use bytes::{ByteError, ByteErrorKind, ByteReader, ByteWriter};
 pub use constant::{
     Constant, ConstantPool, ConstantPoolError, ConstantPoolErrorKind, ConstantSlot,
+};
+pub use instruction::{
+    DecodedCode, Instruction, InstructionError, InstructionErrorKind, InstructionId,
+    InstructionOperand, LocatedInstruction, decode_instructions,
 };
 pub use modified_utf8::{decode_modified_utf8, encode_modified_utf8};
 pub use opcode_generated::{OPCODES, Opcode, OpcodeMetadata};
