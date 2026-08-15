@@ -1,5 +1,9 @@
 # sim-codec-classfile
 
+The structured attributes in this crate are lossless classfile data only. Debug,
+nest, record, sealed-class, package, and module metadata do not perform runtime
+resolution or lookup and carry no runtime meaning here.
+
 This crate will provide the bounded, lossless JVM classfile codec. Its parser is
 deliberately absent in the scope-freeze phase. `scope.toml` is the machine-readable
 format and reuse contract; `fixtures/expectations.toml` freezes independently
@@ -16,4 +20,3 @@ authored outcomes against retained classfile bytes before decoding exists.
   values that cannot be represented as Unicode scalar strings.
 - No existing crate owns JVM classfile structure, constant-pool semantics, or
   classfile attribute preservation, so this crate is the new format owner.
-

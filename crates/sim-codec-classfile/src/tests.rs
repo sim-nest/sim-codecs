@@ -2,8 +2,8 @@ use sha2::{Digest, Sha256};
 use std::collections::BTreeSet;
 
 use crate::{
-    ByteErrorKind, ByteReader, ByteWriter, ConstantPool, ConstantPoolErrorKind, ConstantSlot,
-    decode_modified_utf8, encode_modified_utf8,
+    ByteErrorKind, ByteReader, ByteWriter, Constant, ConstantPool, ConstantPoolErrorKind,
+    ConstantSlot, ModuleAttribute, decode_modified_utf8, encode_modified_utf8,
 };
 use crate::{ClassShell, ShellBudget, ShellErrorKind};
 use crate::{FIXTURE_EXPECTATIONS, SCOPE};
@@ -299,4 +299,41 @@ fn aggregate_attribute_budget_fails_before_retaining_excess() {
     )
     .unwrap_err();
     assert_eq!(error.kind, ShellErrorKind::Budget);
+}
+
+#[test]
+fn module_info_structured_payload_round_trips_byte_identically() {
+    let shell = fixture_shell(include_bytes!("../fixtures/module-info.class"));
+    let module_name_index = shell
+        .constant_pool
+        .slots()
+        .iter()
+        .position(|slot| match slot {
+            ConstantSlot::Entry(Constant::Utf8(value)) => {
+                value.as_code_units() == "Module".encode_utf16().collect::<Vec<_>>()
+            }
+            _ => false,
+        })
+        .expect("module-info fixture has a Module attribute") as u16;
+    let payload = &shell
+        .attributes
+        .iter()
+        .find(|attribute| attribute.name_index == module_name_index)
+        .expect("module-info fixture has class-level Module metadata")
+        .bytes;
+
+    let module = ModuleAttribute::decode(&mut ByteReader::new(payload, payload.len())).unwrap();
+    assert_eq!(module.encode(payload.len()).unwrap(), *payload);
+}
+
+#[test]
+fn standard_attribute_version_table_covers_modern_metadata() {
+    assert_eq!(crate::standard_attribute_min_major("Module"), Some(53));
+    assert_eq!(crate::standard_attribute_min_major("NestMembers"), Some(55));
+    assert_eq!(crate::standard_attribute_min_major("Record"), Some(60));
+    assert_eq!(
+        crate::standard_attribute_min_major("PermittedSubclasses"),
+        Some(61)
+    );
+    assert_eq!(crate::standard_attribute_min_major("VendorAttribute"), None);
 }

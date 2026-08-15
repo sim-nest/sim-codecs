@@ -1,9 +1,9 @@
 //! Structured JVM attributes whose encoded order and indices are semantically significant.
 //!
 //! This module validates binary format and local static constraints only. It deliberately does
-//! not perform bytecode type verification or resolve bootstrap methods: stack-map types,
-//! uninitialized-variable offsets, constant-pool indices, and bootstrap arguments remain faithful
-//! inputs for the verifier and linker introduced by later layers.
+//! not perform bytecode type verification, name resolution, module lookup, or bootstrap-method
+//! resolution. Every constant-pool index and module directive remains faithful input for later
+//! verifier, linker, and runtime layers; none of the structures in this module has runtime meaning.
 
 use core::fmt;
 
@@ -83,6 +83,341 @@ fn count(value: usize, what: &str) -> Result<u16, AttributeError> {
             format!("too many {what}"),
         )
     })
+}
+
+fn read_u2s(reader: &mut ByteReader<'_>, what: &str) -> Result<Vec<u16>, AttributeError> {
+    let n = usize::from(reader.read_u2()?);
+    reader.preflight_allocation(n)?;
+    let mut values = Vec::with_capacity(n);
+    for _ in 0..n {
+        values.push(reader.read_u2()?);
+    }
+    finish(reader)?;
+    let _ = what;
+    Ok(values)
+}
+
+fn write_u2s(values: &[u16], budget: usize, what: &str) -> Result<Vec<u8>, AttributeError> {
+    let mut out = ByteWriter::new(budget);
+    out.write_u2(count(values.len(), what)?)?;
+    for value in values {
+        out.write_u2(*value)?;
+    }
+    Ok(out.into_bytes())
+}
+
+/// A standard attribute whose payload is exactly one unresolved constant-pool index.
+///
+/// This represents `ConstantValue`, `Signature`, `SourceFile`, `NestHost`, and
+/// `ModuleMainClass` metadata.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct IndexAttribute {
+    /// The unresolved constant-pool index.
+    pub index: u16,
+}
+
+impl IndexAttribute {
+    /// Decode the exact two-byte payload.
+    pub fn decode(reader: &mut ByteReader<'_>) -> Result<Self, AttributeError> {
+        let index = reader.read_u2()?;
+        finish(reader)?;
+        Ok(Self { index })
+    }
+
+    /// Encode the index without inspecting its target.
+    pub fn encode(&self, budget: usize) -> Result<Vec<u8>, AttributeError> {
+        let mut out = ByteWriter::new(budget);
+        out.write_u2(self.index)?;
+        Ok(out.into_bytes())
+    }
+}
+
+/// A marker attribute (`Synthetic` or `Deprecated`), whose payload must be empty.
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
+pub struct MarkerAttribute;
+
+impl MarkerAttribute {
+    /// Accept only an empty bounded payload.
+    pub fn decode(reader: &mut ByteReader<'_>) -> Result<Self, AttributeError> {
+        finish(reader)?;
+        Ok(Self)
+    }
+
+    /// Encode the empty payload.
+    pub fn encode(&self, budget: usize) -> Result<Vec<u8>, AttributeError> {
+        Ok(ByteWriter::new(budget).into_bytes())
+    }
+}
+
+/// An opaque byte payload, used by `SourceDebugExtension`.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct ByteAttribute {
+    /// Exact bytes, without text decoding or newline normalization.
+    pub bytes: Vec<u8>,
+}
+
+impl ByteAttribute {
+    /// Retain all remaining bytes.
+    pub fn decode(reader: &mut ByteReader<'_>) -> Result<Self, AttributeError> {
+        let bytes = reader.take(reader.remaining())?.to_vec();
+        Ok(Self { bytes })
+    }
+
+    /// Encode the retained bytes exactly.
+    pub fn encode(&self, budget: usize) -> Result<Vec<u8>, AttributeError> {
+        let mut out = ByteWriter::new(budget);
+        out.write_bytes(&self.bytes)?;
+        Ok(out.into_bytes())
+    }
+}
+
+/// An ordered list of unresolved indices (`Exceptions`, `NestMembers`,
+/// `PermittedSubclasses`, or `ModulePackages`).
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct IndexListAttribute {
+    /// Indices in classfile order.
+    pub indices: Vec<u16>,
+}
+
+impl IndexListAttribute {
+    /// Decode an unsigned-short-counted index list.
+    pub fn decode(reader: &mut ByteReader<'_>) -> Result<Self, AttributeError> {
+        Ok(Self {
+            indices: read_u2s(reader, "indices")?,
+        })
+    }
+
+    /// Encode the list without sorting or deduplication.
+    pub fn encode(&self, budget: usize) -> Result<Vec<u8>, AttributeError> {
+        write_u2s(&self.indices, budget, "indices")
+    }
+}
+
+/// One `InnerClasses` table row.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct InnerClass {
+    /// Class index for the nested class.
+    pub inner_class_index: u16,
+    /// Enclosing class index, or zero.
+    pub outer_class_index: u16,
+    /// Simple-name index, or zero for anonymous classes.
+    pub inner_name_index: u16,
+    /// Raw inner-class access flags.
+    pub access_flags: u16,
+}
+
+/// The ordered `InnerClasses` payload.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct InnerClassesAttribute {
+    /// Rows in declaration order.
+    pub classes: Vec<InnerClass>,
+}
+
+impl InnerClassesAttribute {
+    /// Decode all rows without resolving their indices.
+    pub fn decode(reader: &mut ByteReader<'_>) -> Result<Self, AttributeError> {
+        let n = usize::from(reader.read_u2()?);
+        reader.preflight_allocation(n)?;
+        let mut classes = Vec::with_capacity(n);
+        for _ in 0..n {
+            classes.push(InnerClass {
+                inner_class_index: reader.read_u2()?,
+                outer_class_index: reader.read_u2()?,
+                inner_name_index: reader.read_u2()?,
+                access_flags: reader.read_u2()?,
+            });
+        }
+        finish(reader)?;
+        Ok(Self { classes })
+    }
+    /// Encode rows exactly as stored.
+    pub fn encode(&self, budget: usize) -> Result<Vec<u8>, AttributeError> {
+        let mut out = ByteWriter::new(budget);
+        out.write_u2(count(self.classes.len(), "inner classes")?)?;
+        for v in &self.classes {
+            out.write_u2(v.inner_class_index)?;
+            out.write_u2(v.outer_class_index)?;
+            out.write_u2(v.inner_name_index)?;
+            out.write_u2(v.access_flags)?;
+        }
+        Ok(out.into_bytes())
+    }
+}
+
+/// The `EnclosingMethod` payload; a zero method index denotes no specific method.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct EnclosingMethodAttribute {
+    /// Enclosing class index.
+    pub class_index: u16,
+    /// Name-and-type index, or zero.
+    pub method_index: u16,
+}
+
+impl EnclosingMethodAttribute {
+    /// Decode the two unresolved indices.
+    pub fn decode(reader: &mut ByteReader<'_>) -> Result<Self, AttributeError> {
+        let class_index = reader.read_u2()?;
+        let method_index = reader.read_u2()?;
+        finish(reader)?;
+        Ok(Self {
+            class_index,
+            method_index,
+        })
+    }
+    /// Encode the two indices.
+    pub fn encode(&self, budget: usize) -> Result<Vec<u8>, AttributeError> {
+        let mut out = ByteWriter::new(budget);
+        out.write_u2(self.class_index)?;
+        out.write_u2(self.method_index)?;
+        Ok(out.into_bytes())
+    }
+}
+
+/// One source line mapping in a `LineNumberTable`.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct LineNumber {
+    /// Code-array start offset.
+    pub start_pc: u16,
+    /// Source line number.
+    pub line_number: u16,
+}
+
+/// An ordered `LineNumberTable` payload.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct LineNumberTableAttribute {
+    /// Mappings in encoded order.
+    pub lines: Vec<LineNumber>,
+}
+
+impl LineNumberTableAttribute {
+    /// Decode mappings without validating instruction boundaries.
+    pub fn decode(reader: &mut ByteReader<'_>) -> Result<Self, AttributeError> {
+        let n = usize::from(reader.read_u2()?);
+        reader.preflight_allocation(n)?;
+        let mut lines = Vec::with_capacity(n);
+        for _ in 0..n {
+            lines.push(LineNumber {
+                start_pc: reader.read_u2()?,
+                line_number: reader.read_u2()?,
+            });
+        }
+        finish(reader)?;
+        Ok(Self { lines })
+    }
+    /// Encode mappings exactly as stored.
+    pub fn encode(&self, budget: usize) -> Result<Vec<u8>, AttributeError> {
+        let mut out = ByteWriter::new(budget);
+        out.write_u2(count(self.lines.len(), "line numbers")?)?;
+        for v in &self.lines {
+            out.write_u2(v.start_pc)?;
+            out.write_u2(v.line_number)?;
+        }
+        Ok(out.into_bytes())
+    }
+}
+
+/// One local-variable range, shared by `LocalVariableTable` and `LocalVariableTypeTable`.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct LocalVariable {
+    /// Code-array start offset.
+    pub start_pc: u16,
+    /// Range length.
+    pub length: u16,
+    /// Name index.
+    pub name_index: u16,
+    /// Descriptor or signature index.
+    pub type_index: u16,
+    /// Local-variable slot.
+    pub slot: u16,
+}
+
+/// An ordered local-variable table payload.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct LocalVariablesAttribute {
+    /// Ranges in encoded order.
+    pub variables: Vec<LocalVariable>,
+}
+
+impl LocalVariablesAttribute {
+    /// Decode ranges without resolving names or checking code offsets.
+    pub fn decode(reader: &mut ByteReader<'_>) -> Result<Self, AttributeError> {
+        let n = usize::from(reader.read_u2()?);
+        reader.preflight_allocation(n)?;
+        let mut variables = Vec::with_capacity(n);
+        for _ in 0..n {
+            variables.push(LocalVariable {
+                start_pc: reader.read_u2()?,
+                length: reader.read_u2()?,
+                name_index: reader.read_u2()?,
+                type_index: reader.read_u2()?,
+                slot: reader.read_u2()?,
+            });
+        }
+        finish(reader)?;
+        Ok(Self { variables })
+    }
+    /// Encode ranges exactly as stored.
+    pub fn encode(&self, budget: usize) -> Result<Vec<u8>, AttributeError> {
+        let mut out = ByteWriter::new(budget);
+        out.write_u2(count(self.variables.len(), "local variables")?)?;
+        for v in &self.variables {
+            out.write_u2(v.start_pc)?;
+            out.write_u2(v.length)?;
+            out.write_u2(v.name_index)?;
+            out.write_u2(v.type_index)?;
+            out.write_u2(v.slot)?;
+        }
+        Ok(out.into_bytes())
+    }
+}
+
+/// One `MethodParameters` row.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct MethodParameter {
+    /// Name index, or zero.
+    pub name_index: u16,
+    /// Raw parameter access flags.
+    pub access_flags: u16,
+}
+
+/// The ordered `MethodParameters` payload.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct MethodParametersAttribute {
+    /// Parameters in descriptor order.
+    pub parameters: Vec<MethodParameter>,
+}
+
+impl MethodParametersAttribute {
+    /// Decode the u1-counted parameter table.
+    pub fn decode(reader: &mut ByteReader<'_>) -> Result<Self, AttributeError> {
+        let n = usize::from(reader.read_u1()?);
+        reader.preflight_allocation(n)?;
+        let mut parameters = Vec::with_capacity(n);
+        for _ in 0..n {
+            parameters.push(MethodParameter {
+                name_index: reader.read_u2()?,
+                access_flags: reader.read_u2()?,
+            });
+        }
+        finish(reader)?;
+        Ok(Self { parameters })
+    }
+    /// Encode the parameter table.
+    pub fn encode(&self, budget: usize) -> Result<Vec<u8>, AttributeError> {
+        let mut out = ByteWriter::new(budget);
+        out.write_u1(u8::try_from(self.parameters.len()).map_err(|_| {
+            error(
+                AttributeErrorKind::CountOverflow,
+                0,
+                "too many method parameters",
+            )
+        })?)?;
+        for v in &self.parameters {
+            out.write_u2(v.name_index)?;
+            out.write_u2(v.access_flags)?;
+        }
+        Ok(out.into_bytes())
+    }
 }
 
 /// Maximum annotation nesting accepted even when a caller supplies a larger budget.
@@ -1245,5 +1580,285 @@ impl BootstrapMethodsAttribute {
             }
         }
         Ok(out.into_bytes())
+    }
+}
+
+/// One nested attribute attached to a record component.
+pub type RecordComponentAttribute = NestedAttribute;
+
+/// One component in a `Record` attribute.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct RecordComponent {
+    /// Component name index.
+    pub name_index: u16,
+    /// Component descriptor index.
+    pub descriptor_index: u16,
+    /// Component attributes in classfile order.
+    pub attributes: Vec<RecordComponentAttribute>,
+}
+
+/// The ordered `Record` payload.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct RecordAttribute {
+    /// Components in declaration order.
+    pub components: Vec<RecordComponent>,
+}
+
+impl RecordAttribute {
+    /// Decode components and retain every nested attribute as exact bytes.
+    pub fn decode(reader: &mut ByteReader<'_>) -> Result<Self, AttributeError> {
+        let n = usize::from(reader.read_u2()?);
+        reader.preflight_allocation(n)?;
+        let mut components = Vec::with_capacity(n);
+        for _ in 0..n {
+            let name_index = reader.read_u2()?;
+            let descriptor_index = reader.read_u2()?;
+            let attribute_count = usize::from(reader.read_u2()?);
+            reader.preflight_allocation(attribute_count)?;
+            let mut attributes = Vec::with_capacity(attribute_count);
+            for _ in 0..attribute_count {
+                let name_index = reader.read_u2()?;
+                let length = usize::try_from(reader.read_u4()?).map_err(|_| {
+                    error(
+                        AttributeErrorKind::StaticConstraint,
+                        reader.offset(),
+                        "record component attribute length is not addressable",
+                    )
+                })?;
+                attributes.push(NestedAttribute {
+                    name_index,
+                    bytes: reader.take(length)?.to_vec(),
+                });
+            }
+            components.push(RecordComponent {
+                name_index,
+                descriptor_index,
+                attributes,
+            });
+        }
+        finish(reader)?;
+        Ok(Self { components })
+    }
+
+    /// Encode component and nested-attribute order exactly as stored.
+    pub fn encode(&self, budget: usize) -> Result<Vec<u8>, AttributeError> {
+        let mut out = ByteWriter::new(budget);
+        out.write_u2(count(self.components.len(), "record components")?)?;
+        for component in &self.components {
+            out.write_u2(component.name_index)?;
+            out.write_u2(component.descriptor_index)?;
+            out.write_u2(count(
+                component.attributes.len(),
+                "record component attributes",
+            )?)?;
+            for attribute in &component.attributes {
+                out.write_u2(attribute.name_index)?;
+                out.write_u4(u32::try_from(attribute.bytes.len()).map_err(|_| {
+                    error(
+                        AttributeErrorKind::CountOverflow,
+                        0,
+                        "record component attribute is too long",
+                    )
+                })?)?;
+                out.write_bytes(&attribute.bytes)?;
+            }
+        }
+        Ok(out.into_bytes())
+    }
+}
+
+/// One `requires` directive in a `Module` attribute.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct ModuleRequire {
+    /// Module constant index.
+    pub module_index: u16,
+    /// Raw requires flags.
+    pub flags: u16,
+    /// Version string index, or zero.
+    pub version_index: u16,
+}
+/// One `exports` or `opens` directive in a `Module` attribute.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct ModuleExport {
+    /// Package constant index.
+    pub package_index: u16,
+    /// Raw directive flags.
+    pub flags: u16,
+    /// Target module indices in encoded order.
+    pub targets: Vec<u16>,
+}
+/// One `provides` directive in a `Module` attribute.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct ModuleProvide {
+    /// Service class index.
+    pub service_index: u16,
+    /// Provider class indices in encoded order.
+    pub providers: Vec<u16>,
+}
+/// The complete structural `Module` payload.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct ModuleAttribute {
+    /// Module constant index.
+    pub name_index: u16,
+    /// Raw module flags.
+    pub flags: u16,
+    /// Module version string index, or zero.
+    pub version_index: u16,
+    /// Required modules in declaration order.
+    pub requires: Vec<ModuleRequire>,
+    /// Export directives in declaration order.
+    pub exports: Vec<ModuleExport>,
+    /// Open directives in declaration order.
+    pub opens: Vec<ModuleExport>,
+    /// Used service class indices in declaration order.
+    pub uses: Vec<u16>,
+    /// Service provider directives in declaration order.
+    pub provides: Vec<ModuleProvide>,
+}
+
+fn decode_module_exports(reader: &mut ByteReader<'_>) -> Result<Vec<ModuleExport>, AttributeError> {
+    let n = usize::from(reader.read_u2()?);
+    reader.preflight_allocation(n)?;
+    let mut values = Vec::with_capacity(n);
+    for _ in 0..n {
+        let package_index = reader.read_u2()?;
+        let flags = reader.read_u2()?;
+        let m = usize::from(reader.read_u2()?);
+        reader.preflight_allocation(m)?;
+        let mut targets = Vec::with_capacity(m);
+        for _ in 0..m {
+            targets.push(reader.read_u2()?);
+        }
+        values.push(ModuleExport {
+            package_index,
+            flags,
+            targets,
+        });
+    }
+    Ok(values)
+}
+fn encode_module_exports(
+    values: &[ModuleExport],
+    out: &mut ByteWriter,
+    what: &str,
+) -> Result<(), AttributeError> {
+    out.write_u2(count(values.len(), what)?)?;
+    for v in values {
+        out.write_u2(v.package_index)?;
+        out.write_u2(v.flags)?;
+        out.write_u2(count(v.targets.len(), "module directive targets")?)?;
+        for target in &v.targets {
+            out.write_u2(*target)?;
+        }
+    }
+    Ok(())
+}
+
+impl ModuleAttribute {
+    /// Decode all module directives without resolving or interpreting them.
+    pub fn decode(reader: &mut ByteReader<'_>) -> Result<Self, AttributeError> {
+        let name_index = reader.read_u2()?;
+        let flags = reader.read_u2()?;
+        let version_index = reader.read_u2()?;
+        let n = usize::from(reader.read_u2()?);
+        reader.preflight_allocation(n)?;
+        let mut requires = Vec::with_capacity(n);
+        for _ in 0..n {
+            requires.push(ModuleRequire {
+                module_index: reader.read_u2()?,
+                flags: reader.read_u2()?,
+                version_index: reader.read_u2()?,
+            });
+        }
+        let exports = decode_module_exports(reader)?;
+        let opens = decode_module_exports(reader)?;
+        let n = usize::from(reader.read_u2()?);
+        reader.preflight_allocation(n)?;
+        let mut uses = Vec::with_capacity(n);
+        for _ in 0..n {
+            uses.push(reader.read_u2()?);
+        }
+        let n = usize::from(reader.read_u2()?);
+        reader.preflight_allocation(n)?;
+        let mut provides = Vec::with_capacity(n);
+        for _ in 0..n {
+            let service_index = reader.read_u2()?;
+            let m = usize::from(reader.read_u2()?);
+            reader.preflight_allocation(m)?;
+            let mut providers = Vec::with_capacity(m);
+            for _ in 0..m {
+                providers.push(reader.read_u2()?);
+            }
+            provides.push(ModuleProvide {
+                service_index,
+                providers,
+            });
+        }
+        finish(reader)?;
+        Ok(Self {
+            name_index,
+            flags,
+            version_index,
+            requires,
+            exports,
+            opens,
+            uses,
+            provides,
+        })
+    }
+    /// Encode every directive exactly in stored order.
+    pub fn encode(&self, budget: usize) -> Result<Vec<u8>, AttributeError> {
+        let mut out = ByteWriter::new(budget);
+        out.write_u2(self.name_index)?;
+        out.write_u2(self.flags)?;
+        out.write_u2(self.version_index)?;
+        out.write_u2(count(self.requires.len(), "module requires")?)?;
+        for v in &self.requires {
+            out.write_u2(v.module_index)?;
+            out.write_u2(v.flags)?;
+            out.write_u2(v.version_index)?;
+        }
+        encode_module_exports(&self.exports, &mut out, "module exports")?;
+        encode_module_exports(&self.opens, &mut out, "module opens")?;
+        out.write_u2(count(self.uses.len(), "module uses")?)?;
+        for v in &self.uses {
+            out.write_u2(*v)?;
+        }
+        out.write_u2(count(self.provides.len(), "module provides")?)?;
+        for v in &self.provides {
+            out.write_u2(v.service_index)?;
+            out.write_u2(count(v.providers.len(), "module providers")?)?;
+            for provider in &v.providers {
+                out.write_u2(*provider)?;
+            }
+        }
+        Ok(out.into_bytes())
+    }
+}
+
+/// Earliest classfile major version for a standard attribute.
+pub fn standard_attribute_min_major(name: &str) -> Option<u16> {
+    match name {
+        "Signature"
+        | "SourceDebugExtension"
+        | "LocalVariableTypeTable"
+        | "EnclosingMethod"
+        | "RuntimeVisibleAnnotations"
+        | "RuntimeInvisibleAnnotations"
+        | "RuntimeVisibleParameterAnnotations"
+        | "RuntimeInvisibleParameterAnnotations"
+        | "AnnotationDefault" => Some(49),
+        "StackMapTable" => Some(50),
+        "BootstrapMethods" => Some(51),
+        "MethodParameters"
+        | "RuntimeVisibleTypeAnnotations"
+        | "RuntimeInvisibleTypeAnnotations" => Some(52),
+        "Module" | "ModulePackages" | "ModuleMainClass" => Some(53),
+        "NestHost" | "NestMembers" => Some(55),
+        "Record" => Some(60),
+        "PermittedSubclasses" => Some(61),
+        "ConstantValue" | "Code" | "Exceptions" | "InnerClasses" | "Synthetic" | "SourceFile"
+        | "LineNumberTable" | "LocalVariableTable" | "Deprecated" => Some(45),
+        _ => None,
     }
 }

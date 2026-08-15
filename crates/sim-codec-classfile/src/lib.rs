@@ -18,10 +18,15 @@ mod shell;
 pub use attribute::{
     Annotation, AnnotationDefaultAttribute, AnnotationElement, AnnotationsAttribute,
     AttributeError, AttributeErrorKind, AttributeOrigin, BootstrapMethod,
-    BootstrapMethodsAttribute, CodeAttribute, CodeException, ElementValue, LocalVariableTarget,
-    MAX_ANNOTATION_NESTING, NestedAttribute, ParameterAnnotationsAttribute, StackMapFrame,
-    StackMapTableAttribute, TypeAnnotation, TypeAnnotationTarget, TypeAnnotationsAttribute,
-    TypePathEntry, VerificationType,
+    BootstrapMethodsAttribute, ByteAttribute, CodeAttribute, CodeException, ElementValue,
+    EnclosingMethodAttribute, IndexAttribute, IndexListAttribute, InnerClass,
+    InnerClassesAttribute, LineNumber, LineNumberTableAttribute, LocalVariable,
+    LocalVariableTarget, LocalVariablesAttribute, MAX_ANNOTATION_NESTING, MarkerAttribute,
+    MethodParameter, MethodParametersAttribute, ModuleAttribute, ModuleExport, ModuleProvide,
+    ModuleRequire, NestedAttribute, ParameterAnnotationsAttribute, RecordAttribute,
+    RecordComponent, RecordComponentAttribute, StackMapFrame, StackMapTableAttribute,
+    TypeAnnotation, TypeAnnotationTarget, TypeAnnotationsAttribute, TypePathEntry,
+    VerificationType, standard_attribute_min_major,
 };
 pub use bytes::{ByteError, ByteErrorKind, ByteReader, ByteWriter};
 pub use constant::{
