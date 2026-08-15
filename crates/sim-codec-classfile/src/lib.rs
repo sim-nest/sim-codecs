@@ -6,6 +6,12 @@
 #![forbid(unsafe_code)]
 #![deny(missing_docs)]
 
+mod bytes;
+mod modified_utf8;
+
+pub use bytes::{ByteError, ByteErrorKind, ByteReader, ByteWriter};
+pub use modified_utf8::{decode_modified_utf8, encode_modified_utf8};
+
 /// Machine-readable format bounds and reuse decisions.
 pub const SCOPE: &str = include_str!("../scope.toml");
 

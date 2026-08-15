@@ -9,6 +9,9 @@ repository.workspace = true
 homepage.workspace = true
 description = "Bounded, lossless Java Virtual Machine classfile codec for SIM"
 
+[dependencies]
+sim-text = "0.1.0"
+
 [lints]
 workspace = true
 
