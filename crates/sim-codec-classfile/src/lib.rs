@@ -16,8 +16,12 @@ mod opcode_generated;
 mod shell;
 
 pub use attribute::{
-    AttributeError, AttributeErrorKind, BootstrapMethod, BootstrapMethodsAttribute, CodeAttribute,
-    CodeException, NestedAttribute, StackMapFrame, StackMapTableAttribute, VerificationType,
+    Annotation, AnnotationDefaultAttribute, AnnotationElement, AnnotationsAttribute,
+    AttributeError, AttributeErrorKind, AttributeOrigin, BootstrapMethod,
+    BootstrapMethodsAttribute, CodeAttribute, CodeException, ElementValue, LocalVariableTarget,
+    MAX_ANNOTATION_NESTING, NestedAttribute, ParameterAnnotationsAttribute, StackMapFrame,
+    StackMapTableAttribute, TypeAnnotation, TypeAnnotationTarget, TypeAnnotationsAttribute,
+    TypePathEntry, VerificationType,
 };
 pub use bytes::{ByteError, ByteErrorKind, ByteReader, ByteWriter};
 pub use constant::{
