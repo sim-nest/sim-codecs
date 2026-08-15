@@ -74,6 +74,7 @@ mod codec;
 mod expr_json;
 mod grammar;
 mod helpers;
+mod json_tree;
 mod projection;
 mod schema;
 #[cfg(test)]
@@ -89,6 +90,7 @@ pub use codec::{JsonCodec, JsonCodecLib};
 pub use expr_json::{expr_to_json, json_to_expr};
 pub use grammar::JsonGrammarRenderer;
 pub use helpers::json_escape;
+pub use json_tree::{JsonTree, parse_json, parse_json_with_limits, render_json};
 pub use projection::{
     JsonProjectionMode, json_number_to_u64, project_expr_to_json, project_json_to_expr,
     project_json_to_expr_budgeted,
