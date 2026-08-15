@@ -1,0 +1,22 @@
+schema = "sim.classfile-scope/v1"
+
+[classfile_version]
+minimum_major = 45
+minimum_java_release = "1.1"
+maximum_major = 69
+maximum_java_release = "25"
+future_major_policy = "reject-before-constant-pool"
+minor_policy = "accept-zero-or-preview-65535-only"
+
+[reuse]
+codec_protocol = "sim-codec"
+decode_budget = "sim-codec"
+bounded_binary_pattern = "sim-codec-binary"
+runtime_object_pattern = "sim-codec-json"
+code_unit_text = "sim-text"
+
+[ownership]
+classfile_structure = "sim-codec-classfile"
+modified_utf8 = "sim-codec-classfile"
+attribute_preservation = "sim-codec-classfile"
+
