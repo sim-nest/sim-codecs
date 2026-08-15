@@ -97,6 +97,10 @@ pub enum InstructionErrorKind {
     InvalidTarget,
     /// An exception handler range is empty, reversed, or not instruction-aligned.
     InvalidHandler,
+    /// An instruction cannot be represented by its manifest-declared operand width.
+    WidthOverflow,
+    /// An instruction's operands do not match its manifest-declared layout.
+    InvalidOperands,
     /// Generated manifest metadata is internally inconsistent.
     Manifest,
 }
@@ -481,7 +485,7 @@ fn require_boundary(
     ))
 }
 
-fn check_metadata(
+pub(crate) fn check_metadata(
     metadata: &crate::OpcodeMetadata,
     major: u16,
     offset: usize,
@@ -620,7 +624,7 @@ fn check_zero<T: Default + PartialEq>(value: T, start: usize) -> Result<(), Inst
         ))
     }
 }
-fn error(
+pub(crate) fn error(
     kind: InstructionErrorKind,
     offset: usize,
     message: impl Into<String>,

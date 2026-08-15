@@ -8,6 +8,7 @@
 
 mod bytes;
 mod constant;
+mod encode;
 mod instruction;
 mod modified_utf8;
 mod opcode_generated;
@@ -17,6 +18,7 @@ pub use bytes::{ByteError, ByteErrorKind, ByteReader, ByteWriter};
 pub use constant::{
     Constant, ConstantPool, ConstantPoolError, ConstantPoolErrorKind, ConstantSlot,
 };
+pub use encode::encode_instructions;
 pub use instruction::{
     DecodedCode, ExceptionHandlerRange, Instruction, InstructionError, InstructionErrorKind,
     InstructionId, InstructionOperand, LocatedInstruction, decode_instructions,
