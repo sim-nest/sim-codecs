@@ -7,9 +7,13 @@
 #![deny(missing_docs)]
 
 mod bytes;
+mod constant;
 mod modified_utf8;
 
 pub use bytes::{ByteError, ByteErrorKind, ByteReader, ByteWriter};
+pub use constant::{
+    Constant, ConstantPool, ConstantPoolError, ConstantPoolErrorKind, ConstantSlot,
+};
 pub use modified_utf8::{decode_modified_utf8, encode_modified_utf8};
 
 /// Machine-readable format bounds and reuse decisions.
