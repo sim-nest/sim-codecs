@@ -20,6 +20,12 @@ pub enum InstructionOperand {
     Constant(u16),
     /// A relative branch displacement.
     Branch(i32),
+    /// The lowest key accepted by a `tableswitch`.
+    TableLow(i32),
+    /// The highest key accepted by a `tableswitch`.
+    TableHigh(i32),
+    /// One key in a `lookupswitch`, followed by its branch operand.
+    LookupKey(i32),
     /// The `invokeinterface` argument count.
     Count(u8),
     /// The `multianewarray` dimension count.
@@ -59,6 +65,17 @@ pub struct DecodedCode {
     pub offsets: BTreeMap<u32, InstructionId>,
 }
 
+/// Raw Code-attribute exception-table offsets to validate against decoded instructions.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct ExceptionHandlerRange {
+    /// First protected instruction, inclusive.
+    pub start: u16,
+    /// End of the protected range, exclusive; the code length is permitted.
+    pub end: u16,
+    /// First instruction of the handler.
+    pub handler: u16,
+}
+
 /// Stable instruction decoding failure category.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum InstructionErrorKind {
@@ -74,8 +91,12 @@ pub enum InstructionErrorKind {
     ConstantPool,
     /// A `wide` prefix modifies an opcode that cannot be widened.
     IllegalWide,
-    /// Variable switch decoding belongs to the offset-sensitive decoder.
+    /// A variable layout is malformed or too large to represent safely.
     VariableLayout,
+    /// A relative control-flow target is outside the code array or not an instruction boundary.
+    InvalidTarget,
+    /// An exception handler range is empty, reversed, or not instruction-aligned.
+    InvalidHandler,
     /// Generated manifest metadata is internally inconsistent.
     Manifest,
 }
@@ -99,7 +120,7 @@ impl fmt::Display for InstructionError {
 
 impl std::error::Error for InstructionError {}
 
-/// Decode the common JVM instruction layouts using only generated opcode metadata.
+/// Decode JVM instructions using generated metadata plus the three irregular layouts.
 pub fn decode_instructions(
     code: &[u8],
     major_version: u16,
@@ -127,87 +148,88 @@ pub fn decode_instructions(
                 ));
             }
         }
-        if metadata.width == "variable" {
-            return Err(error(
-                InstructionErrorKind::VariableLayout,
-                start,
-                format!(
-                    "offset-sensitive {} layout is not a common fixed layout",
-                    metadata.mnemonic
-                ),
-            ));
-        }
-        let mut operands = Vec::new();
-        for field in metadata.operands.split(',') {
-            match field {
-                "none" => {}
-                "value:s1" | "increment:s1" if !wide => operands.push(
-                    InstructionOperand::Immediate(i32::from(
-                        read_u1(code, &mut cursor, start)? as i8
+        let operands = if opcode == Opcode::Tableswitch {
+            decode_table_switch(code, &mut cursor, start)?
+        } else if opcode == Opcode::Lookupswitch {
+            decode_lookup_switch(code, &mut cursor, start)?
+        } else {
+            if metadata.width == "variable" && !wide {
+                return Err(error(
+                    InstructionErrorKind::VariableLayout,
+                    start,
+                    format!("unsupported variable layout for {}", metadata.mnemonic),
+                ));
+            }
+            let mut operands = Vec::new();
+            for field in metadata.operands.split(',') {
+                match field {
+                    "none" => {}
+                    "value:s1" | "increment:s1" if !wide => operands.push(
+                        InstructionOperand::Immediate(i32::from(
+                            read_u1(code, &mut cursor, start)? as i8,
+                        )),
+                    ),
+                    "increment:s1" => operands.push(InstructionOperand::Immediate(i32::from(
+                        read_u2(code, &mut cursor, start)? as i16,
+                    ))),
+                    "value:s2" | "increment:s2" => operands.push(InstructionOperand::Immediate(
+                        i32::from(read_u2(code, &mut cursor, start)? as i16),
                     )),
-                ),
-                "increment:s1" => operands.push(InstructionOperand::Immediate(i32::from(read_u2(
-                    code,
-                    &mut cursor,
-                    start,
-                )?
-                    as i16))),
-                "value:s2" | "increment:s2" => operands.push(InstructionOperand::Immediate(
-                    i32::from(read_u2(code, &mut cursor, start)? as i16),
-                )),
-                "local:u1" if !wide => operands.push(InstructionOperand::Local(u16::from(
-                    read_u1(code, &mut cursor, start)?,
-                ))),
-                "local:u1" => operands.push(InstructionOperand::Local(read_u2(
-                    code,
-                    &mut cursor,
-                    start,
-                )?)),
-                "constant_pool:u1" => operands.push(InstructionOperand::Constant(u16::from(
-                    read_u1(code, &mut cursor, start)?,
-                ))),
-                "constant_pool:u2" => operands.push(InstructionOperand::Constant(read_u2(
-                    code,
-                    &mut cursor,
-                    start,
-                )?)),
-                "branch:s2" => operands.push(InstructionOperand::Branch(i32::from(read_u2(
-                    code,
-                    &mut cursor,
-                    start,
-                )?
-                    as i16))),
-                "branch:s4" => {
-                    operands.push(InstructionOperand::Branch(
-                        read_u4(code, &mut cursor, start)? as i32,
-                    ))
-                }
-                "count:u1" => operands.push(InstructionOperand::Count(read_u1(
-                    code,
-                    &mut cursor,
-                    start,
-                )?)),
-                "dimensions:u1" => operands.push(InstructionOperand::Dimensions(read_u1(
-                    code,
-                    &mut cursor,
-                    start,
-                )?)),
-                "atype:u1" => operands.push(InstructionOperand::ArrayType(read_u1(
-                    code,
-                    &mut cursor,
-                    start,
-                )?)),
-                "zero:u1" => check_zero(read_u1(code, &mut cursor, start)?, start)?,
-                "zero:u2" => check_zero(read_u2(code, &mut cursor, start)?, start)?,
-                other => {
-                    return Err(error(
-                        InstructionErrorKind::Manifest,
+                    "local:u1" if !wide => operands.push(InstructionOperand::Local(u16::from(
+                        read_u1(code, &mut cursor, start)?,
+                    ))),
+                    "local:u1" => operands.push(InstructionOperand::Local(read_u2(
+                        code,
+                        &mut cursor,
                         start,
-                        format!("unsupported manifest operand {other}"),
-                    ));
+                    )?)),
+                    "constant_pool:u1" => operands.push(InstructionOperand::Constant(u16::from(
+                        read_u1(code, &mut cursor, start)?,
+                    ))),
+                    "constant_pool:u2" => operands.push(InstructionOperand::Constant(read_u2(
+                        code,
+                        &mut cursor,
+                        start,
+                    )?)),
+                    "branch:s2" => operands.push(InstructionOperand::Branch(i32::from(read_u2(
+                        code,
+                        &mut cursor,
+                        start,
+                    )?
+                        as i16))),
+                    "branch:s4" => {
+                        operands.push(InstructionOperand::Branch(
+                            read_u4(code, &mut cursor, start)? as i32,
+                        ))
+                    }
+                    "count:u1" => operands.push(InstructionOperand::Count(read_u1(
+                        code,
+                        &mut cursor,
+                        start,
+                    )?)),
+                    "dimensions:u1" => operands.push(InstructionOperand::Dimensions(read_u1(
+                        code,
+                        &mut cursor,
+                        start,
+                    )?)),
+                    "atype:u1" => operands.push(InstructionOperand::ArrayType(read_u1(
+                        code,
+                        &mut cursor,
+                        start,
+                    )?)),
+                    "zero:u1" => check_zero(read_u1(code, &mut cursor, start)?, start)?,
+                    "zero:u2" => check_zero(read_u2(code, &mut cursor, start)?, start)?,
+                    other => {
+                        return Err(error(
+                            InstructionErrorKind::Manifest,
+                            start,
+                            format!("unsupported manifest operand {other}"),
+                        ));
+                    }
                 }
             }
-        }
+            operands
+        };
         if let Some(InstructionOperand::Constant(index)) = operands
             .iter()
             .find(|v| matches!(v, InstructionOperand::Constant(_)))
@@ -239,10 +261,224 @@ pub fn decode_instructions(
             },
         });
     }
-    Ok(DecodedCode {
+    let decoded = DecodedCode {
         instructions,
         offsets,
-    })
+    };
+    validate_branch_targets(&decoded, code.len())?;
+    Ok(decoded)
+}
+
+/// Validate Code-attribute exception ranges against an already decoded code array.
+pub fn validate_exception_handlers(
+    decoded: &DecodedCode,
+    code_length: usize,
+    handlers: &[ExceptionHandlerRange],
+) -> Result<(), InstructionError> {
+    for range in handlers {
+        let start = usize::from(range.start);
+        let end = usize::from(range.end);
+        let handler = usize::from(range.handler);
+        if start >= end {
+            return Err(error(
+                InstructionErrorKind::InvalidHandler,
+                start,
+                format!("exception handler range {start}..{end} is empty or reversed"),
+            ));
+        }
+        require_boundary(decoded, start, code_length, false, "exception range start")?;
+        require_boundary(decoded, end, code_length, true, "exception range end")?;
+        require_boundary(decoded, handler, code_length, false, "exception handler")?;
+    }
+    Ok(())
+}
+
+fn decode_table_switch(
+    code: &[u8],
+    cursor: &mut usize,
+    start: usize,
+) -> Result<Vec<InstructionOperand>, InstructionError> {
+    read_padding(code, cursor, start)?;
+    let default = read_i4(code, cursor, start)?;
+    let low = read_i4(code, cursor, start)?;
+    let high = read_i4(code, cursor, start)?;
+    if high < low {
+        return Err(error(
+            InstructionErrorKind::VariableLayout,
+            start,
+            format!("tableswitch high key {high} precedes low key {low}"),
+        ));
+    }
+    let count = i64::from(high) - i64::from(low) + 1;
+    let count = usize::try_from(count).map_err(|_| {
+        error(
+            InstructionErrorKind::VariableLayout,
+            start,
+            "tableswitch key range overflows addressable input",
+        )
+    })?;
+    ensure_entries_fit(code, *cursor, count, 4, start, "tableswitch")?;
+    let mut operands = Vec::with_capacity(count.saturating_add(3));
+    operands.push(InstructionOperand::Branch(default));
+    operands.push(InstructionOperand::TableLow(low));
+    operands.push(InstructionOperand::TableHigh(high));
+    for _ in 0..count {
+        operands.push(InstructionOperand::Branch(read_i4(code, cursor, start)?));
+    }
+    Ok(operands)
+}
+
+fn decode_lookup_switch(
+    code: &[u8],
+    cursor: &mut usize,
+    start: usize,
+) -> Result<Vec<InstructionOperand>, InstructionError> {
+    read_padding(code, cursor, start)?;
+    let default = read_i4(code, cursor, start)?;
+    let pairs_origin = *cursor;
+    let pair_count = read_i4(code, cursor, start)?;
+    let pair_count = usize::try_from(pair_count).map_err(|_| {
+        error(
+            InstructionErrorKind::VariableLayout,
+            pairs_origin,
+            format!("lookupswitch pair count {pair_count} is negative"),
+        )
+    })?;
+    ensure_entries_fit(code, *cursor, pair_count, 8, start, "lookupswitch")?;
+    let mut operands = Vec::with_capacity(pair_count.saturating_mul(2).saturating_add(1));
+    operands.push(InstructionOperand::Branch(default));
+    let mut previous = None;
+    for _ in 0..pair_count {
+        let key_origin = *cursor;
+        let key = read_i4(code, cursor, start)?;
+        if let Some(prior) = previous
+            && key <= prior
+        {
+            let relation = if key == prior {
+                "duplicate"
+            } else {
+                "out-of-order"
+            };
+            return Err(error(
+                InstructionErrorKind::VariableLayout,
+                key_origin,
+                format!("lookupswitch {relation} key {key} follows {prior}"),
+            ));
+        }
+        let displacement = read_i4(code, cursor, start)?;
+        operands.push(InstructionOperand::LookupKey(key));
+        operands.push(InstructionOperand::Branch(displacement));
+        previous = Some(key);
+    }
+    Ok(operands)
+}
+
+fn read_padding(code: &[u8], cursor: &mut usize, start: usize) -> Result<(), InstructionError> {
+    let padding = (4 - (*cursor % 4)) % 4;
+    for _ in 0..padding {
+        let origin = *cursor;
+        if read_u1(code, cursor, start)? != 0 {
+            return Err(error(
+                InstructionErrorKind::ReservedByte,
+                origin,
+                "switch alignment padding must be zero",
+            ));
+        }
+    }
+    Ok(())
+}
+
+fn ensure_entries_fit(
+    code: &[u8],
+    cursor: usize,
+    count: usize,
+    width: usize,
+    start: usize,
+    layout: &str,
+) -> Result<(), InstructionError> {
+    let bytes = count.checked_mul(width).ok_or_else(|| {
+        error(
+            InstructionErrorKind::VariableLayout,
+            start,
+            format!("{layout} entry byte count overflows"),
+        )
+    })?;
+    let end = cursor.checked_add(bytes).ok_or_else(|| {
+        error(
+            InstructionErrorKind::VariableLayout,
+            start,
+            format!("{layout} end offset overflows"),
+        )
+    })?;
+    if end > code.len() {
+        return Err(error(
+            InstructionErrorKind::Truncated,
+            start,
+            format!("truncated {layout}"),
+        ));
+    }
+    Ok(())
+}
+
+fn validate_branch_targets(
+    decoded: &DecodedCode,
+    code_length: usize,
+) -> Result<(), InstructionError> {
+    for located in &decoded.instructions {
+        for operand in &located.instruction.operands {
+            if let InstructionOperand::Branch(displacement) = operand {
+                let target = i64::from(located.offset) + i64::from(*displacement);
+                let target = usize::try_from(target).map_err(|_| {
+                    error(
+                        InstructionErrorKind::InvalidTarget,
+                        located.offset as usize,
+                        format!("branch target {target} is outside the code array"),
+                    )
+                })?;
+                require_boundary(decoded, target, code_length, false, "branch target")?;
+            }
+        }
+    }
+    Ok(())
+}
+
+fn require_boundary(
+    decoded: &DecodedCode,
+    offset: usize,
+    code_length: usize,
+    allow_end: bool,
+    subject: &str,
+) -> Result<(), InstructionError> {
+    let offset_u32 = u32::try_from(offset).map_err(|_| {
+        error(
+            InstructionErrorKind::InvalidTarget,
+            offset,
+            format!("{subject} {offset} exceeds the classfile offset range"),
+        )
+    })?;
+    if (allow_end && offset == code_length) || decoded.offsets.contains_key(&offset_u32) {
+        return Ok(());
+    }
+    if offset >= code_length {
+        return Err(error(
+            if subject.starts_with("exception") {
+                InstructionErrorKind::InvalidHandler
+            } else {
+                InstructionErrorKind::InvalidTarget
+            },
+            offset,
+            format!("{subject} {offset} is outside the code array"),
+        ));
+    }
+    Err(error(
+        if subject.starts_with("exception") {
+            InstructionErrorKind::InvalidHandler
+        } else {
+            InstructionErrorKind::InvalidTarget
+        },
+        offset,
+        format!("{subject} {offset} is not an instruction boundary"),
+    ))
 }
 
 fn check_metadata(
@@ -369,6 +605,9 @@ fn read_u4(code: &[u8], cursor: &mut usize, start: usize) -> Result<u32, Instruc
         read_u1(code, cursor, start)?,
         read_u1(code, cursor, start)?,
     ]))
+}
+fn read_i4(code: &[u8], cursor: &mut usize, start: usize) -> Result<i32, InstructionError> {
+    Ok(read_u4(code, cursor, start)? as i32)
 }
 fn check_zero<T: Default + PartialEq>(value: T, start: usize) -> Result<(), InstructionError> {
     if value == T::default() {
