@@ -3,7 +3,8 @@ use std::collections::BTreeSet;
 
 use crate::{
     ByteErrorKind, ByteReader, ByteWriter, Constant, ConstantPool, ConstantPoolErrorKind,
-    ConstantSlot, ModuleAttribute, decode_modified_utf8, encode_modified_utf8,
+    ConstantSlot, InnerClassesAttribute, ModuleAttribute, decode_modified_utf8,
+    encode_modified_utf8,
 };
 use crate::{ClassShell, ShellBudget, ShellErrorKind};
 use crate::{FIXTURE_EXPECTATIONS, SCOPE};
@@ -324,6 +325,15 @@ fn module_info_structured_payload_round_trips_byte_identically() {
 
     let module = ModuleAttribute::decode(&mut ByteReader::new(payload, payload.len())).unwrap();
     assert_eq!(module.encode(payload.len()).unwrap(), *payload);
+}
+
+#[test]
+fn inner_classes_rows_round_trip_at_the_standard_eight_byte_width() {
+    let payload = [0, 1, 0, 2, 0, 3, 0, 4, 0, 5];
+    let attribute =
+        InnerClassesAttribute::decode(&mut ByteReader::new(&payload, payload.len())).unwrap();
+
+    assert_eq!(attribute.encode(payload.len()).unwrap(), payload);
 }
 
 #[test]
