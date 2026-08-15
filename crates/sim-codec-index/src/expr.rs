@@ -1,11 +1,13 @@
 //! Conversion between `IndexDoc` records and the codec expression grammar.
 
 use sim_index_core::{
-    AnchorId, CanonicalFeatureKey, DiscoveredAnchor, DiscoveredSpecimen, DiscoveredSurface,
-    FeatureDraft, FeatureId, FeatureRecord, GrammarContract, IndexDoc, IndexEdge, RouteId,
-    RouteRecord, RouteStep, SpecimenId, SubjectId, SubjectRecord, SurfaceId, Visibility,
+    AnchorId, CanonicalFeatureKey, DeclarationFact, DeclarationRole, DiscoveredAnchor,
+    DiscoveredSpecimen, DiscoveredSurface, FeatureDraft, FeatureId, FeatureRecord, GrammarContract,
+    IndexDoc, IndexEdge, ProtocolRelation, ProtocolResolution, RouteId, RouteRecord, RouteStep,
+    SourceLocation, SpecimenId, SubjectId, SubjectRecord, SurfaceId, SyntaxBound, UnresolvedReason,
+    Visibility,
 };
-use sim_kernel::Expr;
+use sim_kernel::{Expr, NumberLiteral, Symbol};
 use sim_value::build::entry as field;
 
 use crate::CodecError;
@@ -13,19 +15,34 @@ use crate::CodecError;
 /// Projects an index document to the single expression grammar used by all
 /// index text forms.
 pub fn expr_from_index_doc(doc: &IndexDoc) -> Expr {
-    map(vec![
+    let mut entries = vec![
         field("schema", text(&doc.schema)),
         field("generated-by", text(&doc.generated_by)),
         field("visibility", text(visibility_name(doc.visibility))),
         field("subjects", list(doc.subjects.iter().map(subject_expr))),
         field("anchors", list(doc.anchors.iter().map(anchor_expr))),
+    ];
+    if !doc.declarations.is_empty() {
+        entries.push(field(
+            "declarations",
+            list(doc.declarations.iter().map(declaration_expr)),
+        ));
+    }
+    if !doc.protocol_relations.is_empty() {
+        entries.push(field(
+            "protocol-relations",
+            list(doc.protocol_relations.iter().map(protocol_relation_expr)),
+        ));
+    }
+    entries.extend([
         field("surfaces", list(doc.surfaces.iter().map(surface_expr))),
         field("specimens", list(doc.specimens.iter().map(specimen_expr))),
         field("drafts", list(doc.drafts.iter().map(draft_expr))),
         field("features", list(doc.features.iter().map(feature_expr))),
         field("routes", list(doc.routes.iter().map(route_expr))),
         field("edges", list(doc.edges.iter().map(edge_expr))),
-    ])
+    ]);
+    map(entries)
 }
 
 /// Builds an index document from the checked index expression grammar.
@@ -37,6 +54,12 @@ pub fn index_doc_from_expr(expr: &Expr) -> Result<IndexDoc, CodecError> {
         visibility: visibility_from_name(string_field(root, "visibility")?)?,
         subjects: map_list_field(root, "subjects", subject_from_expr)?,
         anchors: map_list_field(root, "anchors", anchor_from_expr)?,
+        declarations: optional_map_list_field(root, "declarations", declaration_from_expr)?,
+        protocol_relations: optional_map_list_field(
+            root,
+            "protocol-relations",
+            protocol_relation_from_expr,
+        )?,
         surfaces: map_list_field(root, "surfaces", surface_from_expr)?,
         specimens: map_list_field(root, "specimens", specimen_from_expr)?,
         drafts: map_list_field(root, "drafts", draft_from_expr)?,
@@ -44,6 +67,57 @@ pub fn index_doc_from_expr(expr: &Expr) -> Result<IndexDoc, CodecError> {
         routes: map_list_field(root, "routes", route_from_expr)?,
         edges: map_list_field(root, "edges", edge_from_expr)?,
     })
+}
+
+fn declaration_expr(fact: &DeclarationFact) -> Expr {
+    map(vec![
+        field("anchor", text(fact.anchor.as_str())),
+        field("role", text(fact.role.as_str())),
+        field("module-path", text(&fact.module_path)),
+        field("generics", text(&fact.generics)),
+        field("members", strings(fact.members.iter())),
+        field("location", source_location_expr(&fact.location)),
+        field("syntax-bound", syntax_bound_expr(fact.syntax_bound)),
+    ])
+}
+
+fn source_location_expr(location: &SourceLocation) -> Expr {
+    map(vec![
+        field("file", text(&location.file)),
+        field("declaration", unsigned(location.declaration)),
+    ])
+}
+
+fn syntax_bound_expr(bound: SyntaxBound) -> Expr {
+    map(vec![
+        field("max-bytes", unsigned(bound.max_bytes)),
+        field("truncated", Expr::Bool(bound.truncated)),
+    ])
+}
+
+fn protocol_relation_expr(relation: &ProtocolRelation) -> Expr {
+    map(vec![
+        field("anchor", text(relation.anchor.as_str())),
+        field("implementor", text(&relation.implementor)),
+        field("source-spelling", text(&relation.source_spelling)),
+        field("body-fingerprint", text(&relation.body_fingerprint)),
+        field("body-bound", syntax_bound_expr(relation.body_bound)),
+        field("resolution", resolution_expr(&relation.resolution)),
+    ])
+}
+
+fn resolution_expr(resolution: &ProtocolResolution) -> Expr {
+    match resolution {
+        ProtocolResolution::Resolved { protocol } => map(vec![
+            field("state", text("resolved")),
+            field("protocol", text(protocol)),
+        ]),
+        ProtocolResolution::Unresolved { reason, candidates } => map(vec![
+            field("state", text("unresolved")),
+            field("reason", text(unresolved_reason_name(*reason))),
+            field("candidates", strings(candidates.iter())),
+        ]),
+    }
 }
 
 fn subject_expr(subject: &SubjectRecord) -> Expr {
@@ -183,6 +257,63 @@ fn anchor_from_expr(expr: &Expr) -> Result<DiscoveredAnchor, CodecError> {
     })
 }
 
+fn declaration_from_expr(expr: &Expr) -> Result<DeclarationFact, CodecError> {
+    let entries = expect_map(expr, "declaration")?;
+    Ok(DeclarationFact {
+        anchor: AnchorId::new(string_field(entries, "anchor")?),
+        role: declaration_role_from_name(string_field(entries, "role")?)?,
+        module_path: string_field(entries, "module-path")?.to_owned(),
+        generics: string_field(entries, "generics")?.to_owned(),
+        members: string_list_field(entries, "members")?,
+        location: source_location_from_expr(required(entries, "location")?)?,
+        syntax_bound: syntax_bound_from_expr(required(entries, "syntax-bound")?)?,
+    })
+}
+
+fn source_location_from_expr(expr: &Expr) -> Result<SourceLocation, CodecError> {
+    let entries = expect_map(expr, "source location")?;
+    Ok(SourceLocation {
+        file: string_field(entries, "file")?.to_owned(),
+        declaration: usize_field(entries, "declaration")?,
+    })
+}
+
+fn syntax_bound_from_expr(expr: &Expr) -> Result<SyntaxBound, CodecError> {
+    let entries = expect_map(expr, "syntax bound")?;
+    Ok(SyntaxBound {
+        max_bytes: usize_field(entries, "max-bytes")?,
+        truncated: bool_field(entries, "truncated")?,
+    })
+}
+
+fn protocol_relation_from_expr(expr: &Expr) -> Result<ProtocolRelation, CodecError> {
+    let entries = expect_map(expr, "protocol relation")?;
+    Ok(ProtocolRelation {
+        anchor: AnchorId::new(string_field(entries, "anchor")?),
+        implementor: string_field(entries, "implementor")?.to_owned(),
+        source_spelling: string_field(entries, "source-spelling")?.to_owned(),
+        body_fingerprint: string_field(entries, "body-fingerprint")?.to_owned(),
+        body_bound: syntax_bound_from_expr(required(entries, "body-bound")?)?,
+        resolution: resolution_from_expr(required(entries, "resolution")?)?,
+    })
+}
+
+fn resolution_from_expr(expr: &Expr) -> Result<ProtocolResolution, CodecError> {
+    let entries = expect_map(expr, "protocol resolution")?;
+    match string_field(entries, "state")? {
+        "resolved" => Ok(ProtocolResolution::Resolved {
+            protocol: string_field(entries, "protocol")?.to_owned(),
+        }),
+        "unresolved" => Ok(ProtocolResolution::Unresolved {
+            reason: unresolved_reason_from_name(string_field(entries, "reason")?)?,
+            candidates: string_list_field(entries, "candidates")?,
+        }),
+        other => Err(CodecError::Shape(format!(
+            "unsupported protocol resolution state {other:?}"
+        ))),
+    }
+}
+
 fn surface_from_expr(expr: &Expr) -> Result<DiscoveredSurface, CodecError> {
     let entries = expect_map(expr, "surface")?;
     Ok(DiscoveredSurface {
@@ -310,6 +441,18 @@ fn map_list_field<T>(
     items.iter().map(read).collect()
 }
 
+fn optional_map_list_field<T>(
+    entries: &[(Expr, Expr)],
+    name: &str,
+    read: fn(&Expr) -> Result<T, CodecError>,
+) -> Result<Vec<T>, CodecError> {
+    match field_value(entries, name) {
+        None => Ok(Vec::new()),
+        Some(Expr::List(items)) => items.iter().map(read).collect(),
+        Some(_) => Err(CodecError::Shape(format!("{name} must be a list"))),
+    }
+}
+
 fn id_list<T>(
     entries: &[(Expr, Expr)],
     name: &str,
@@ -380,6 +523,18 @@ fn bool_field(entries: &[(Expr, Expr)], name: &str) -> Result<bool, CodecError> 
     }
 }
 
+fn usize_field(entries: &[(Expr, Expr)], name: &str) -> Result<usize, CodecError> {
+    match required(entries, name)? {
+        Expr::Number(number) => number
+            .canonical
+            .parse()
+            .map_err(|_| CodecError::Shape(format!("{name} must be a non-negative integer"))),
+        other => Err(CodecError::Shape(format!(
+            "{name} must be a number, found {other:?}"
+        ))),
+    }
+}
+
 fn optional_anchor(entries: &[(Expr, Expr)], name: &str) -> Result<Option<AnchorId>, CodecError> {
     optional_id_from_field(entries, name).map(|value| value.map(AnchorId::new))
 }
@@ -445,6 +600,42 @@ fn visibility_from_name(name: &str) -> Result<Visibility, CodecError> {
     }
 }
 
+fn declaration_role_from_name(name: &str) -> Result<DeclarationRole, CodecError> {
+    match name {
+        "const" => Ok(DeclarationRole::Const),
+        "enum" => Ok(DeclarationRole::Enum),
+        "function" => Ok(DeclarationRole::Function),
+        "module" => Ok(DeclarationRole::Module),
+        "re-export" => Ok(DeclarationRole::ReExport),
+        "static" => Ok(DeclarationRole::Static),
+        "struct" => Ok(DeclarationRole::Struct),
+        "trait" => Ok(DeclarationRole::Trait),
+        "type-alias" => Ok(DeclarationRole::TypeAlias),
+        other => Err(CodecError::Shape(format!(
+            "unsupported declaration role {other:?}"
+        ))),
+    }
+}
+
+fn unresolved_reason_name(reason: UnresolvedReason) -> &'static str {
+    match reason {
+        UnresolvedReason::AmbiguousGlobImport => "ambiguous-glob-import",
+        UnresolvedReason::AmbiguousName => "ambiguous-name",
+        UnresolvedReason::ExternalMetadataAbsent => "external-metadata-absent",
+    }
+}
+
+fn unresolved_reason_from_name(name: &str) -> Result<UnresolvedReason, CodecError> {
+    match name {
+        "ambiguous-glob-import" => Ok(UnresolvedReason::AmbiguousGlobImport),
+        "ambiguous-name" => Ok(UnresolvedReason::AmbiguousName),
+        "external-metadata-absent" => Ok(UnresolvedReason::ExternalMetadataAbsent),
+        other => Err(CodecError::Shape(format!(
+            "unsupported unresolved reason {other:?}"
+        ))),
+    }
+}
+
 fn map(entries: Vec<(Expr, Expr)>) -> Expr {
     Expr::Map(entries)
 }
@@ -474,4 +665,11 @@ fn optional_text(value: Option<&String>) -> Expr {
 
 fn text(value: impl AsRef<str>) -> Expr {
     Expr::String(value.as_ref().to_owned())
+}
+
+fn unsigned(value: usize) -> Expr {
+    Expr::Number(NumberLiteral {
+        domain: Symbol::qualified("numbers", "u64"),
+        canonical: value.to_string(),
+    })
 }

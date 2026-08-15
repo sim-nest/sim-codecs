@@ -29,6 +29,8 @@ impl IndexExprShape {
                 Field::string("visibility"),
                 Field::list("subjects", subject),
                 Field::list("anchors", anchor),
+                Field::optional_list("declarations", declaration),
+                Field::optional_list("protocol-relations", protocol_relation),
                 Field::list("surfaces", surface),
                 Field::list("specimens", specimen),
                 Field::list("drafts", draft),
@@ -52,7 +54,9 @@ struct Field {
 #[derive(Clone, Copy)]
 enum FieldKind {
     String,
+    Number,
     Bool,
+    Object(CheckFn),
     OptionalString,
     OptionalList(CheckFn),
     List(CheckFn),
@@ -70,6 +74,20 @@ impl Field {
         Self {
             name,
             kind: FieldKind::Bool,
+        }
+    }
+
+    const fn number(name: &'static str) -> Self {
+        Self {
+            name,
+            kind: FieldKind::Number,
+        }
+    }
+
+    const fn object(name: &'static str, check: CheckFn) -> Self {
+        Self {
+            name,
+            kind: FieldKind::Object(check),
         }
     }
 
@@ -92,6 +110,84 @@ impl Field {
             name,
             kind: FieldKind::List(item),
         }
+    }
+}
+
+fn declaration(expr: &Expr) -> Result<(), CodecError> {
+    fields(
+        map(expr, "declaration")?,
+        &[
+            Field::string("anchor"),
+            Field::string("role"),
+            Field::string("module-path"),
+            Field::string("generics"),
+            Field::list("members", string_item),
+            Field::object("location", source_location),
+            Field::object("syntax-bound", syntax_bound),
+        ],
+        "declaration",
+    )
+}
+
+fn source_location(expr: &Expr) -> Result<(), CodecError> {
+    fields(
+        map(expr, "source location")?,
+        &[Field::string("file"), Field::number("declaration")],
+        "source location",
+    )
+}
+
+fn syntax_bound(expr: &Expr) -> Result<(), CodecError> {
+    fields(
+        map(expr, "syntax bound")?,
+        &[Field::number("max-bytes"), Field::bool("truncated")],
+        "syntax bound",
+    )
+}
+
+fn protocol_relation(expr: &Expr) -> Result<(), CodecError> {
+    fields(
+        map(expr, "protocol relation")?,
+        &[
+            Field::string("anchor"),
+            Field::string("implementor"),
+            Field::string("source-spelling"),
+            Field::string("body-fingerprint"),
+            Field::object("body-bound", syntax_bound),
+            Field::object("resolution", protocol_resolution),
+        ],
+        "protocol relation",
+    )
+}
+
+fn protocol_resolution(expr: &Expr) -> Result<(), CodecError> {
+    let entries = map(expr, "protocol resolution")?;
+    unique_symbol_fields(entries, "protocol resolution")?;
+    let state = entries
+        .iter()
+        .find_map(|(key, value)| (symbol_name(key) == Some("state")).then_some(value));
+    match state {
+        Some(Expr::String(state)) if state == "resolved" => fields(
+            entries,
+            &[Field::string("state"), Field::string("protocol")],
+            "protocol resolution",
+        ),
+        Some(Expr::String(state)) if state == "unresolved" => fields(
+            entries,
+            &[
+                Field::string("state"),
+                Field::string("reason"),
+                Field::list("candidates", string_item),
+            ],
+            "protocol resolution",
+        ),
+        Some(Expr::String(state)) => Err(CodecError::Shape(format!(
+            "unsupported protocol resolution state {state:?}"
+        ))),
+        Some(other) => wrong("protocol resolution", "state", "string", other),
+        None => Err(CodecError::Shape(
+            "protocol resolution missing field state".to_owned(),
+        )),
     }
 }
 
@@ -281,9 +377,17 @@ impl Field {
 fn check_field_kind(value: &Expr, field: Field, label: &str) -> Result<(), CodecError> {
     match field.kind {
         FieldKind::String => string_item(value),
+        FieldKind::Number => match value {
+            Expr::Number(_) => Ok(()),
+            other => wrong(label, field.name, "number", other),
+        },
         FieldKind::Bool => match value {
             Expr::Bool(_) => Ok(()),
             other => wrong(label, field.name, "bool", other),
+        },
+        FieldKind::Object(check) => match value {
+            Expr::Map(_) => check(value),
+            other => wrong(label, field.name, "map", other),
         },
         FieldKind::OptionalString => match value {
             Expr::Nil | Expr::String(_) => Ok(()),
