@@ -4,7 +4,9 @@ use core::fmt;
 
 use sim_kernel::{CodecId, Origin, SourceId, Span};
 
-use crate::{ByteError, ByteReader, Constant, ConstantPool, ConstantPoolError};
+use crate::{
+    ByteError, ByteReader, ByteWriter, CodeAttribute, Constant, ConstantPool, ConstantPoolError,
+};
 
 /// Limits for allocations made while structurally decoding one classfile shell.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -32,6 +34,44 @@ pub struct AttributeShell {
     pub bytes: Vec<u8>,
     /// Source span covering the complete attribute, including its header.
     pub origin: Origin,
+    /// Owner and ordinal captured at decode time.
+    pub location: AttributeLocation,
+}
+
+/// The legal classfile owner of an attribute shell.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum AttributeOwner {
+    /// The class declaration.
+    Class,
+    /// A field declaration at the given classfile ordinal.
+    Field(usize),
+    /// A method declaration at the given classfile ordinal.
+    Method(usize),
+}
+
+/// Stable owner and order evidence for a retained attribute.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct AttributeLocation {
+    /// Attribute owner.
+    pub owner: AttributeOwner,
+    /// Zero-based position within that owner's attribute table.
+    pub order: usize,
+}
+
+/// Checked evidence invalidated by a classfile edit.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct LayoutInvalidation {
+    /// Declaration path whose original bytes are no longer evidence for current content/layout.
+    pub path: String,
+    /// Whether byte positions after this path moved.
+    pub shifts_following_layout: bool,
+}
+
+/// Result of one checked method-body edit.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct EditReport {
+    /// Exact layout evidence invalidated by the edit.
+    pub invalidated: Vec<LayoutInvalidation>,
 }
 
 /// A raw field declaration whose indices have not been validated.
@@ -153,6 +193,8 @@ pub enum ShellErrorKind {
     InvalidIndex,
     /// Bytes remained after the complete class shell.
     TrailingBytes,
+    /// A requested checked edit cannot be applied to this shell.
+    Edit,
 }
 
 /// A located shell failure, optionally naming the offending raw index.
@@ -221,15 +263,28 @@ impl ClassShell {
             source,
         };
         let interfaces = read_indices(&mut reader, budget.interfaces, "interfaces")?;
-        let fields = read_members(&mut reader, budget.fields, "fields", &mut state)?
-            .into_iter()
-            .map(Member::into_field)
-            .collect();
-        let methods = read_members(&mut reader, budget.methods, "methods", &mut state)?
-            .into_iter()
-            .map(Member::into_method)
-            .collect();
-        let attributes = read_attributes(&mut reader, "attributes", &mut state)?;
+        let fields = read_members(
+            &mut reader,
+            budget.fields,
+            "fields",
+            AttributeOwner::Field,
+            &mut state,
+        )?
+        .into_iter()
+        .map(Member::into_field)
+        .collect();
+        let methods = read_members(
+            &mut reader,
+            budget.methods,
+            "methods",
+            AttributeOwner::Method,
+            &mut state,
+        )?
+        .into_iter()
+        .map(Member::into_method)
+        .collect();
+        let attributes =
+            read_attributes(&mut reader, "attributes", AttributeOwner::Class, &mut state)?;
         if reader.remaining() != 0 {
             return Err(error(
                 ShellErrorKind::TrailingBytes,
@@ -319,6 +374,90 @@ impl ClassShell {
             fields,
             methods,
             attribute_names: self.validate_attributes(&self.attributes, "class")?,
+        })
+    }
+
+    /// Encode the complete shell, retaining all attribute bytes and table order exactly.
+    pub fn encode(&self, allocation_budget: usize) -> Result<Vec<u8>, ShellError> {
+        self.validate()?;
+        let mut out = ByteWriter::new(allocation_budget);
+        out.write_u4(0xcafe_babe)
+            .map_err(|e| byte_error("magic", e))?;
+        out.write_u2(self.minor_version)
+            .map_err(|e| byte_error("minor_version", e))?;
+        out.write_u2(self.major_version)
+            .map_err(|e| byte_error("major_version", e))?;
+        self.constant_pool
+            .encode(&mut out, self.major_version)
+            .map_err(pool_error)?;
+        out.write_u2(self.access_flags)
+            .map_err(|e| byte_error("access_flags", e))?;
+        out.write_u2(self.this_class)
+            .map_err(|e| byte_error("this_class", e))?;
+        out.write_u2(self.super_class)
+            .map_err(|e| byte_error("super_class", e))?;
+        write_indices(&mut out, &self.interfaces, "interfaces")?;
+        write_members(&mut out, &self.fields, "fields")?;
+        write_members(&mut out, &self.methods, "methods")?;
+        write_attributes(&mut out, &self.attributes, "class")?;
+        Ok(out.into_bytes())
+    }
+
+    /// Replace one method's `Code` byte array without disturbing unrelated raw attributes.
+    ///
+    /// The selected payload is decoded and re-encoded structurally, so malformed code metadata or
+    /// an edit that invalidates exception ranges is rejected. The report precisely distinguishes a
+    /// same-size content edit from an edit that shifts following byte positions.
+    pub fn replace_method_code(
+        &mut self,
+        method_index: usize,
+        code: Vec<u8>,
+        allocation_budget: usize,
+    ) -> Result<EditReport, ShellError> {
+        let code_name = self.constant_pool.slots().iter().position(|slot| {
+            matches!(slot, crate::ConstantSlot::Entry(Constant::Utf8(value)) if value.as_code_units() == ['C' as u16, 'o' as u16, 'd' as u16, 'e' as u16])
+        }).ok_or_else(|| edit_error("constant_pool", "constant pool does not contain Code"))? as u16;
+        let method = self.methods.get_mut(method_index).ok_or_else(|| {
+            edit_error(
+                format!("methods[{method_index}]"),
+                "method index is out of range",
+            )
+        })?;
+        let (attribute_index, attribute) = method
+            .attributes
+            .iter_mut()
+            .enumerate()
+            .find(|(_, attribute)| attribute.name_index == code_name)
+            .ok_or_else(|| {
+                edit_error(
+                    format!("methods[{method_index}]"),
+                    "method has no Code attribute",
+                )
+            })?;
+        let old_len = attribute.bytes.len();
+        let mut structured =
+            CodeAttribute::decode(&mut ByteReader::new(&attribute.bytes, allocation_budget))
+                .map_err(|cause| {
+                    edit_error(
+                        format!("methods[{method_index}].attributes[{attribute_index}]"),
+                        cause.to_string(),
+                    )
+                })?;
+        structured.code = code;
+        let bytes = structured.encode(allocation_budget).map_err(|cause| {
+            edit_error(
+                format!("methods[{method_index}].attributes[{attribute_index}]"),
+                cause.to_string(),
+            )
+        })?;
+        attribute.declared_length = u32::try_from(bytes.len())
+            .map_err(|_| edit_error("Code", "encoded Code attribute exceeds u32"))?;
+        attribute.bytes = bytes;
+        Ok(EditReport {
+            invalidated: vec![LayoutInvalidation {
+                path: format!("methods[{method_index}].attributes[{attribute_index}].bytes"),
+                shifts_following_layout: old_len != attribute.bytes.len(),
+            }],
         })
     }
 
@@ -438,6 +577,7 @@ fn read_members(
     reader: &mut ByteReader<'_>,
     limit: usize,
     path: &str,
+    owner: fn(usize) -> AttributeOwner,
     state: &mut DecodeState,
 ) -> Result<Vec<Member>, ShellError> {
     let count = usize::from(reader.read_u2().map_err(|e| byte_error(path, e))?);
@@ -449,7 +589,7 @@ fn read_members(
         let access_flags = reader.read_u2().map_err(|e| byte_error(&member_path, e))?;
         let name_index = reader.read_u2().map_err(|e| byte_error(&member_path, e))?;
         let descriptor_index = reader.read_u2().map_err(|e| byte_error(&member_path, e))?;
-        let attributes = read_attributes(reader, &member_path, state)?;
+        let attributes = read_attributes(reader, &member_path, owner(position), state)?;
         members.push(Member {
             access_flags,
             name_index,
@@ -464,6 +604,7 @@ fn read_members(
 fn read_attributes(
     reader: &mut ByteReader<'_>,
     owner: &str,
+    attribute_owner: AttributeOwner,
     state: &mut DecodeState,
 ) -> Result<Vec<AttributeShell>, ShellError> {
     let count = usize::from(reader.read_u2().map_err(|e| byte_error(owner, e))?);
@@ -499,9 +640,87 @@ fn read_attributes(
             declared_length,
             bytes,
             origin: origin(state.codec, state.source.clone(), start, reader.offset()),
+            location: AttributeLocation {
+                owner: attribute_owner,
+                order: position,
+            },
         });
     }
     Ok(attributes)
+}
+
+trait MemberShell {
+    fn header(&self) -> (u16, u16, u16);
+    fn attributes(&self) -> &[AttributeShell];
+}
+impl MemberShell for FieldShell {
+    fn header(&self) -> (u16, u16, u16) {
+        (self.access_flags, self.name_index, self.descriptor_index)
+    }
+    fn attributes(&self) -> &[AttributeShell] {
+        &self.attributes
+    }
+}
+impl MemberShell for MethodShell {
+    fn header(&self) -> (u16, u16, u16) {
+        (self.access_flags, self.name_index, self.descriptor_index)
+    }
+    fn attributes(&self) -> &[AttributeShell] {
+        &self.attributes
+    }
+}
+fn write_indices(out: &mut ByteWriter, values: &[u16], path: &str) -> Result<(), ShellError> {
+    out.write_u2(u16::try_from(values.len()).map_err(|_| edit_error(path, "count exceeds u16"))?)
+        .map_err(|e| byte_error(path, e))?;
+    for value in values {
+        out.write_u2(*value).map_err(|e| byte_error(path, e))?;
+    }
+    Ok(())
+}
+fn write_members<T: MemberShell>(
+    out: &mut ByteWriter,
+    values: &[T],
+    path: &str,
+) -> Result<(), ShellError> {
+    out.write_u2(u16::try_from(values.len()).map_err(|_| edit_error(path, "count exceeds u16"))?)
+        .map_err(|e| byte_error(path, e))?;
+    for value in values {
+        let (flags, name, descriptor) = value.header();
+        out.write_u2(flags).map_err(|e| byte_error(path, e))?;
+        out.write_u2(name).map_err(|e| byte_error(path, e))?;
+        out.write_u2(descriptor).map_err(|e| byte_error(path, e))?;
+        write_attributes(out, value.attributes(), path)?;
+    }
+    Ok(())
+}
+fn write_attributes(
+    out: &mut ByteWriter,
+    values: &[AttributeShell],
+    path: &str,
+) -> Result<(), ShellError> {
+    out.write_u2(
+        u16::try_from(values.len()).map_err(|_| edit_error(path, "attribute count exceeds u16"))?,
+    )
+    .map_err(|e| byte_error(path, e))?;
+    for attribute in values {
+        if usize::try_from(attribute.declared_length).ok() != Some(attribute.bytes.len()) {
+            return Err(edit_error(
+                path,
+                "declared attribute length differs from retained bytes",
+            ));
+        }
+        out.write_u2(attribute.name_index)
+            .map_err(|e| byte_error(path, e))?;
+        out.write_u4(attribute.declared_length)
+            .map_err(|e| byte_error(path, e))?;
+        out.write_bytes(&attribute.bytes)
+            .map_err(|e| byte_error(path, e))?;
+    }
+    Ok(())
+}
+
+fn edit_error(path: impl Into<String>, message: impl Into<String>) -> ShellError {
+    error(ShellErrorKind::Edit, 0, None, path, message)
 }
 
 fn check_count(

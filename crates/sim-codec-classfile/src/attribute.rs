@@ -1105,8 +1105,25 @@ fn encode_type_annotation(
 pub struct NestedAttribute {
     /// Constant-pool index naming the attribute.
     pub name_index: u16,
+    /// Owner category in which this attribute was decoded.
+    pub owner: NestedAttributeOwner,
+    /// Zero-based order within its owner's table.
+    pub order: usize,
+    /// Body length declared by the attribute header.
+    pub declared_length: u32,
     /// Exact attribute payload.
     pub bytes: Vec<u8>,
+    /// Source range covering the complete header and body.
+    pub origin: AttributeOrigin,
+}
+
+/// Legal owners for attributes nested inside structured attribute bodies.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum NestedAttributeOwner {
+    /// A `Code` attribute.
+    Code,
+    /// A record component.
+    RecordComponent,
 }
 
 /// One `Code` exception-table row, with all offsets and the catch index retained verbatim.
@@ -1166,9 +1183,11 @@ impl CodeAttribute {
         let attribute_count = usize::from(reader.read_u2()?);
         reader.preflight_allocation(attribute_count)?;
         let mut attributes = Vec::with_capacity(attribute_count);
-        for _ in 0..attribute_count {
+        for order in 0..attribute_count {
+            let start = reader.offset();
             let name_index = reader.read_u2()?;
-            let length = usize::try_from(reader.read_u4()?).map_err(|_| {
+            let declared_length = reader.read_u4()?;
+            let length = usize::try_from(declared_length).map_err(|_| {
                 error(
                     AttributeErrorKind::CountOverflow,
                     reader.offset(),
@@ -1178,7 +1197,11 @@ impl CodeAttribute {
             reader.preflight_allocation(length)?;
             attributes.push(NestedAttribute {
                 name_index,
+                owner: NestedAttributeOwner::Code,
+                order,
+                declared_length,
                 bytes: reader.take(length)?.to_vec(),
+                origin: annotation_origin(start, reader),
             });
         }
         finish(reader)?;
@@ -1211,14 +1234,15 @@ impl CodeAttribute {
         }
         out.write_u2(count(self.attributes.len(), "nested attributes")?)?;
         for attribute in &self.attributes {
+            if usize::try_from(attribute.declared_length).ok() != Some(attribute.bytes.len()) {
+                return Err(error(
+                    AttributeErrorKind::StaticConstraint,
+                    attribute.origin.start,
+                    "nested attribute declared length differs from retained bytes",
+                ));
+            }
             out.write_u2(attribute.name_index)?;
-            out.write_u4(u32::try_from(attribute.bytes.len()).map_err(|_| {
-                error(
-                    AttributeErrorKind::CountOverflow,
-                    0,
-                    "nested attribute is too long",
-                )
-            })?)?;
+            out.write_u4(attribute.declared_length)?;
             out.write_bytes(&attribute.bytes)?;
         }
         Ok(out.into_bytes())
@@ -1616,9 +1640,11 @@ impl RecordAttribute {
             let attribute_count = usize::from(reader.read_u2()?);
             reader.preflight_allocation(attribute_count)?;
             let mut attributes = Vec::with_capacity(attribute_count);
-            for _ in 0..attribute_count {
+            for order in 0..attribute_count {
+                let start = reader.offset();
                 let name_index = reader.read_u2()?;
-                let length = usize::try_from(reader.read_u4()?).map_err(|_| {
+                let declared_length = reader.read_u4()?;
+                let length = usize::try_from(declared_length).map_err(|_| {
                     error(
                         AttributeErrorKind::StaticConstraint,
                         reader.offset(),
@@ -1627,7 +1653,11 @@ impl RecordAttribute {
                 })?;
                 attributes.push(NestedAttribute {
                     name_index,
+                    owner: NestedAttributeOwner::RecordComponent,
+                    order,
+                    declared_length,
                     bytes: reader.take(length)?.to_vec(),
+                    origin: annotation_origin(start, reader),
                 });
             }
             components.push(RecordComponent {
@@ -1652,14 +1682,15 @@ impl RecordAttribute {
                 "record component attributes",
             )?)?;
             for attribute in &component.attributes {
+                if usize::try_from(attribute.declared_length).ok() != Some(attribute.bytes.len()) {
+                    return Err(error(
+                        AttributeErrorKind::StaticConstraint,
+                        attribute.origin.start,
+                        "record component attribute declared length differs from retained bytes",
+                    ));
+                }
                 out.write_u2(attribute.name_index)?;
-                out.write_u4(u32::try_from(attribute.bytes.len()).map_err(|_| {
-                    error(
-                        AttributeErrorKind::CountOverflow,
-                        0,
-                        "record component attribute is too long",
-                    )
-                })?)?;
+                out.write_u4(attribute.declared_length)?;
                 out.write_bytes(&attribute.bytes)?;
             }
         }

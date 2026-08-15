@@ -1,6 +1,6 @@
 use sim_codec_classfile::{
-    BootstrapMethodsAttribute, ByteReader, CodeAttribute, CodeException, NestedAttribute,
-    StackMapFrame, StackMapTableAttribute, VerificationType,
+    AttributeOrigin, BootstrapMethodsAttribute, ByteReader, CodeAttribute, CodeException,
+    NestedAttribute, NestedAttributeOwner, StackMapFrame, StackMapTableAttribute, VerificationType,
 };
 
 #[test]
@@ -49,11 +49,19 @@ fn code_preserves_exception_and_nested_attribute_order() {
         attributes: vec![
             NestedAttribute {
                 name_index: 9,
+                owner: NestedAttributeOwner::Code,
+                order: 0,
+                declared_length: 2,
                 bytes: vec![1, 2],
+                origin: AttributeOrigin { start: 31, end: 39 },
             },
             NestedAttribute {
                 name_index: 7,
+                owner: NestedAttributeOwner::Code,
+                order: 1,
+                declared_length: 0,
                 bytes: vec![],
+                origin: AttributeOrigin { start: 39, end: 45 },
             },
         ],
     };

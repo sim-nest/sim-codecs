@@ -23,10 +23,10 @@ pub use attribute::{
     InnerClassesAttribute, LineNumber, LineNumberTableAttribute, LocalVariable,
     LocalVariableTarget, LocalVariablesAttribute, MAX_ANNOTATION_NESTING, MarkerAttribute,
     MethodParameter, MethodParametersAttribute, ModuleAttribute, ModuleExport, ModuleProvide,
-    ModuleRequire, NestedAttribute, ParameterAnnotationsAttribute, RecordAttribute,
-    RecordComponent, RecordComponentAttribute, StackMapFrame, StackMapTableAttribute,
-    TypeAnnotation, TypeAnnotationTarget, TypeAnnotationsAttribute, TypePathEntry,
-    VerificationType, standard_attribute_min_major,
+    ModuleRequire, NestedAttribute, NestedAttributeOwner, ParameterAnnotationsAttribute,
+    RecordAttribute, RecordComponent, RecordComponentAttribute, StackMapFrame,
+    StackMapTableAttribute, TypeAnnotation, TypeAnnotationTarget, TypeAnnotationsAttribute,
+    TypePathEntry, VerificationType, standard_attribute_min_major,
 };
 pub use bytes::{ByteError, ByteErrorKind, ByteReader, ByteWriter};
 pub use constant::{
@@ -41,8 +41,9 @@ pub use instruction::{
 pub use modified_utf8::{decode_modified_utf8, encode_modified_utf8};
 pub use opcode_generated::{OPCODES, Opcode, OpcodeMetadata};
 pub use shell::{
-    AttributeShell, ClassIndex, ClassShell, FieldShell, MethodShell, ShellBudget, ShellError,
-    ShellErrorKind, Utf8Index, ValidatedClassShell, ValidatedFieldShell, ValidatedMethodShell,
+    AttributeLocation, AttributeOwner, AttributeShell, ClassIndex, ClassShell, EditReport,
+    FieldShell, LayoutInvalidation, MethodShell, ShellBudget, ShellError, ShellErrorKind,
+    Utf8Index, ValidatedClassShell, ValidatedFieldShell, ValidatedMethodShell,
 };
 
 /// Machine-readable format bounds and reuse decisions.
