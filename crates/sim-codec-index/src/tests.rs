@@ -13,6 +13,15 @@ use crate::{
     index_doc_from_expr, index_shape,
 };
 
+#[test]
+fn index_decode_budget_admits_a_merged_constellation_graph() {
+    let limits = crate::form::index_decode_limits();
+    assert_eq!(limits.max_input_bytes, 32 * 1024 * 1024);
+    assert_eq!(limits.max_tokens, 4_000_000);
+    assert_eq!(limits.max_expr_nodes, 2_000_000);
+    assert!(limits.max_input_bytes <= 64 * 1024 * 1024);
+}
+
 fn valid_doc() -> IndexDoc {
     let repo_subject = SubjectId::new("repo/sim-run");
     let subject = SubjectId::new("crate/sim-run");
@@ -437,6 +446,35 @@ fn literal_claims_and_missing_specimens_fail_closed() {
             ..
         })) if id == "recipe/sim-run/missing"
     ));
+}
+
+#[test]
+fn fragment_codec_defers_cross_repository_endpoints_only() {
+    let codec = IndexCodec;
+    let mut fragment = valid_doc();
+    fragment.edges.push(IndexEdge::relates(
+        FeatureId::new("feature/sim-run/repl"),
+        "presents",
+        FeatureId::new("feature/sim-runtime/read-eval"),
+    ));
+    fragment.routes[0].steps.push(RouteStep::Specimen {
+        id: SpecimenId::new("spec-test/sim-sdk/tests/read_eval"),
+        why: "The SDK proves the public facade.".to_owned(),
+    });
+
+    let sx = codec
+        .encode_fragment(&fragment, EncodePosition::Data, IndexForm::Sx)
+        .expect("encode fragment");
+    let decoded = codec
+        .decode_fragment(IndexForm::Sx, &sx)
+        .expect("decode fragment");
+    assert_eq!(decoded, fragment);
+    assert!(
+        codec
+            .encode(&fragment, EncodePosition::Data, IndexForm::Sx)
+            .is_err()
+    );
+    assert!(codec.decode(IndexForm::Sx, &sx).is_err());
 }
 
 #[test]

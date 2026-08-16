@@ -12,13 +12,17 @@
 | `cookbook/codec/bitwise-base64` | `cookbook-recipe` | `sim-codec-bitwise-base64` | ASCII-safe Base64 text wrapper around canonical bitwise frames. |
 | `cookbook/codec/bridge` | `cookbook-recipe` | `sim-codec-bridge` | Strict packet envelopes for checked exchanges. |
 | `cookbook/codec/chat` | `cookbook-recipe` | `sim-codec-chat` | Chat transcript and provider projection forms. |
+| `cookbook/codec/classfile` | `cookbook-recipe` | `sim-codec-classfile` | Inspect retained JVM classfiles without starting a JVM. |
 | `cookbook/codec/compare` | `cookbook-recipe` | `sim-codec-compare` | Measured bitwise-vs-binary size and speed comparison. |
 | `cookbook/codec/config` | `cookbook-recipe` | `sim-codec-config` | Configuration tables for library defaults and shared launcher files. |
 | `cookbook/codec/core` | `cookbook-recipe` | `sim-codec` | Shared codec runtime traits, positions, and limits. |
 | `cookbook/codec/doc` | `cookbook-recipe` | `sim-codec-doc` | Document decoding and provenance-preserving chunk descriptors. |
+| `cookbook/codec/javascript` | `cookbook-recipe` | `sim-codec-javascript` | Bounded, lossless JavaScript source parsing. |
 | `cookbook/codec/json` | `cookbook-recipe` | `sim-codec-json` | Tagged JSON expression forms. |
 | `cookbook/codec/lisp` | `cookbook-recipe` | `sim-codec-lisp` | Lisp surface forms for SIM expressions. |
 | `cookbook/codec/lua` | `cookbook-recipe` | `sim-codec-lua` | Lua expression parsing and round-trip recipes for SIM codec surfaces. |
 | `cookbook/codec/mcp` | `cookbook-recipe` | `sim-codec-mcp` | MCP JSON-RPC request, response, notification, and error envelopes. |
 | `cookbook/codec/pratt` | `cookbook-recipe` | `sim-codec-pratt` | Shared Pratt parsing substrate for codec lexers. |
+| `cookbook/codec/python` | `cookbook-recipe` | `sim-codec-python` | Bounded lossless Python source parsing. |
+| `cookbook/codec/typescript` | `cookbook-recipe` | `sim-codec-typescript` | Bounded, lossless TypeScript and TSX source parsing. |
 | `registry/catalog` | `browse-registry` | `workspace` | registry catalog browse card |

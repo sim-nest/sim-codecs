@@ -120,14 +120,14 @@ def crate_name(path: pathlib.Path, workspace: pathlib.Path) -> str:
     return ""
 
 
-def guard_findings(root: pathlib.Path, workspace: pathlib.Path, config: dict, opcodes: list[str], constants: list[str], attributes: list[str]) -> list[str]:
+def guard_findings(root: pathlib.Path, workspace: pathlib.Path, config: dict, coverage: dict, opcodes: list[str], constants: list[str], attributes: list[str]) -> list[str]:
     findings: list[str] = []
     owner = config["owner_crate"]
     generated = {root / item for item in config["generated_files"]}
     authorities = {
         root / "opcode-manifest.tsv",
-        root / "src/constant.rs",
-        root / "src/attribute.rs",
+        root / coverage["constant_source"],
+        root / coverage["attribute_source"],
         root / "src/opcode_generated.rs",
     }
     opcode_set = {name for name in opcodes if not name.startswith("reserved_")}
@@ -174,7 +174,15 @@ def main() -> int:
             OUTPUT.write_text(expected, encoding="utf-8")
             current = True
         workspace = (args.workspace_root or ROOT).resolve()
-        findings = guard_findings(ROOT, workspace, document["guards"], opcodes, constants, attributes) if args.scan else []
+        findings = guard_findings(
+            ROOT,
+            workspace,
+            document["guards"],
+            coverage,
+            opcodes,
+            constants,
+            attributes,
+        ) if args.scan else []
     except (KeyError, OSError, ValueError, tomllib.TOMLDecodeError) as error:
         print(error, file=sys.stderr)
         return 1

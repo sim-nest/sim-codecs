@@ -12,7 +12,7 @@ use crate::{
     CodecError, IndexForm,
     error::kernel_codec_error,
     expr_from_index_doc,
-    form::{doc_from_expr, doc_from_form, encode_doc},
+    form::{doc_from_expr, doc_from_form, encode_doc, encode_fragment_doc, fragment_from_form},
 };
 
 /// Runtime decoder/encoder for the `codec/index` surface.
@@ -41,6 +41,26 @@ impl IndexCodec {
         form: IndexForm,
     ) -> std::result::Result<String, CodecError> {
         encode_doc(doc, position, form)
+    }
+
+    /// Decodes one repository fragment while deferring cross-repository
+    /// relationship and route targets until constellation merge.
+    pub fn decode_fragment(
+        &self,
+        form: IndexForm,
+        source: &str,
+    ) -> std::result::Result<sim_index_core::IndexDoc, CodecError> {
+        fragment_from_form(form, source)
+    }
+
+    /// Encodes one repository fragment after checking all local invariants.
+    pub fn encode_fragment(
+        &self,
+        doc: &sim_index_core::IndexDoc,
+        position: EncodePosition,
+        form: IndexForm,
+    ) -> std::result::Result<String, CodecError> {
+        encode_fragment_doc(doc, position, form)
     }
 }
 

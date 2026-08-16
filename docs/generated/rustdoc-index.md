@@ -12,15 +12,19 @@
 | `sim-codec-bitwise-base64` | `workspace` | Base64 text framing over the SIM bitwise codec. |
 | `sim-codec-bridge` | `workspace` | BRIDGE packet line codec for SIM. |
 | `sim-codec-chat` | `workspace` | Canonical chat transcript codec for SIM. |
+| `sim-codec-classfile` | `workspace` | Frozen scope contract for the bounded, lossless JVM classfile codec. |
 | `sim-codec-compare` | `workspace` | Developer harness: sim-codec-bitwise vs sim-codec-binary, measured. |
 | `sim-codec-config` | `workspace` | Configuration codec for the SIM runtime. |
 | `sim-codec-doc` | `workspace` | Markup document domain codec for SIM. |
 | `sim-codec-index` | `workspace` | SIM Index codec over the shared IndexDoc graph. |
+| `sim-codec-javascript` | `workspace` | Bounded, lossless ECMAScript 2026 Script and Module frontend. |
 | `sim-codec-json` | `workspace` | General-purpose JSON codec for the SIM runtime. |
 | `sim-codec-lisp` | `workspace` | SIM workspace package for sim codec lisp. |
 | `sim-codec-lua` | `workspace` | Lua chunk codec for SIM codec surfaces. |
 | `sim-codec-mcp` | `workspace` | MCP JSON-RPC envelope codec for SIM. |
 | `sim-codec-pratt` | `workspace` | Shared Pratt parser substrate for SIM codecs. |
+| `sim-codec-python` | `workspace` | Bounded, lossless Python 3.14 syntax and general-purpose codec. |
+| `sim-codec-typescript` | `workspace` | Bounded, lossless TypeScript 7 and TSX syntax layered on JavaScript. |
 | `sim-test-support` | `workspace` | Shared test harness for SIM crates. |
 | `sim-wasm-abi` | `workspace` | Wasm ABI transport for SIM. |
 | `xtask` | `workspace` | SIM workspace package for xtask. |

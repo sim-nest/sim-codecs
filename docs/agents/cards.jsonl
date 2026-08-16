@@ -36,6 +36,11 @@
 {"kind":"recipe","path":"crates/sim-codec-chat/recipes/01-basics/transcript-descriptor/recipe.toml"}
 {"kind":"recipe","path":"crates/sim-codec-chat/recipes/01-basics/transcript-descriptor/setup.siml"}
 {"kind":"recipe","path":"crates/sim-codec-chat/recipes/book.toml"}
+{"kind":"recipe","path":"crates/sim-codec-classfile/recipes/01-inspection/chapter.toml"}
+{"kind":"recipe","path":"crates/sim-codec-classfile/recipes/01-inspection/retained-classfile/positive.class"}
+{"kind":"recipe","path":"crates/sim-codec-classfile/recipes/01-inspection/retained-classfile/purpose.md"}
+{"kind":"recipe","path":"crates/sim-codec-classfile/recipes/01-inspection/retained-classfile/recipe.toml"}
+{"kind":"recipe","path":"crates/sim-codec-classfile/recipes/book.toml"}
 {"kind":"recipe","path":"crates/sim-codec-compare/recipes/01-basics/chapter.toml"}
 {"kind":"recipe","path":"crates/sim-codec-compare/recipes/01-basics/run-report/purpose.md"}
 {"kind":"recipe","path":"crates/sim-codec-compare/recipes/01-basics/run-report/recipe.toml"}

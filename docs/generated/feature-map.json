@@ -44,6 +44,11 @@
     {
       "features": [],
       "group": "workspace",
+      "package": "sim-codec-classfile"
+    },
+    {
+      "features": [],
+      "group": "workspace",
       "package": "sim-codec-compare"
     },
     {

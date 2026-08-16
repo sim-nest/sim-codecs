@@ -17,7 +17,13 @@ INPUTS = (
     "opcode-manifest.tsv",
     "CLASSFILE_COVERAGE.md",
     "src/constant.rs",
+    "src/constant/model.rs",
+    "src/constant/codec.rs",
     "src/attribute.rs",
+    "src/attribute/basic.rs",
+    "src/attribute/annotations.rs",
+    "src/attribute/code.rs",
+    "src/attribute/class.rs",
     "src/opcode_generated.rs",
     "OPCODES.md",
 )

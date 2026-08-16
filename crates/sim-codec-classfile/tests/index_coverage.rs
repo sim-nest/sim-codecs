@@ -1,3 +1,5 @@
+// conformance: classfile coverage policy rejects duplicate, lossy, and hand-edited inventories.
+
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
@@ -32,11 +34,19 @@ fn scratch_copy() -> PathBuf {
         "opcode-manifest.tsv",
         "CLASSFILE_COVERAGE.md",
         "src/constant.rs",
+        "src/constant/model.rs",
+        "src/constant/codec.rs",
         "src/attribute.rs",
+        "src/attribute/basic.rs",
+        "src/attribute/annotations.rs",
+        "src/attribute/code.rs",
+        "src/attribute/class.rs",
         "src/opcode_generated.rs",
         "OPCODES.md",
     ] {
-        fs::copy(source.join(relative), destination.join(relative)).expect("copy coverage input");
+        let target = destination.join(relative);
+        fs::create_dir_all(target.parent().unwrap()).expect("create coverage input parent");
+        fs::copy(source.join(relative), target).expect("copy coverage input");
     }
     destination
 }

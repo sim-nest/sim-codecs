@@ -5,7 +5,7 @@ use std::sync::Arc;
 use sim_codec::{DecodeBudget, DecodeLimits, Decoder, Encoder, Input, Output, ReadCx};
 use sim_codec_json::{expr_to_json, json_to_expr};
 use sim_codec_lisp::{LispProcMacroDecoder, LispProcMacroEncoder};
-use sim_index_core::{IndexDoc, check_index_doc};
+use sim_index_core::{IndexDoc, check_index_doc, check_index_fragment};
 use sim_kernel::{
     CodecId, Cx, DefaultFactory, EncodeOptions, EncodePosition, Expr, NoopEvalPolicy, ReadPolicy,
     WriteCx,
@@ -13,7 +13,9 @@ use sim_kernel::{
 
 use crate::{CodecError, expr_from_index_doc, index_doc_from_expr, index_shape};
 
-const INDEX_MAX_EXPR_NODES: usize = 500_000;
+const INDEX_MAX_EXPR_NODES: usize = 2_000_000;
+const INDEX_MAX_INPUT_BYTES: usize = 32 * 1024 * 1024;
+const INDEX_MAX_TOKENS: usize = 4_000_000;
 
 /// Text forms emitted by `codec/index`.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -49,6 +51,14 @@ pub(crate) fn doc_from_form(form: IndexForm, source: &str) -> Result<IndexDoc, C
     doc_from_expr(&expr)
 }
 
+pub(crate) fn fragment_from_form(form: IndexForm, source: &str) -> Result<IndexDoc, CodecError> {
+    let expr = decode_index_expr(form, source)?;
+    index_shape().check(&expr)?;
+    let doc = index_doc_from_expr(&expr)?;
+    check_index_fragment(&doc)?;
+    Ok(doc)
+}
+
 pub(crate) fn doc_from_expr(expr: &Expr) -> Result<IndexDoc, CodecError> {
     index_shape().check(expr)?;
     let doc = index_doc_from_expr(expr)?;
@@ -62,6 +72,16 @@ pub(crate) fn encode_doc(
     form: IndexForm,
 ) -> Result<String, CodecError> {
     check_index_doc(doc)?;
+    let expr = expr_from_index_doc(doc);
+    encode_index_expr(&expr, position, form)
+}
+
+pub(crate) fn encode_fragment_doc(
+    doc: &IndexDoc,
+    position: EncodePosition,
+    form: IndexForm,
+) -> Result<String, CodecError> {
+    check_index_fragment(doc)?;
     let expr = expr_from_index_doc(doc);
     encode_index_expr(&expr, position, form)
 }
@@ -86,8 +106,13 @@ fn decode_json_expr(source: &str) -> Result<Expr, CodecError> {
         .map_err(|err| CodecError::Decode(err.to_string()))
 }
 
-fn index_decode_limits() -> DecodeLimits {
+pub(crate) fn index_decode_limits() -> DecodeLimits {
     DecodeLimits {
+        // Merged constellation graphs legitimately carry repository-scale
+        // authored guidance. Keep the generic codec default small while giving
+        // codec/index an explicit, still-bounded whole-graph allowance.
+        max_input_bytes: INDEX_MAX_INPUT_BYTES,
+        max_tokens: INDEX_MAX_TOKENS,
         max_expr_nodes: INDEX_MAX_EXPR_NODES,
         ..DecodeLimits::default()
     }

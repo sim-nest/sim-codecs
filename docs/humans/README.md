@@ -18,6 +18,7 @@ This generated lane consumes `docs/generated/sim-index-fragment.sx`. Global inde
 | Feature | Subject | Specimens | Summary |
 | --- | --- | ---: | --- |
 | `feature/sim-codecs/codec` | `crate/sim-codec` | 1 | Define codec positions, limits, syntax surfaces, wire surfaces, and loadable codec runtime libraries. |
+| `feature/sim-codecs/classfile-inspection` | `crate/sim-codec-classfile` | 2 | Decode and re-encode retained JVM classfiles while browsing bounded constants, attributes, and byte-located instructions without starting a JVM. |
 | `feature/sim-codecs/expression-syntax-grammars` | `crate/sim-codec-lisp` | 1 | Read and write Lisp, JSON, Algol, JavaScript, Lua, Python, Compare, and Bridge rendered expression grammars. |
 | `feature/sim-codecs/python-source-frontend` | `crate/sim-codec-python` | 1 | Tokenize and parse frozen Python 3.14.6 syntax, lower every admitted source form to stable python/* expressions, and round-trip general SIM expressions through bounded plain, located, and tree lanes. |
 | `feature/sim-codecs/javascript-source-frontend` | `crate/sim-codec-javascript` | 1 | Tokenize and structurally parse frozen ECMAScript 2026 Script and Module goals, lower every accepted form to stable javascript/* expressions, and round-trip through plain, located, and tree codec lanes. |
@@ -32,6 +33,7 @@ This generated lane consumes `docs/generated/sim-index-fragment.sx`. Global inde
 
 | Surface | Kind | Subject |
 | --- | --- | --- |
+| `cli/report` | `cli` | `crate/sim-codec-compare` |
 | `cli/sim-codec-compare` | `cli` | `crate/sim-codec-compare` |
 | `cli/xtask` | `cli` | `crate/xtask` |
 | `docs/sim-codecs/generated` | `docs` | `doc-set/sim-codecs/generated` |
@@ -43,6 +45,7 @@ This generated lane consumes `docs/generated/sim-index-fragment.sx`. Global inde
 | `syntax/bitwise-base64` | `syntax` | `language/bitwise-base64` |
 | `syntax/bridge` | `syntax` | `language/bridge` |
 | `syntax/chat` | `syntax` | `language/chat` |
+| `syntax/classfile` | `syntax` | `language/classfile` |
 | `syntax/compare` | `syntax` | `language/compare` |
 | `syntax/config` | `syntax` | `language/config` |
 | `syntax/doc` | `syntax` | `language/doc` |
@@ -106,6 +109,11 @@ This generated lane consumes `docs/generated/sim-index-fragment.sx`. Global inde
 - `crates/sim-codec-chat/recipes/01-basics/transcript-descriptor/recipe.toml`
 - `crates/sim-codec-chat/recipes/01-basics/transcript-descriptor/setup.siml`
 - `crates/sim-codec-chat/recipes/book.toml`
+- `crates/sim-codec-classfile/recipes/01-inspection/chapter.toml`
+- `crates/sim-codec-classfile/recipes/01-inspection/retained-classfile/positive.class`
+- `crates/sim-codec-classfile/recipes/01-inspection/retained-classfile/purpose.md`
+- `crates/sim-codec-classfile/recipes/01-inspection/retained-classfile/recipe.toml`
+- `crates/sim-codec-classfile/recipes/book.toml`
 - `crates/sim-codec-compare/recipes/01-basics/chapter.toml`
 - `crates/sim-codec-compare/recipes/01-basics/run-report/purpose.md`
 - `crates/sim-codec-compare/recipes/01-basics/run-report/recipe.toml`
@@ -622,6 +630,163 @@ impl sim_kernel::ObjectCompat for CodecRuntime {
             (Symbol::new("options-shape"), self.options_shape.clone()),
         ])
     }
+}
+```
+
+### `feature/sim-codecs/classfile-inspection`
+
+Specimen `recipe/sim-codecs/crates/sim-codec-classfile/01-inspection/retained-classfile` is checked by `sh scripts/check-recipes.sh`.
+
+Source `crates/sim-codec-classfile/recipes/01-inspection/retained-classfile/recipe.toml`:
+
+```toml
+id = "retained-classfile"
+title = "Inspect a retained classfile without a JVM"
+codec = "classfile"
+setup = "positive.class"
+purpose = "purpose.md"
+order = 10
+tags = ["codec", "classfile", "inspect", "jvm-free"]
+requires = ["codec/classfile"]
+```
+
+Specimen `spec-test/sim-codecs/crates/sim-codec-classfile/tests/index_coverage` is checked by `cargo test`.
+
+Source `crates/sim-codec-classfile/tests/index_coverage.rs`:
+
+```rust
+// conformance: classfile coverage policy rejects duplicate, lossy, and hand-edited inventories.
+
+use std::fs;
+use std::path::{Path, PathBuf};
+use std::process::Command;
+use std::time::{SystemTime, UNIX_EPOCH};
+
+fn crate_root() -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+}
+
+fn run(root: &Path, arguments: &[&str]) -> std::process::Output {
+    Command::new("python3")
+        .arg(root.join("generate_index_coverage.py"))
+        .args(arguments)
+        .output()
+        .expect("run classfile Index coverage generator")
+}
+
+fn scratch_copy() -> PathBuf {
+    let nonce = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .expect("clock after epoch")
+        .as_nanos();
+    let destination = std::env::temp_dir().join(format!(
+        "sim-codec-classfile-index-{}-{nonce}",
+        std::process::id()
+    ));
+    fs::create_dir_all(destination.join("src")).expect("create scratch source directory");
+    let source = crate_root();
+    for relative in [
+        "generate_index_coverage.py",
+        "index-coverage.toml",
+        "opcode-manifest.tsv",
+        "CLASSFILE_COVERAGE.md",
+        "src/constant.rs",
+        "src/constant/model.rs",
+        "src/constant/codec.rs",
+        "src/attribute.rs",
+        "src/attribute/basic.rs",
+        "src/attribute/annotations.rs",
+        "src/attribute/code.rs",
+        "src/attribute/class.rs",
+        "src/opcode_generated.rs",
+        "OPCODES.md",
+    ] {
+        let target = destination.join(relative);
+        fs::create_dir_all(target.parent().unwrap()).expect("create coverage input parent");
+        fs::copy(source.join(relative), target).expect("copy coverage input");
+    }
+    destination
+}
+
+fn failure(root: &Path) -> String {
+    let output = run(
+        root,
+        &[
+            "--check",
+            "--scan",
+            "--workspace-root",
+            root.to_str().unwrap(),
+        ],
+    );
+    assert!(
+        !output.status.success(),
+        "violating fixture unexpectedly passed"
+    );
+    String::from_utf8_lossy(&output.stderr).into_owned()
+}
+
+#[test]
+fn published_coverage_is_current_and_exact() {
+    let output = run(&crate_root(), &["--check", "--scan"]);
+    assert!(
+        output.status.success(),
+        "coverage check failed:\n{}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let projection = fs::read_to_string(crate_root().join("CLASSFILE_COVERAGE.md")).unwrap();
+    assert!(projection.contains("256 opcodes"));
+    assert!(projection.contains("coverage difference: 0"));
+}
+
+#[test]
+fn duplicate_inventory_fixture_is_rejected() {
+    let scratch = scratch_copy();
+    fs::write(
+        scratch.join("src/duplicate.rs"),
+        "const OPCODE_TABLE: &[u8] = &[0, 1, 2, 3, 4, 5, 6, 7];\n",
+    )
+    .unwrap();
+    assert!(failure(&scratch).contains("duplicate classfile inventory"));
+    fs::remove_dir_all(scratch).unwrap();
+}
+
+#[test]
+fn runtime_byte_parser_fixture_is_rejected() {
+    let scratch = scratch_copy();
+    let member = scratch.join("crates/sim-lib-jvm-runtime/src");
+    fs::create_dir_all(&member).unwrap();
+    fs::write(
+        member.parent().unwrap().join("Cargo.toml"),
+        "[package]\nname = \"sim-lib-jvm-runtime\"\n",
+    )
+    .unwrap();
+    fs::write(
+        member.join("parser.rs"),
+        "fn parse_classfile(r: &mut ByteReader) { let _ = r.read_u2(); }\n",
+    )
+    .unwrap();
+    assert!(failure(&scratch).contains("parses classfile bytes outside sim-codec-classfile"));
+    fs::remove_dir_all(scratch).unwrap();
+}
+
+#[test]
+fn lossy_modified_utf8_fixture_is_rejected() {
+    let scratch = scratch_copy();
+    fs::write(
+        scratch.join("src/lossy.rs"),
+        "fn modified_utf8(bytes: &[u8]) { let _ = String::from_utf8_lossy(bytes); }\n",
+    )
+    .unwrap();
+    assert!(failure(&scratch).contains("lossy modified UTF-8 crossing"));
+    fs::remove_dir_all(scratch).unwrap();
+}
+
+#[test]
+fn hand_edited_generated_projection_fixture_is_rejected() {
+    let scratch = scratch_copy();
+    fs::write(scratch.join("CLASSFILE_COVERAGE.md"), "hand edited\n").unwrap();
+    assert!(failure(&scratch).contains("generated classfile coverage is stale"));
+    fs::remove_dir_all(scratch).unwrap();
 }
 ```
 
@@ -1614,6 +1779,7 @@ use sim_codec::{
     CodecRuntime, DecodeBudget, DecodeLimits, DecodePosition, DecodedForm, Input,
     decode_datum_with_codec, decode_default_with_codec, decode_with_codec,
     decode_with_codec_and_limits, encode_datum_with_codec, encode_tree_with_codec,
+    encode_with_codec,
 };
 use sim_kernel::{
     Datum, DefaultFactory, EagerPolicy, EncodeOptions, Expr, LocatedExpr, LocatedExprTree,
@@ -1622,8 +1788,8 @@ use sim_kernel::{
 
 use crate::helpers::base64_encode;
 use crate::{
-    JsonCodecLib, expr_to_json, json_escape, json_to_expr, json_to_located_expr,
-    located_expr_to_json,
+    JsonCodecLib, JsonTree, expr_to_json, json_escape, json_to_expr, json_to_located_expr,
+    located_expr_to_json, parse_json, parse_json_with_limits, render_json,
 };
 
 fn cx() -> sim_kernel::Cx {
@@ -1689,6 +1855,73 @@ fn json_escape_returns_a_json_string_fragment() {
         "quote\\\" slash\\\\ lf\\n cr\\r tab\\t back\\b form\\f nul\\u0000"
     );
     assert_eq!(json_escape("plain utf8 cafe"), "plain utf8 cafe");
+}
+
+#[test]
+fn public_tree_and_runtime_share_the_frozen_corpus() {
+    let mut cx = cx();
+    let symbol = Symbol::qualified("codec", "json");
+    let codec = codec_id(&mut cx, &symbol);
+    let corpus = [
+        Expr::Nil,
+        Expr::Bool(true),
+        Expr::String("cafe\njson".to_owned()),
+        Expr::Bytes(vec![0, 127, 255]),
+        Expr::List(vec![Expr::Bool(false), Expr::String("x".to_owned())]),
+        Expr::Map(vec![(Expr::String("key".to_owned()), Expr::Nil)]),
+    ];
+
+    for expr in corpus {
+        let runtime = encode_with_codec(&mut cx, &symbol, &expr, Default::default())
+            .unwrap()
+            .into_text()
+            .unwrap();
+        let tree = parse_json(codec, &runtime).unwrap();
+        assert_eq!(render_json(codec, &tree).unwrap(), runtime);
+        let decoded = decode_with_codec(
+            &mut cx,
+            &symbol,
+            Input::Text(render_json(codec, &tree).unwrap()),
+            ReadPolicy::default(),
+        )
+        .unwrap();
+        assert_eq!(decoded, expr);
+    }
+}
+
+#[test]
+fn public_tree_is_dependency_neutral_and_bounded() {
+    let codec = sim_kernel::CodecId(41);
+    let tree = JsonTree::Object(vec![
+        ("answer".to_owned(), JsonTree::Number("42".to_owned())),
+        (
+            "values".to_owned(),
+            JsonTree::Array(vec![JsonTree::Null, JsonTree::Bool(true)]),
+        ),
+    ]);
+    assert_eq!(
+        parse_json(codec, &render_json(codec, &tree).unwrap()).unwrap(),
+        tree
+    );
+
+    let limits = DecodeLimits {
+        max_collection_len: 1,
+        ..DecodeLimits::default()
+    };
+    let error = parse_json_with_limits(codec, "[null,true]", limits).unwrap_err();
+    assert!(
+        matches!(error, sim_kernel::Error::CodecError { message, .. } if message.contains("collection length"))
+    );
+}
+
+#[test]
+fn public_tree_owns_f64_number_validation_and_rendering() {
+    let codec = sim_kernel::CodecId(42);
+    let number = JsonTree::number_from_f64(codec, 2.0).unwrap();
+    assert_eq!(number.number_as_f64(codec).unwrap(), 2.0);
+    assert_eq!(render_json(codec, &number).unwrap(), "2.0");
+    assert!(JsonTree::number_from_f64(codec, f64::NAN).is_err());
+    assert!(JsonTree::number_from_f64(codec, f64::INFINITY).is_err());
 }
 
 #[test]
