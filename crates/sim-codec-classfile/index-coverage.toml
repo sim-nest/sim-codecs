@@ -1,0 +1,16 @@
+schema = "sim.classfile-index-coverage/v1"
+
+[coverage]
+opcode_manifest = "opcode-manifest.tsv"
+constant_source = "src/constant/model.rs"
+constant_enum = "Constant"
+attribute_source = "src/attribute/class.rs"
+attribute_function = "standard_attribute_min_major"
+
+[guards]
+owner_crate = "sim-codec-classfile"
+generated_files = [
+  "CLASSFILE_COVERAGE.md",
+  "OPCODES.md",
+  "src/opcode_generated.rs",
+]

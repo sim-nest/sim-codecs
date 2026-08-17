@@ -1,0 +1,5 @@
+book = "codec/classfile"
+title = "Classfile Inspection"
+summary = "Inspect retained JVM classfiles without starting a JVM."
+order = 70
+chapters = ["01-inspection"]

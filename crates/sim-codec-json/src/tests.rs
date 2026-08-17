@@ -7,6 +7,7 @@ use sim_codec::{
     CodecRuntime, DecodeBudget, DecodeLimits, DecodePosition, DecodedForm, Input,
     decode_datum_with_codec, decode_default_with_codec, decode_with_codec,
     decode_with_codec_and_limits, encode_datum_with_codec, encode_tree_with_codec,
+    encode_with_codec,
 };
 use sim_kernel::{
     Datum, DefaultFactory, EagerPolicy, EncodeOptions, Expr, LocatedExpr, LocatedExprTree,
@@ -15,8 +16,8 @@ use sim_kernel::{
 
 use crate::helpers::base64_encode;
 use crate::{
-    JsonCodecLib, expr_to_json, json_escape, json_to_expr, json_to_located_expr,
-    located_expr_to_json,
+    JsonCodecLib, JsonTree, expr_to_json, json_escape, json_to_expr, json_to_located_expr,
+    located_expr_to_json, parse_json, parse_json_with_limits, render_json,
 };
 
 fn cx() -> sim_kernel::Cx {
@@ -82,6 +83,73 @@ fn json_escape_returns_a_json_string_fragment() {
         "quote\\\" slash\\\\ lf\\n cr\\r tab\\t back\\b form\\f nul\\u0000"
     );
     assert_eq!(json_escape("plain utf8 cafe"), "plain utf8 cafe");
+}
+
+#[test]
+fn public_tree_and_runtime_share_the_frozen_corpus() {
+    let mut cx = cx();
+    let symbol = Symbol::qualified("codec", "json");
+    let codec = codec_id(&mut cx, &symbol);
+    let corpus = [
+        Expr::Nil,
+        Expr::Bool(true),
+        Expr::String("cafe\njson".to_owned()),
+        Expr::Bytes(vec![0, 127, 255]),
+        Expr::List(vec![Expr::Bool(false), Expr::String("x".to_owned())]),
+        Expr::Map(vec![(Expr::String("key".to_owned()), Expr::Nil)]),
+    ];
+
+    for expr in corpus {
+        let runtime = encode_with_codec(&mut cx, &symbol, &expr, Default::default())
+            .unwrap()
+            .into_text()
+            .unwrap();
+        let tree = parse_json(codec, &runtime).unwrap();
+        assert_eq!(render_json(codec, &tree).unwrap(), runtime);
+        let decoded = decode_with_codec(
+            &mut cx,
+            &symbol,
+            Input::Text(render_json(codec, &tree).unwrap()),
+            ReadPolicy::default(),
+        )
+        .unwrap();
+        assert_eq!(decoded, expr);
+    }
+}
+
+#[test]
+fn public_tree_is_dependency_neutral_and_bounded() {
+    let codec = sim_kernel::CodecId(41);
+    let tree = JsonTree::Object(vec![
+        ("answer".to_owned(), JsonTree::Number("42".to_owned())),
+        (
+            "values".to_owned(),
+            JsonTree::Array(vec![JsonTree::Null, JsonTree::Bool(true)]),
+        ),
+    ]);
+    assert_eq!(
+        parse_json(codec, &render_json(codec, &tree).unwrap()).unwrap(),
+        tree
+    );
+
+    let limits = DecodeLimits {
+        max_collection_len: 1,
+        ..DecodeLimits::default()
+    };
+    let error = parse_json_with_limits(codec, "[null,true]", limits).unwrap_err();
+    assert!(
+        matches!(error, sim_kernel::Error::CodecError { message, .. } if message.contains("collection length"))
+    );
+}
+
+#[test]
+fn public_tree_owns_f64_number_validation_and_rendering() {
+    let codec = sim_kernel::CodecId(42);
+    let number = JsonTree::number_from_f64(codec, 2.0).unwrap();
+    assert_eq!(number.number_as_f64(codec).unwrap(), 2.0);
+    assert_eq!(render_json(codec, &number).unwrap(), "2.0");
+    assert!(JsonTree::number_from_f64(codec, f64::NAN).is_err());
+    assert!(JsonTree::number_from_f64(codec, f64::INFINITY).is_err());
 }
 
 #[test]

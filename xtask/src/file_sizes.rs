@@ -7,6 +7,8 @@ const GENERAL_SOFT_LIMIT: usize = 500;
 const GENERAL_HARD_LIMIT: usize = 700;
 const ENTRYPOINT_SOFT_LIMIT: usize = 150;
 const ENTRYPOINT_HARD_LIMIT: usize = 250;
+const GENERATED_TABLE_SOFT_LIMIT: usize = 1_000;
+const GENERATED_TABLE_HARD_LIMIT: usize = 2_000;
 
 pub fn run(args: &[String]) -> Result<(), String> {
     if args.len() != 2 {
@@ -93,6 +95,14 @@ struct Limits {
 
 fn limits_for(path: &Path) -> Limits {
     match path.file_name().and_then(|name| name.to_str()) {
+        // This byte-complete table is generator-owned and guarded by the
+        // opcode fixpoint test. Splitting its single generated inventory would
+        // make generation and auditability worse without reducing authored
+        // source complexity.
+        Some("opcode_generated.rs") => Limits {
+            soft: GENERATED_TABLE_SOFT_LIMIT,
+            hard: GENERATED_TABLE_HARD_LIMIT,
+        },
         Some("lib.rs" | "main.rs" | "mod.rs") => Limits {
             soft: ENTRYPOINT_SOFT_LIMIT,
             hard: ENTRYPOINT_HARD_LIMIT,
@@ -109,4 +119,24 @@ fn relative_path(root: &Path, path: &Path) -> String {
         .unwrap_or(path)
         .display()
         .to_string()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn opcode_inventory_has_a_bounded_generated_table_budget() {
+        let limits = limits_for(Path::new(
+            "crates/sim-codec-classfile/src/opcode_generated.rs",
+        ));
+        assert_eq!(
+            limits,
+            Limits {
+                soft: GENERATED_TABLE_SOFT_LIMIT,
+                hard: GENERATED_TABLE_HARD_LIMIT,
+            }
+        );
+        assert!(limits.hard < 3 * GENERAL_HARD_LIMIT);
+    }
 }

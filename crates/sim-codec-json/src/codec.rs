@@ -6,19 +6,18 @@
 
 use std::sync::Arc;
 
-use serde_json::Value as JsonValue;
 use sim_codec::{
     CodecDefaultDecode, CodecRuntime, DecodeBudget, Decoder, Encoder, Input, LocatedDecoder,
     LocatedEncoder, Output, ReadCx, TreeDecoder, TreeEncoder, codec_value, validate_expr_tree,
 };
 use sim_kernel::{
-    AbiVersion, DefaultFactory, Dependency, Error, Export, Expr, Lib, LibManifest, LibTarget,
-    Linker, LocatedExpr, LocatedExprTree, Result, Symbol, Version, WriteCx,
+    AbiVersion, DefaultFactory, Dependency, Export, Expr, Lib, LibManifest, LibTarget, Linker,
+    LocatedExpr, LocatedExprTree, Result, Symbol, Version, WriteCx,
 };
 
 use crate::{
-    expr_to_json, json_to_expr, json_to_located_expr, json_to_tree, located_expr_to_json,
-    tree_to_json,
+    JsonTree, expr_to_json, json_to_expr, json_to_located_expr, json_to_tree, located_expr_to_json,
+    parse_json_with_limits, render_json, tree_to_json,
 };
 
 /// JSON codec runtime object that round-trips every [`Expr`] through JSON.
@@ -32,25 +31,17 @@ pub struct JsonCodec;
 
 impl Decoder for JsonCodec {
     fn decode(&self, cx: &mut ReadCx<'_>, input: Input) -> Result<Expr> {
-        let source = input.into_string_for(cx.codec)?;
+        let tree = parse_json_with_limits(cx.codec, &input.into_string_for(cx.codec)?, cx.limits)?;
+        let value = tree.to_json_value(cx.codec)?;
         let mut budget = DecodeBudget::new(cx.limits);
-        budget.check_input_bytes(cx.codec, source.len())?;
-        let value =
-            serde_json::from_str::<JsonValue>(&source).map_err(|err| Error::CodecError {
-                codec: cx.codec,
-                message: err.to_string(),
-            })?;
         json_to_expr(cx.codec, &value, &mut budget, 0)
     }
 }
 
 impl Encoder for JsonCodec {
     fn encode(&self, cx: &mut WriteCx<'_>, expr: &Expr) -> Result<Output> {
-        let value = expr_to_json(expr);
-        let text = serde_json::to_string(&value).map_err(|err| Error::CodecError {
-            codec: cx.codec,
-            message: err.to_string(),
-        })?;
+        let tree = JsonTree::from_json_value(expr_to_json(expr));
+        let text = render_json(cx.codec, &tree)?;
         Ok(Output::Text(text))
     }
 }
@@ -62,25 +53,18 @@ impl LocatedDecoder for JsonCodec {
         input: Input,
         _source_id: String,
     ) -> Result<LocatedExpr> {
-        let source = input.into_string_for(cx.codec)?;
+        let tree = parse_json_with_limits(cx.codec, &input.into_string_for(cx.codec)?, cx.limits)?;
+        let value = tree.to_json_value(cx.codec)?;
         let mut budget = DecodeBudget::new(cx.limits);
-        budget.check_input_bytes(cx.codec, source.len())?;
-        let value =
-            serde_json::from_str::<JsonValue>(&source).map_err(|err| Error::CodecError {
-                codec: cx.codec,
-                message: err.to_string(),
-            })?;
         json_to_located_expr(cx.codec, &value, &mut budget, 0)
     }
 }
 
 impl LocatedEncoder for JsonCodec {
     fn encode_located(&self, cx: &mut WriteCx<'_>, expr: &LocatedExpr) -> Result<Output> {
-        let value = located_expr_to_json(expr, cx.options.lossless_origin);
-        let text = serde_json::to_string(&value).map_err(|err| Error::CodecError {
-            codec: cx.codec,
-            message: err.to_string(),
-        })?;
+        let tree =
+            JsonTree::from_json_value(located_expr_to_json(expr, cx.options.lossless_origin));
+        let text = render_json(cx.codec, &tree)?;
         Ok(Output::Text(text))
     }
 }
@@ -92,14 +76,9 @@ impl TreeDecoder for JsonCodec {
         input: Input,
         _source_id: String,
     ) -> Result<LocatedExprTree> {
-        let source = input.into_string_for(cx.codec)?;
+        let tree = parse_json_with_limits(cx.codec, &input.into_string_for(cx.codec)?, cx.limits)?;
+        let value = tree.to_json_value(cx.codec)?;
         let mut budget = DecodeBudget::new(cx.limits);
-        budget.check_input_bytes(cx.codec, source.len())?;
-        let value =
-            serde_json::from_str::<JsonValue>(&source).map_err(|err| Error::CodecError {
-                codec: cx.codec,
-                message: err.to_string(),
-            })?;
         json_to_tree(cx.codec, &value, &mut budget, 0)
     }
 }
@@ -107,11 +86,8 @@ impl TreeDecoder for JsonCodec {
 impl TreeEncoder for JsonCodec {
     fn encode_tree(&self, cx: &mut WriteCx<'_>, expr: &LocatedExprTree) -> Result<Output> {
         validate_expr_tree(cx.codec, expr)?;
-        let value = tree_to_json(expr, cx.options.lossless_origin);
-        let text = serde_json::to_string(&value).map_err(|err| Error::CodecError {
-            codec: cx.codec,
-            message: err.to_string(),
-        })?;
+        let tree = JsonTree::from_json_value(tree_to_json(expr, cx.options.lossless_origin));
+        let text = render_json(cx.codec, &tree)?;
         Ok(Output::Text(text))
     }
 }

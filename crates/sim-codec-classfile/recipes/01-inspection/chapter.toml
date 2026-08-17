@@ -1,0 +1,3 @@
+title = "Inspection"
+order = 10
+summary = "Browse constants, attributes, and byte-located instructions."

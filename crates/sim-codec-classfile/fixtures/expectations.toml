@@ -1,0 +1,92 @@
+schema = "sim.classfile-fixture-expectations/v1"
+authorship = "written-before-parser-implementation"
+
+[[fixture]]
+name = "positive"
+file = "positive.class"
+sha256 = "12a7f8f1a1119df88b01218d18cfffcf18b578a05be110a9a0ec98f9cb7c4f9b"
+expected_roundtrip_sha256 = "12a7f8f1a1119df88b01218d18cfffcf18b578a05be110a9a0ec98f9cb7c4f9b"
+outcome = "success"
+failure_offset = -1
+failure_path = "none"
+requirement = "ordinary class, fields, methods, and Code attributes retain byte identity"
+
+[[fixture]]
+name = "negative"
+file = "negative.class"
+sha256 = "2b0e098941abc27421ab0f0ea9d7ec6429845bea8e5f43041317074b85d8ebc9"
+expected_roundtrip_sha256 = "2b0e098941abc27421ab0f0ea9d7ec6429845bea8e5f43041317074b85d8ebc9"
+outcome = "failure"
+failure_offset = 3
+failure_path = "magic"
+requirement = "truncated magic reports the first unavailable byte"
+
+[[fixture]]
+name = "adversarial"
+file = "adversarial.class"
+sha256 = "b447d53b3d2788eefca24a84893b766c52dc8972806102c2d215a5cd8278dbc0"
+expected_roundtrip_sha256 = "b447d53b3d2788eefca24a84893b766c52dc8972806102c2d215a5cd8278dbc0"
+outcome = "failure"
+failure_offset = 8
+failure_path = "constant_pool"
+requirement = "maximal declared constant pool cannot allocate past retained input"
+
+[[fixture]]
+name = "module"
+file = "module-info.class"
+sha256 = "1caeca421611698293fb311d12a6a60abf06795feaee8a722d9dfe891fbbeaac"
+expected_roundtrip_sha256 = "1caeca421611698293fb311d12a6a60abf06795feaee8a722d9dfe891fbbeaac"
+outcome = "success"
+failure_offset = -1
+failure_path = "none"
+requirement = "ACC_MODULE, CONSTANT_Module, CONSTANT_Package, and Module retain byte identity"
+
+[[fixture]]
+name = "record"
+file = "record.class"
+sha256 = "453df0c18a849d6dd8551509fdbc57b0f06bfbd33b0d48078ad3b121f8a54bf7"
+expected_roundtrip_sha256 = "453df0c18a849d6dd8551509fdbc57b0f06bfbd33b0d48078ad3b121f8a54bf7"
+outcome = "success"
+failure_offset = -1
+failure_path = "none"
+requirement = "Record and bootstrap-linked generated methods retain byte identity"
+
+[[fixture]]
+name = "sealed"
+file = "sealed.class"
+sha256 = "c28c9fc30be2821b0392d94905751918189dbb84637e14b40ba3f4122a325fe9"
+expected_roundtrip_sha256 = "c28c9fc30be2821b0392d94905751918189dbb84637e14b40ba3f4122a325fe9"
+outcome = "success"
+failure_offset = -1
+failure_path = "none"
+requirement = "PermittedSubclasses retains byte identity"
+
+[[fixture]]
+name = "annotation"
+file = "annotation.class"
+sha256 = "e2ac679cfe7206ba0a9b2c3701497f64322350288969b8b40dc47499252ce454"
+expected_roundtrip_sha256 = "e2ac679cfe7206ba0a9b2c3701497f64322350288969b8b40dc47499252ce454"
+outcome = "success"
+failure_offset = -1
+failure_path = "none"
+requirement = "annotation defaults and runtime-visible annotations retain byte identity"
+
+[[fixture]]
+name = "dynamic"
+file = "dynamic.class"
+sha256 = "36e0ca46cac2564922ecccf151104deae33eb16bd7c15712ce7f73b5a2b886bb"
+expected_roundtrip_sha256 = "36e0ca46cac2564922ecccf151104deae33eb16bd7c15712ce7f73b5a2b886bb"
+outcome = "success"
+failure_offset = -1
+failure_path = "none"
+requirement = "CONSTANT_InvokeDynamic and BootstrapMethods retain byte identity"
+
+[[fixture]]
+name = "unknown-attribute"
+file = "unknown-attribute.class"
+sha256 = "a0a5145e7a6b33945d790c6003cf7c7b05fd482bd809f2bfecfa6967e5b7c463"
+expected_roundtrip_sha256 = "a0a5145e7a6b33945d790c6003cf7c7b05fd482bd809f2bfecfa6967e5b7c463"
+outcome = "success"
+failure_offset = -1
+failure_path = "none"
+requirement = "unrecognized FuturePayload attribute retains its name and raw payload bytes"

@@ -58,6 +58,13 @@
       "summary": "Canonical chat transcript codec for SIM."
     },
     {
+      "crate_name": "sim_codec_classfile",
+      "group": "workspace",
+      "manifest": "crates/sim-codec-classfile/Cargo.toml",
+      "package": "sim-codec-classfile",
+      "summary": "Frozen scope contract for the bounded, lossless JVM classfile codec."
+    },
+    {
       "crate_name": "sim_codec_compare",
       "group": "workspace",
       "manifest": "crates/sim-codec-compare/Cargo.toml",
