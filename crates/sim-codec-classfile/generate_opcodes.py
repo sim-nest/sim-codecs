@@ -46,8 +46,16 @@ def rust_string(value: str) -> str:
     return '"' + value.replace('\\', '\\\\').replace('"', '\\"') + '"'
 
 
+def rust_opcode_variant(row: dict[str, str]) -> str:
+    documentation = f"JVM opcode `{row['mnemonic']}` (`{row['value']}`)."
+    return (
+        f"    #[doc = {rust_string(documentation)}] "
+        f"{row['identity']} = {row['value']},"
+    )
+
+
 def generate_rust(rows: list[dict[str, str]]) -> str:
-    variants = "\n".join(f"    /// JVM opcode `{row['mnemonic']}` (`{row['value']}`).\n    {row['identity']} = {row['value']}," for row in rows)
+    variants = "\n".join(rust_opcode_variant(row) for row in rows)
     metadata = "\n".join(
         "    OpcodeMetadata { "
         f"opcode: Opcode::{row['identity']}, mnemonic: {rust_string(row['mnemonic'])}, "
@@ -62,6 +70,7 @@ def generate_rust(rows: list[dict[str, str]]) -> str:
 /// Stable identity for every byte in the JVM opcode space.
 #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 #[repr(u8)]
+#[rustfmt::skip]
 pub enum Opcode {{
 {variants}
 }}

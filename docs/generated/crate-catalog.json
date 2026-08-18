@@ -1,6 +1,6 @@
 {
   "generator": "xtask crate-catalog v1",
-  "package_count": 23,
+  "package_count": 24,
   "packages": [
     {
       "description": "SIM workspace package for sim codec algol.",
@@ -91,6 +91,20 @@
       "target_kinds": [
         "custom-build",
         "lib"
+      ]
+    },
+    {
+      "description": "Bounded, lossless Java Virtual Machine classfile codec for SIM.",
+      "generated_readme": false,
+      "manifest": "crates/sim-codec-classfile/Cargo.toml",
+      "name": "sim-codec-classfile",
+      "publish": "true",
+      "readme": "crates/sim-codec-classfile/README.md",
+      "root": "crates/sim-codec-classfile",
+      "target_kinds": [
+        "custom-build",
+        "lib",
+        "test"
       ]
     },
     {

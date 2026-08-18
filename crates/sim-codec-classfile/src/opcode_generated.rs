@@ -3,519 +3,264 @@
 /// Stable identity for every byte in the JVM opcode space.
 #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 #[repr(u8)]
+#[rustfmt::skip]
 pub enum Opcode {
-    /// JVM opcode `nop` (`0x00`).
-    Nop = 0x00,
-    /// JVM opcode `aconst_null` (`0x01`).
-    AconstNull = 0x01,
-    /// JVM opcode `iconst_m1` (`0x02`).
-    IconstM1 = 0x02,
-    /// JVM opcode `iconst_0` (`0x03`).
-    Iconst0 = 0x03,
-    /// JVM opcode `iconst_1` (`0x04`).
-    Iconst1 = 0x04,
-    /// JVM opcode `iconst_2` (`0x05`).
-    Iconst2 = 0x05,
-    /// JVM opcode `iconst_3` (`0x06`).
-    Iconst3 = 0x06,
-    /// JVM opcode `iconst_4` (`0x07`).
-    Iconst4 = 0x07,
-    /// JVM opcode `iconst_5` (`0x08`).
-    Iconst5 = 0x08,
-    /// JVM opcode `lconst_0` (`0x09`).
-    Lconst0 = 0x09,
-    /// JVM opcode `lconst_1` (`0x0a`).
-    Lconst1 = 0x0a,
-    /// JVM opcode `fconst_0` (`0x0b`).
-    Fconst0 = 0x0b,
-    /// JVM opcode `fconst_1` (`0x0c`).
-    Fconst1 = 0x0c,
-    /// JVM opcode `fconst_2` (`0x0d`).
-    Fconst2 = 0x0d,
-    /// JVM opcode `dconst_0` (`0x0e`).
-    Dconst0 = 0x0e,
-    /// JVM opcode `dconst_1` (`0x0f`).
-    Dconst1 = 0x0f,
-    /// JVM opcode `bipush` (`0x10`).
-    Bipush = 0x10,
-    /// JVM opcode `sipush` (`0x11`).
-    Sipush = 0x11,
-    /// JVM opcode `ldc` (`0x12`).
-    Ldc = 0x12,
-    /// JVM opcode `ldc_w` (`0x13`).
-    LdcW = 0x13,
-    /// JVM opcode `ldc2_w` (`0x14`).
-    Ldc2W = 0x14,
-    /// JVM opcode `iload` (`0x15`).
-    Iload = 0x15,
-    /// JVM opcode `lload` (`0x16`).
-    Lload = 0x16,
-    /// JVM opcode `fload` (`0x17`).
-    Fload = 0x17,
-    /// JVM opcode `dload` (`0x18`).
-    Dload = 0x18,
-    /// JVM opcode `aload` (`0x19`).
-    Aload = 0x19,
-    /// JVM opcode `iload_0` (`0x1a`).
-    Iload0 = 0x1a,
-    /// JVM opcode `iload_1` (`0x1b`).
-    Iload1 = 0x1b,
-    /// JVM opcode `iload_2` (`0x1c`).
-    Iload2 = 0x1c,
-    /// JVM opcode `iload_3` (`0x1d`).
-    Iload3 = 0x1d,
-    /// JVM opcode `lload_0` (`0x1e`).
-    Lload0 = 0x1e,
-    /// JVM opcode `lload_1` (`0x1f`).
-    Lload1 = 0x1f,
-    /// JVM opcode `lload_2` (`0x20`).
-    Lload2 = 0x20,
-    /// JVM opcode `lload_3` (`0x21`).
-    Lload3 = 0x21,
-    /// JVM opcode `fload_0` (`0x22`).
-    Fload0 = 0x22,
-    /// JVM opcode `fload_1` (`0x23`).
-    Fload1 = 0x23,
-    /// JVM opcode `fload_2` (`0x24`).
-    Fload2 = 0x24,
-    /// JVM opcode `fload_3` (`0x25`).
-    Fload3 = 0x25,
-    /// JVM opcode `dload_0` (`0x26`).
-    Dload0 = 0x26,
-    /// JVM opcode `dload_1` (`0x27`).
-    Dload1 = 0x27,
-    /// JVM opcode `dload_2` (`0x28`).
-    Dload2 = 0x28,
-    /// JVM opcode `dload_3` (`0x29`).
-    Dload3 = 0x29,
-    /// JVM opcode `aload_0` (`0x2a`).
-    Aload0 = 0x2a,
-    /// JVM opcode `aload_1` (`0x2b`).
-    Aload1 = 0x2b,
-    /// JVM opcode `aload_2` (`0x2c`).
-    Aload2 = 0x2c,
-    /// JVM opcode `aload_3` (`0x2d`).
-    Aload3 = 0x2d,
-    /// JVM opcode `iaload` (`0x2e`).
-    Iaload = 0x2e,
-    /// JVM opcode `laload` (`0x2f`).
-    Laload = 0x2f,
-    /// JVM opcode `faload` (`0x30`).
-    Faload = 0x30,
-    /// JVM opcode `daload` (`0x31`).
-    Daload = 0x31,
-    /// JVM opcode `aaload` (`0x32`).
-    Aaload = 0x32,
-    /// JVM opcode `baload` (`0x33`).
-    Baload = 0x33,
-    /// JVM opcode `caload` (`0x34`).
-    Caload = 0x34,
-    /// JVM opcode `saload` (`0x35`).
-    Saload = 0x35,
-    /// JVM opcode `istore` (`0x36`).
-    Istore = 0x36,
-    /// JVM opcode `lstore` (`0x37`).
-    Lstore = 0x37,
-    /// JVM opcode `fstore` (`0x38`).
-    Fstore = 0x38,
-    /// JVM opcode `dstore` (`0x39`).
-    Dstore = 0x39,
-    /// JVM opcode `astore` (`0x3a`).
-    Astore = 0x3a,
-    /// JVM opcode `istore_0` (`0x3b`).
-    Istore0 = 0x3b,
-    /// JVM opcode `istore_1` (`0x3c`).
-    Istore1 = 0x3c,
-    /// JVM opcode `istore_2` (`0x3d`).
-    Istore2 = 0x3d,
-    /// JVM opcode `istore_3` (`0x3e`).
-    Istore3 = 0x3e,
-    /// JVM opcode `lstore_0` (`0x3f`).
-    Lstore0 = 0x3f,
-    /// JVM opcode `lstore_1` (`0x40`).
-    Lstore1 = 0x40,
-    /// JVM opcode `lstore_2` (`0x41`).
-    Lstore2 = 0x41,
-    /// JVM opcode `lstore_3` (`0x42`).
-    Lstore3 = 0x42,
-    /// JVM opcode `fstore_0` (`0x43`).
-    Fstore0 = 0x43,
-    /// JVM opcode `fstore_1` (`0x44`).
-    Fstore1 = 0x44,
-    /// JVM opcode `fstore_2` (`0x45`).
-    Fstore2 = 0x45,
-    /// JVM opcode `fstore_3` (`0x46`).
-    Fstore3 = 0x46,
-    /// JVM opcode `dstore_0` (`0x47`).
-    Dstore0 = 0x47,
-    /// JVM opcode `dstore_1` (`0x48`).
-    Dstore1 = 0x48,
-    /// JVM opcode `dstore_2` (`0x49`).
-    Dstore2 = 0x49,
-    /// JVM opcode `dstore_3` (`0x4a`).
-    Dstore3 = 0x4a,
-    /// JVM opcode `astore_0` (`0x4b`).
-    Astore0 = 0x4b,
-    /// JVM opcode `astore_1` (`0x4c`).
-    Astore1 = 0x4c,
-    /// JVM opcode `astore_2` (`0x4d`).
-    Astore2 = 0x4d,
-    /// JVM opcode `astore_3` (`0x4e`).
-    Astore3 = 0x4e,
-    /// JVM opcode `iastore` (`0x4f`).
-    Iastore = 0x4f,
-    /// JVM opcode `lastore` (`0x50`).
-    Lastore = 0x50,
-    /// JVM opcode `fastore` (`0x51`).
-    Fastore = 0x51,
-    /// JVM opcode `dastore` (`0x52`).
-    Dastore = 0x52,
-    /// JVM opcode `aastore` (`0x53`).
-    Aastore = 0x53,
-    /// JVM opcode `bastore` (`0x54`).
-    Bastore = 0x54,
-    /// JVM opcode `castore` (`0x55`).
-    Castore = 0x55,
-    /// JVM opcode `sastore` (`0x56`).
-    Sastore = 0x56,
-    /// JVM opcode `pop` (`0x57`).
-    Pop = 0x57,
-    /// JVM opcode `pop2` (`0x58`).
-    Pop2 = 0x58,
-    /// JVM opcode `dup` (`0x59`).
-    Dup = 0x59,
-    /// JVM opcode `dup_x1` (`0x5a`).
-    DupX1 = 0x5a,
-    /// JVM opcode `dup_x2` (`0x5b`).
-    DupX2 = 0x5b,
-    /// JVM opcode `dup2` (`0x5c`).
-    Dup2 = 0x5c,
-    /// JVM opcode `dup2_x1` (`0x5d`).
-    Dup2X1 = 0x5d,
-    /// JVM opcode `dup2_x2` (`0x5e`).
-    Dup2X2 = 0x5e,
-    /// JVM opcode `swap` (`0x5f`).
-    Swap = 0x5f,
-    /// JVM opcode `iadd` (`0x60`).
-    Iadd = 0x60,
-    /// JVM opcode `ladd` (`0x61`).
-    Ladd = 0x61,
-    /// JVM opcode `fadd` (`0x62`).
-    Fadd = 0x62,
-    /// JVM opcode `dadd` (`0x63`).
-    Dadd = 0x63,
-    /// JVM opcode `isub` (`0x64`).
-    Isub = 0x64,
-    /// JVM opcode `lsub` (`0x65`).
-    Lsub = 0x65,
-    /// JVM opcode `fsub` (`0x66`).
-    Fsub = 0x66,
-    /// JVM opcode `dsub` (`0x67`).
-    Dsub = 0x67,
-    /// JVM opcode `imul` (`0x68`).
-    Imul = 0x68,
-    /// JVM opcode `lmul` (`0x69`).
-    Lmul = 0x69,
-    /// JVM opcode `fmul` (`0x6a`).
-    Fmul = 0x6a,
-    /// JVM opcode `dmul` (`0x6b`).
-    Dmul = 0x6b,
-    /// JVM opcode `idiv` (`0x6c`).
-    Idiv = 0x6c,
-    /// JVM opcode `ldiv` (`0x6d`).
-    Ldiv = 0x6d,
-    /// JVM opcode `fdiv` (`0x6e`).
-    Fdiv = 0x6e,
-    /// JVM opcode `ddiv` (`0x6f`).
-    Ddiv = 0x6f,
-    /// JVM opcode `irem` (`0x70`).
-    Irem = 0x70,
-    /// JVM opcode `lrem` (`0x71`).
-    Lrem = 0x71,
-    /// JVM opcode `frem` (`0x72`).
-    Frem = 0x72,
-    /// JVM opcode `drem` (`0x73`).
-    Drem = 0x73,
-    /// JVM opcode `ineg` (`0x74`).
-    Ineg = 0x74,
-    /// JVM opcode `lneg` (`0x75`).
-    Lneg = 0x75,
-    /// JVM opcode `fneg` (`0x76`).
-    Fneg = 0x76,
-    /// JVM opcode `dneg` (`0x77`).
-    Dneg = 0x77,
-    /// JVM opcode `ishl` (`0x78`).
-    Ishl = 0x78,
-    /// JVM opcode `lshl` (`0x79`).
-    Lshl = 0x79,
-    /// JVM opcode `ishr` (`0x7a`).
-    Ishr = 0x7a,
-    /// JVM opcode `lshr` (`0x7b`).
-    Lshr = 0x7b,
-    /// JVM opcode `iushr` (`0x7c`).
-    Iushr = 0x7c,
-    /// JVM opcode `lushr` (`0x7d`).
-    Lushr = 0x7d,
-    /// JVM opcode `iand` (`0x7e`).
-    Iand = 0x7e,
-    /// JVM opcode `land` (`0x7f`).
-    Land = 0x7f,
-    /// JVM opcode `ior` (`0x80`).
-    Ior = 0x80,
-    /// JVM opcode `lor` (`0x81`).
-    Lor = 0x81,
-    /// JVM opcode `ixor` (`0x82`).
-    Ixor = 0x82,
-    /// JVM opcode `lxor` (`0x83`).
-    Lxor = 0x83,
-    /// JVM opcode `iinc` (`0x84`).
-    Iinc = 0x84,
-    /// JVM opcode `i2l` (`0x85`).
-    I2l = 0x85,
-    /// JVM opcode `i2f` (`0x86`).
-    I2f = 0x86,
-    /// JVM opcode `i2d` (`0x87`).
-    I2d = 0x87,
-    /// JVM opcode `l2i` (`0x88`).
-    L2i = 0x88,
-    /// JVM opcode `l2f` (`0x89`).
-    L2f = 0x89,
-    /// JVM opcode `l2d` (`0x8a`).
-    L2d = 0x8a,
-    /// JVM opcode `f2i` (`0x8b`).
-    F2i = 0x8b,
-    /// JVM opcode `f2l` (`0x8c`).
-    F2l = 0x8c,
-    /// JVM opcode `f2d` (`0x8d`).
-    F2d = 0x8d,
-    /// JVM opcode `d2i` (`0x8e`).
-    D2i = 0x8e,
-    /// JVM opcode `d2l` (`0x8f`).
-    D2l = 0x8f,
-    /// JVM opcode `d2f` (`0x90`).
-    D2f = 0x90,
-    /// JVM opcode `i2b` (`0x91`).
-    I2b = 0x91,
-    /// JVM opcode `i2c` (`0x92`).
-    I2c = 0x92,
-    /// JVM opcode `i2s` (`0x93`).
-    I2s = 0x93,
-    /// JVM opcode `lcmp` (`0x94`).
-    Lcmp = 0x94,
-    /// JVM opcode `fcmpl` (`0x95`).
-    Fcmpl = 0x95,
-    /// JVM opcode `fcmpg` (`0x96`).
-    Fcmpg = 0x96,
-    /// JVM opcode `dcmpl` (`0x97`).
-    Dcmpl = 0x97,
-    /// JVM opcode `dcmpg` (`0x98`).
-    Dcmpg = 0x98,
-    /// JVM opcode `ifeq` (`0x99`).
-    Ifeq = 0x99,
-    /// JVM opcode `ifne` (`0x9a`).
-    Ifne = 0x9a,
-    /// JVM opcode `iflt` (`0x9b`).
-    Iflt = 0x9b,
-    /// JVM opcode `ifge` (`0x9c`).
-    Ifge = 0x9c,
-    /// JVM opcode `ifgt` (`0x9d`).
-    Ifgt = 0x9d,
-    /// JVM opcode `ifle` (`0x9e`).
-    Ifle = 0x9e,
-    /// JVM opcode `if_icmpeq` (`0x9f`).
-    IfIcmpeq = 0x9f,
-    /// JVM opcode `if_icmpne` (`0xa0`).
-    IfIcmpne = 0xa0,
-    /// JVM opcode `if_icmplt` (`0xa1`).
-    IfIcmplt = 0xa1,
-    /// JVM opcode `if_icmpge` (`0xa2`).
-    IfIcmpge = 0xa2,
-    /// JVM opcode `if_icmpgt` (`0xa3`).
-    IfIcmpgt = 0xa3,
-    /// JVM opcode `if_icmple` (`0xa4`).
-    IfIcmple = 0xa4,
-    /// JVM opcode `if_acmpeq` (`0xa5`).
-    IfAcmpeq = 0xa5,
-    /// JVM opcode `if_acmpne` (`0xa6`).
-    IfAcmpne = 0xa6,
-    /// JVM opcode `goto` (`0xa7`).
-    Goto = 0xa7,
-    /// JVM opcode `jsr` (`0xa8`).
-    Jsr = 0xa8,
-    /// JVM opcode `ret` (`0xa9`).
-    Ret = 0xa9,
-    /// JVM opcode `tableswitch` (`0xaa`).
-    Tableswitch = 0xaa,
-    /// JVM opcode `lookupswitch` (`0xab`).
-    Lookupswitch = 0xab,
-    /// JVM opcode `ireturn` (`0xac`).
-    Ireturn = 0xac,
-    /// JVM opcode `lreturn` (`0xad`).
-    Lreturn = 0xad,
-    /// JVM opcode `freturn` (`0xae`).
-    Freturn = 0xae,
-    /// JVM opcode `dreturn` (`0xaf`).
-    Dreturn = 0xaf,
-    /// JVM opcode `areturn` (`0xb0`).
-    Areturn = 0xb0,
-    /// JVM opcode `return` (`0xb1`).
-    Return = 0xb1,
-    /// JVM opcode `getstatic` (`0xb2`).
-    Getstatic = 0xb2,
-    /// JVM opcode `putstatic` (`0xb3`).
-    Putstatic = 0xb3,
-    /// JVM opcode `getfield` (`0xb4`).
-    Getfield = 0xb4,
-    /// JVM opcode `putfield` (`0xb5`).
-    Putfield = 0xb5,
-    /// JVM opcode `invokevirtual` (`0xb6`).
-    Invokevirtual = 0xb6,
-    /// JVM opcode `invokespecial` (`0xb7`).
-    Invokespecial = 0xb7,
-    /// JVM opcode `invokestatic` (`0xb8`).
-    Invokestatic = 0xb8,
-    /// JVM opcode `invokeinterface` (`0xb9`).
-    Invokeinterface = 0xb9,
-    /// JVM opcode `invokedynamic` (`0xba`).
-    Invokedynamic = 0xba,
-    /// JVM opcode `new` (`0xbb`).
-    New = 0xbb,
-    /// JVM opcode `newarray` (`0xbc`).
-    Newarray = 0xbc,
-    /// JVM opcode `anewarray` (`0xbd`).
-    Anewarray = 0xbd,
-    /// JVM opcode `arraylength` (`0xbe`).
-    Arraylength = 0xbe,
-    /// JVM opcode `athrow` (`0xbf`).
-    Athrow = 0xbf,
-    /// JVM opcode `checkcast` (`0xc0`).
-    Checkcast = 0xc0,
-    /// JVM opcode `instanceof` (`0xc1`).
-    Instanceof = 0xc1,
-    /// JVM opcode `monitorenter` (`0xc2`).
-    Monitorenter = 0xc2,
-    /// JVM opcode `monitorexit` (`0xc3`).
-    Monitorexit = 0xc3,
-    /// JVM opcode `wide` (`0xc4`).
-    Wide = 0xc4,
-    /// JVM opcode `multianewarray` (`0xc5`).
-    Multianewarray = 0xc5,
-    /// JVM opcode `ifnull` (`0xc6`).
-    Ifnull = 0xc6,
-    /// JVM opcode `ifnonnull` (`0xc7`).
-    Ifnonnull = 0xc7,
-    /// JVM opcode `goto_w` (`0xc8`).
-    GotoW = 0xc8,
-    /// JVM opcode `jsr_w` (`0xc9`).
-    JsrW = 0xc9,
-    /// JVM opcode `breakpoint` (`0xca`).
-    Breakpoint = 0xca,
-    /// JVM opcode `reserved_cb` (`0xcb`).
-    ReservedCB = 0xcb,
-    /// JVM opcode `reserved_cc` (`0xcc`).
-    ReservedCC = 0xcc,
-    /// JVM opcode `reserved_cd` (`0xcd`).
-    ReservedCD = 0xcd,
-    /// JVM opcode `reserved_ce` (`0xce`).
-    ReservedCE = 0xce,
-    /// JVM opcode `reserved_cf` (`0xcf`).
-    ReservedCF = 0xcf,
-    /// JVM opcode `reserved_d0` (`0xd0`).
-    ReservedD0 = 0xd0,
-    /// JVM opcode `reserved_d1` (`0xd1`).
-    ReservedD1 = 0xd1,
-    /// JVM opcode `reserved_d2` (`0xd2`).
-    ReservedD2 = 0xd2,
-    /// JVM opcode `reserved_d3` (`0xd3`).
-    ReservedD3 = 0xd3,
-    /// JVM opcode `reserved_d4` (`0xd4`).
-    ReservedD4 = 0xd4,
-    /// JVM opcode `reserved_d5` (`0xd5`).
-    ReservedD5 = 0xd5,
-    /// JVM opcode `reserved_d6` (`0xd6`).
-    ReservedD6 = 0xd6,
-    /// JVM opcode `reserved_d7` (`0xd7`).
-    ReservedD7 = 0xd7,
-    /// JVM opcode `reserved_d8` (`0xd8`).
-    ReservedD8 = 0xd8,
-    /// JVM opcode `reserved_d9` (`0xd9`).
-    ReservedD9 = 0xd9,
-    /// JVM opcode `reserved_da` (`0xda`).
-    ReservedDA = 0xda,
-    /// JVM opcode `reserved_db` (`0xdb`).
-    ReservedDB = 0xdb,
-    /// JVM opcode `reserved_dc` (`0xdc`).
-    ReservedDC = 0xdc,
-    /// JVM opcode `reserved_dd` (`0xdd`).
-    ReservedDD = 0xdd,
-    /// JVM opcode `reserved_de` (`0xde`).
-    ReservedDE = 0xde,
-    /// JVM opcode `reserved_df` (`0xdf`).
-    ReservedDF = 0xdf,
-    /// JVM opcode `reserved_e0` (`0xe0`).
-    ReservedE0 = 0xe0,
-    /// JVM opcode `reserved_e1` (`0xe1`).
-    ReservedE1 = 0xe1,
-    /// JVM opcode `reserved_e2` (`0xe2`).
-    ReservedE2 = 0xe2,
-    /// JVM opcode `reserved_e3` (`0xe3`).
-    ReservedE3 = 0xe3,
-    /// JVM opcode `reserved_e4` (`0xe4`).
-    ReservedE4 = 0xe4,
-    /// JVM opcode `reserved_e5` (`0xe5`).
-    ReservedE5 = 0xe5,
-    /// JVM opcode `reserved_e6` (`0xe6`).
-    ReservedE6 = 0xe6,
-    /// JVM opcode `reserved_e7` (`0xe7`).
-    ReservedE7 = 0xe7,
-    /// JVM opcode `reserved_e8` (`0xe8`).
-    ReservedE8 = 0xe8,
-    /// JVM opcode `reserved_e9` (`0xe9`).
-    ReservedE9 = 0xe9,
-    /// JVM opcode `reserved_ea` (`0xea`).
-    ReservedEA = 0xea,
-    /// JVM opcode `reserved_eb` (`0xeb`).
-    ReservedEB = 0xeb,
-    /// JVM opcode `reserved_ec` (`0xec`).
-    ReservedEC = 0xec,
-    /// JVM opcode `reserved_ed` (`0xed`).
-    ReservedED = 0xed,
-    /// JVM opcode `reserved_ee` (`0xee`).
-    ReservedEE = 0xee,
-    /// JVM opcode `reserved_ef` (`0xef`).
-    ReservedEF = 0xef,
-    /// JVM opcode `reserved_f0` (`0xf0`).
-    ReservedF0 = 0xf0,
-    /// JVM opcode `reserved_f1` (`0xf1`).
-    ReservedF1 = 0xf1,
-    /// JVM opcode `reserved_f2` (`0xf2`).
-    ReservedF2 = 0xf2,
-    /// JVM opcode `reserved_f3` (`0xf3`).
-    ReservedF3 = 0xf3,
-    /// JVM opcode `reserved_f4` (`0xf4`).
-    ReservedF4 = 0xf4,
-    /// JVM opcode `reserved_f5` (`0xf5`).
-    ReservedF5 = 0xf5,
-    /// JVM opcode `reserved_f6` (`0xf6`).
-    ReservedF6 = 0xf6,
-    /// JVM opcode `reserved_f7` (`0xf7`).
-    ReservedF7 = 0xf7,
-    /// JVM opcode `reserved_f8` (`0xf8`).
-    ReservedF8 = 0xf8,
-    /// JVM opcode `reserved_f9` (`0xf9`).
-    ReservedF9 = 0xf9,
-    /// JVM opcode `reserved_fa` (`0xfa`).
-    ReservedFA = 0xfa,
-    /// JVM opcode `reserved_fb` (`0xfb`).
-    ReservedFB = 0xfb,
-    /// JVM opcode `reserved_fc` (`0xfc`).
-    ReservedFC = 0xfc,
-    /// JVM opcode `reserved_fd` (`0xfd`).
-    ReservedFD = 0xfd,
-    /// JVM opcode `impdep1` (`0xfe`).
-    Impdep1 = 0xfe,
-    /// JVM opcode `impdep2` (`0xff`).
-    Impdep2 = 0xff,
+    #[doc = "JVM opcode `nop` (`0x00`)."] Nop = 0x00,
+    #[doc = "JVM opcode `aconst_null` (`0x01`)."] AconstNull = 0x01,
+    #[doc = "JVM opcode `iconst_m1` (`0x02`)."] IconstM1 = 0x02,
+    #[doc = "JVM opcode `iconst_0` (`0x03`)."] Iconst0 = 0x03,
+    #[doc = "JVM opcode `iconst_1` (`0x04`)."] Iconst1 = 0x04,
+    #[doc = "JVM opcode `iconst_2` (`0x05`)."] Iconst2 = 0x05,
+    #[doc = "JVM opcode `iconst_3` (`0x06`)."] Iconst3 = 0x06,
+    #[doc = "JVM opcode `iconst_4` (`0x07`)."] Iconst4 = 0x07,
+    #[doc = "JVM opcode `iconst_5` (`0x08`)."] Iconst5 = 0x08,
+    #[doc = "JVM opcode `lconst_0` (`0x09`)."] Lconst0 = 0x09,
+    #[doc = "JVM opcode `lconst_1` (`0x0a`)."] Lconst1 = 0x0a,
+    #[doc = "JVM opcode `fconst_0` (`0x0b`)."] Fconst0 = 0x0b,
+    #[doc = "JVM opcode `fconst_1` (`0x0c`)."] Fconst1 = 0x0c,
+    #[doc = "JVM opcode `fconst_2` (`0x0d`)."] Fconst2 = 0x0d,
+    #[doc = "JVM opcode `dconst_0` (`0x0e`)."] Dconst0 = 0x0e,
+    #[doc = "JVM opcode `dconst_1` (`0x0f`)."] Dconst1 = 0x0f,
+    #[doc = "JVM opcode `bipush` (`0x10`)."] Bipush = 0x10,
+    #[doc = "JVM opcode `sipush` (`0x11`)."] Sipush = 0x11,
+    #[doc = "JVM opcode `ldc` (`0x12`)."] Ldc = 0x12,
+    #[doc = "JVM opcode `ldc_w` (`0x13`)."] LdcW = 0x13,
+    #[doc = "JVM opcode `ldc2_w` (`0x14`)."] Ldc2W = 0x14,
+    #[doc = "JVM opcode `iload` (`0x15`)."] Iload = 0x15,
+    #[doc = "JVM opcode `lload` (`0x16`)."] Lload = 0x16,
+    #[doc = "JVM opcode `fload` (`0x17`)."] Fload = 0x17,
+    #[doc = "JVM opcode `dload` (`0x18`)."] Dload = 0x18,
+    #[doc = "JVM opcode `aload` (`0x19`)."] Aload = 0x19,
+    #[doc = "JVM opcode `iload_0` (`0x1a`)."] Iload0 = 0x1a,
+    #[doc = "JVM opcode `iload_1` (`0x1b`)."] Iload1 = 0x1b,
+    #[doc = "JVM opcode `iload_2` (`0x1c`)."] Iload2 = 0x1c,
+    #[doc = "JVM opcode `iload_3` (`0x1d`)."] Iload3 = 0x1d,
+    #[doc = "JVM opcode `lload_0` (`0x1e`)."] Lload0 = 0x1e,
+    #[doc = "JVM opcode `lload_1` (`0x1f`)."] Lload1 = 0x1f,
+    #[doc = "JVM opcode `lload_2` (`0x20`)."] Lload2 = 0x20,
+    #[doc = "JVM opcode `lload_3` (`0x21`)."] Lload3 = 0x21,
+    #[doc = "JVM opcode `fload_0` (`0x22`)."] Fload0 = 0x22,
+    #[doc = "JVM opcode `fload_1` (`0x23`)."] Fload1 = 0x23,
+    #[doc = "JVM opcode `fload_2` (`0x24`)."] Fload2 = 0x24,
+    #[doc = "JVM opcode `fload_3` (`0x25`)."] Fload3 = 0x25,
+    #[doc = "JVM opcode `dload_0` (`0x26`)."] Dload0 = 0x26,
+    #[doc = "JVM opcode `dload_1` (`0x27`)."] Dload1 = 0x27,
+    #[doc = "JVM opcode `dload_2` (`0x28`)."] Dload2 = 0x28,
+    #[doc = "JVM opcode `dload_3` (`0x29`)."] Dload3 = 0x29,
+    #[doc = "JVM opcode `aload_0` (`0x2a`)."] Aload0 = 0x2a,
+    #[doc = "JVM opcode `aload_1` (`0x2b`)."] Aload1 = 0x2b,
+    #[doc = "JVM opcode `aload_2` (`0x2c`)."] Aload2 = 0x2c,
+    #[doc = "JVM opcode `aload_3` (`0x2d`)."] Aload3 = 0x2d,
+    #[doc = "JVM opcode `iaload` (`0x2e`)."] Iaload = 0x2e,
+    #[doc = "JVM opcode `laload` (`0x2f`)."] Laload = 0x2f,
+    #[doc = "JVM opcode `faload` (`0x30`)."] Faload = 0x30,
+    #[doc = "JVM opcode `daload` (`0x31`)."] Daload = 0x31,
+    #[doc = "JVM opcode `aaload` (`0x32`)."] Aaload = 0x32,
+    #[doc = "JVM opcode `baload` (`0x33`)."] Baload = 0x33,
+    #[doc = "JVM opcode `caload` (`0x34`)."] Caload = 0x34,
+    #[doc = "JVM opcode `saload` (`0x35`)."] Saload = 0x35,
+    #[doc = "JVM opcode `istore` (`0x36`)."] Istore = 0x36,
+    #[doc = "JVM opcode `lstore` (`0x37`)."] Lstore = 0x37,
+    #[doc = "JVM opcode `fstore` (`0x38`)."] Fstore = 0x38,
+    #[doc = "JVM opcode `dstore` (`0x39`)."] Dstore = 0x39,
+    #[doc = "JVM opcode `astore` (`0x3a`)."] Astore = 0x3a,
+    #[doc = "JVM opcode `istore_0` (`0x3b`)."] Istore0 = 0x3b,
+    #[doc = "JVM opcode `istore_1` (`0x3c`)."] Istore1 = 0x3c,
+    #[doc = "JVM opcode `istore_2` (`0x3d`)."] Istore2 = 0x3d,
+    #[doc = "JVM opcode `istore_3` (`0x3e`)."] Istore3 = 0x3e,
+    #[doc = "JVM opcode `lstore_0` (`0x3f`)."] Lstore0 = 0x3f,
+    #[doc = "JVM opcode `lstore_1` (`0x40`)."] Lstore1 = 0x40,
+    #[doc = "JVM opcode `lstore_2` (`0x41`)."] Lstore2 = 0x41,
+    #[doc = "JVM opcode `lstore_3` (`0x42`)."] Lstore3 = 0x42,
+    #[doc = "JVM opcode `fstore_0` (`0x43`)."] Fstore0 = 0x43,
+    #[doc = "JVM opcode `fstore_1` (`0x44`)."] Fstore1 = 0x44,
+    #[doc = "JVM opcode `fstore_2` (`0x45`)."] Fstore2 = 0x45,
+    #[doc = "JVM opcode `fstore_3` (`0x46`)."] Fstore3 = 0x46,
+    #[doc = "JVM opcode `dstore_0` (`0x47`)."] Dstore0 = 0x47,
+    #[doc = "JVM opcode `dstore_1` (`0x48`)."] Dstore1 = 0x48,
+    #[doc = "JVM opcode `dstore_2` (`0x49`)."] Dstore2 = 0x49,
+    #[doc = "JVM opcode `dstore_3` (`0x4a`)."] Dstore3 = 0x4a,
+    #[doc = "JVM opcode `astore_0` (`0x4b`)."] Astore0 = 0x4b,
+    #[doc = "JVM opcode `astore_1` (`0x4c`)."] Astore1 = 0x4c,
+    #[doc = "JVM opcode `astore_2` (`0x4d`)."] Astore2 = 0x4d,
+    #[doc = "JVM opcode `astore_3` (`0x4e`)."] Astore3 = 0x4e,
+    #[doc = "JVM opcode `iastore` (`0x4f`)."] Iastore = 0x4f,
+    #[doc = "JVM opcode `lastore` (`0x50`)."] Lastore = 0x50,
+    #[doc = "JVM opcode `fastore` (`0x51`)."] Fastore = 0x51,
+    #[doc = "JVM opcode `dastore` (`0x52`)."] Dastore = 0x52,
+    #[doc = "JVM opcode `aastore` (`0x53`)."] Aastore = 0x53,
+    #[doc = "JVM opcode `bastore` (`0x54`)."] Bastore = 0x54,
+    #[doc = "JVM opcode `castore` (`0x55`)."] Castore = 0x55,
+    #[doc = "JVM opcode `sastore` (`0x56`)."] Sastore = 0x56,
+    #[doc = "JVM opcode `pop` (`0x57`)."] Pop = 0x57,
+    #[doc = "JVM opcode `pop2` (`0x58`)."] Pop2 = 0x58,
+    #[doc = "JVM opcode `dup` (`0x59`)."] Dup = 0x59,
+    #[doc = "JVM opcode `dup_x1` (`0x5a`)."] DupX1 = 0x5a,
+    #[doc = "JVM opcode `dup_x2` (`0x5b`)."] DupX2 = 0x5b,
+    #[doc = "JVM opcode `dup2` (`0x5c`)."] Dup2 = 0x5c,
+    #[doc = "JVM opcode `dup2_x1` (`0x5d`)."] Dup2X1 = 0x5d,
+    #[doc = "JVM opcode `dup2_x2` (`0x5e`)."] Dup2X2 = 0x5e,
+    #[doc = "JVM opcode `swap` (`0x5f`)."] Swap = 0x5f,
+    #[doc = "JVM opcode `iadd` (`0x60`)."] Iadd = 0x60,
+    #[doc = "JVM opcode `ladd` (`0x61`)."] Ladd = 0x61,
+    #[doc = "JVM opcode `fadd` (`0x62`)."] Fadd = 0x62,
+    #[doc = "JVM opcode `dadd` (`0x63`)."] Dadd = 0x63,
+    #[doc = "JVM opcode `isub` (`0x64`)."] Isub = 0x64,
+    #[doc = "JVM opcode `lsub` (`0x65`)."] Lsub = 0x65,
+    #[doc = "JVM opcode `fsub` (`0x66`)."] Fsub = 0x66,
+    #[doc = "JVM opcode `dsub` (`0x67`)."] Dsub = 0x67,
+    #[doc = "JVM opcode `imul` (`0x68`)."] Imul = 0x68,
+    #[doc = "JVM opcode `lmul` (`0x69`)."] Lmul = 0x69,
+    #[doc = "JVM opcode `fmul` (`0x6a`)."] Fmul = 0x6a,
+    #[doc = "JVM opcode `dmul` (`0x6b`)."] Dmul = 0x6b,
+    #[doc = "JVM opcode `idiv` (`0x6c`)."] Idiv = 0x6c,
+    #[doc = "JVM opcode `ldiv` (`0x6d`)."] Ldiv = 0x6d,
+    #[doc = "JVM opcode `fdiv` (`0x6e`)."] Fdiv = 0x6e,
+    #[doc = "JVM opcode `ddiv` (`0x6f`)."] Ddiv = 0x6f,
+    #[doc = "JVM opcode `irem` (`0x70`)."] Irem = 0x70,
+    #[doc = "JVM opcode `lrem` (`0x71`)."] Lrem = 0x71,
+    #[doc = "JVM opcode `frem` (`0x72`)."] Frem = 0x72,
+    #[doc = "JVM opcode `drem` (`0x73`)."] Drem = 0x73,
+    #[doc = "JVM opcode `ineg` (`0x74`)."] Ineg = 0x74,
+    #[doc = "JVM opcode `lneg` (`0x75`)."] Lneg = 0x75,
+    #[doc = "JVM opcode `fneg` (`0x76`)."] Fneg = 0x76,
+    #[doc = "JVM opcode `dneg` (`0x77`)."] Dneg = 0x77,
+    #[doc = "JVM opcode `ishl` (`0x78`)."] Ishl = 0x78,
+    #[doc = "JVM opcode `lshl` (`0x79`)."] Lshl = 0x79,
+    #[doc = "JVM opcode `ishr` (`0x7a`)."] Ishr = 0x7a,
+    #[doc = "JVM opcode `lshr` (`0x7b`)."] Lshr = 0x7b,
+    #[doc = "JVM opcode `iushr` (`0x7c`)."] Iushr = 0x7c,
+    #[doc = "JVM opcode `lushr` (`0x7d`)."] Lushr = 0x7d,
+    #[doc = "JVM opcode `iand` (`0x7e`)."] Iand = 0x7e,
+    #[doc = "JVM opcode `land` (`0x7f`)."] Land = 0x7f,
+    #[doc = "JVM opcode `ior` (`0x80`)."] Ior = 0x80,
+    #[doc = "JVM opcode `lor` (`0x81`)."] Lor = 0x81,
+    #[doc = "JVM opcode `ixor` (`0x82`)."] Ixor = 0x82,
+    #[doc = "JVM opcode `lxor` (`0x83`)."] Lxor = 0x83,
+    #[doc = "JVM opcode `iinc` (`0x84`)."] Iinc = 0x84,
+    #[doc = "JVM opcode `i2l` (`0x85`)."] I2l = 0x85,
+    #[doc = "JVM opcode `i2f` (`0x86`)."] I2f = 0x86,
+    #[doc = "JVM opcode `i2d` (`0x87`)."] I2d = 0x87,
+    #[doc = "JVM opcode `l2i` (`0x88`)."] L2i = 0x88,
+    #[doc = "JVM opcode `l2f` (`0x89`)."] L2f = 0x89,
+    #[doc = "JVM opcode `l2d` (`0x8a`)."] L2d = 0x8a,
+    #[doc = "JVM opcode `f2i` (`0x8b`)."] F2i = 0x8b,
+    #[doc = "JVM opcode `f2l` (`0x8c`)."] F2l = 0x8c,
+    #[doc = "JVM opcode `f2d` (`0x8d`)."] F2d = 0x8d,
+    #[doc = "JVM opcode `d2i` (`0x8e`)."] D2i = 0x8e,
+    #[doc = "JVM opcode `d2l` (`0x8f`)."] D2l = 0x8f,
+    #[doc = "JVM opcode `d2f` (`0x90`)."] D2f = 0x90,
+    #[doc = "JVM opcode `i2b` (`0x91`)."] I2b = 0x91,
+    #[doc = "JVM opcode `i2c` (`0x92`)."] I2c = 0x92,
+    #[doc = "JVM opcode `i2s` (`0x93`)."] I2s = 0x93,
+    #[doc = "JVM opcode `lcmp` (`0x94`)."] Lcmp = 0x94,
+    #[doc = "JVM opcode `fcmpl` (`0x95`)."] Fcmpl = 0x95,
+    #[doc = "JVM opcode `fcmpg` (`0x96`)."] Fcmpg = 0x96,
+    #[doc = "JVM opcode `dcmpl` (`0x97`)."] Dcmpl = 0x97,
+    #[doc = "JVM opcode `dcmpg` (`0x98`)."] Dcmpg = 0x98,
+    #[doc = "JVM opcode `ifeq` (`0x99`)."] Ifeq = 0x99,
+    #[doc = "JVM opcode `ifne` (`0x9a`)."] Ifne = 0x9a,
+    #[doc = "JVM opcode `iflt` (`0x9b`)."] Iflt = 0x9b,
+    #[doc = "JVM opcode `ifge` (`0x9c`)."] Ifge = 0x9c,
+    #[doc = "JVM opcode `ifgt` (`0x9d`)."] Ifgt = 0x9d,
+    #[doc = "JVM opcode `ifle` (`0x9e`)."] Ifle = 0x9e,
+    #[doc = "JVM opcode `if_icmpeq` (`0x9f`)."] IfIcmpeq = 0x9f,
+    #[doc = "JVM opcode `if_icmpne` (`0xa0`)."] IfIcmpne = 0xa0,
+    #[doc = "JVM opcode `if_icmplt` (`0xa1`)."] IfIcmplt = 0xa1,
+    #[doc = "JVM opcode `if_icmpge` (`0xa2`)."] IfIcmpge = 0xa2,
+    #[doc = "JVM opcode `if_icmpgt` (`0xa3`)."] IfIcmpgt = 0xa3,
+    #[doc = "JVM opcode `if_icmple` (`0xa4`)."] IfIcmple = 0xa4,
+    #[doc = "JVM opcode `if_acmpeq` (`0xa5`)."] IfAcmpeq = 0xa5,
+    #[doc = "JVM opcode `if_acmpne` (`0xa6`)."] IfAcmpne = 0xa6,
+    #[doc = "JVM opcode `goto` (`0xa7`)."] Goto = 0xa7,
+    #[doc = "JVM opcode `jsr` (`0xa8`)."] Jsr = 0xa8,
+    #[doc = "JVM opcode `ret` (`0xa9`)."] Ret = 0xa9,
+    #[doc = "JVM opcode `tableswitch` (`0xaa`)."] Tableswitch = 0xaa,
+    #[doc = "JVM opcode `lookupswitch` (`0xab`)."] Lookupswitch = 0xab,
+    #[doc = "JVM opcode `ireturn` (`0xac`)."] Ireturn = 0xac,
+    #[doc = "JVM opcode `lreturn` (`0xad`)."] Lreturn = 0xad,
+    #[doc = "JVM opcode `freturn` (`0xae`)."] Freturn = 0xae,
+    #[doc = "JVM opcode `dreturn` (`0xaf`)."] Dreturn = 0xaf,
+    #[doc = "JVM opcode `areturn` (`0xb0`)."] Areturn = 0xb0,
+    #[doc = "JVM opcode `return` (`0xb1`)."] Return = 0xb1,
+    #[doc = "JVM opcode `getstatic` (`0xb2`)."] Getstatic = 0xb2,
+    #[doc = "JVM opcode `putstatic` (`0xb3`)."] Putstatic = 0xb3,
+    #[doc = "JVM opcode `getfield` (`0xb4`)."] Getfield = 0xb4,
+    #[doc = "JVM opcode `putfield` (`0xb5`)."] Putfield = 0xb5,
+    #[doc = "JVM opcode `invokevirtual` (`0xb6`)."] Invokevirtual = 0xb6,
+    #[doc = "JVM opcode `invokespecial` (`0xb7`)."] Invokespecial = 0xb7,
+    #[doc = "JVM opcode `invokestatic` (`0xb8`)."] Invokestatic = 0xb8,
+    #[doc = "JVM opcode `invokeinterface` (`0xb9`)."] Invokeinterface = 0xb9,
+    #[doc = "JVM opcode `invokedynamic` (`0xba`)."] Invokedynamic = 0xba,
+    #[doc = "JVM opcode `new` (`0xbb`)."] New = 0xbb,
+    #[doc = "JVM opcode `newarray` (`0xbc`)."] Newarray = 0xbc,
+    #[doc = "JVM opcode `anewarray` (`0xbd`)."] Anewarray = 0xbd,
+    #[doc = "JVM opcode `arraylength` (`0xbe`)."] Arraylength = 0xbe,
+    #[doc = "JVM opcode `athrow` (`0xbf`)."] Athrow = 0xbf,
+    #[doc = "JVM opcode `checkcast` (`0xc0`)."] Checkcast = 0xc0,
+    #[doc = "JVM opcode `instanceof` (`0xc1`)."] Instanceof = 0xc1,
+    #[doc = "JVM opcode `monitorenter` (`0xc2`)."] Monitorenter = 0xc2,
+    #[doc = "JVM opcode `monitorexit` (`0xc3`)."] Monitorexit = 0xc3,
+    #[doc = "JVM opcode `wide` (`0xc4`)."] Wide = 0xc4,
+    #[doc = "JVM opcode `multianewarray` (`0xc5`)."] Multianewarray = 0xc5,
+    #[doc = "JVM opcode `ifnull` (`0xc6`)."] Ifnull = 0xc6,
+    #[doc = "JVM opcode `ifnonnull` (`0xc7`)."] Ifnonnull = 0xc7,
+    #[doc = "JVM opcode `goto_w` (`0xc8`)."] GotoW = 0xc8,
+    #[doc = "JVM opcode `jsr_w` (`0xc9`)."] JsrW = 0xc9,
+    #[doc = "JVM opcode `breakpoint` (`0xca`)."] Breakpoint = 0xca,
+    #[doc = "JVM opcode `reserved_cb` (`0xcb`)."] ReservedCB = 0xcb,
+    #[doc = "JVM opcode `reserved_cc` (`0xcc`)."] ReservedCC = 0xcc,
+    #[doc = "JVM opcode `reserved_cd` (`0xcd`)."] ReservedCD = 0xcd,
+    #[doc = "JVM opcode `reserved_ce` (`0xce`)."] ReservedCE = 0xce,
+    #[doc = "JVM opcode `reserved_cf` (`0xcf`)."] ReservedCF = 0xcf,
+    #[doc = "JVM opcode `reserved_d0` (`0xd0`)."] ReservedD0 = 0xd0,
+    #[doc = "JVM opcode `reserved_d1` (`0xd1`)."] ReservedD1 = 0xd1,
+    #[doc = "JVM opcode `reserved_d2` (`0xd2`)."] ReservedD2 = 0xd2,
+    #[doc = "JVM opcode `reserved_d3` (`0xd3`)."] ReservedD3 = 0xd3,
+    #[doc = "JVM opcode `reserved_d4` (`0xd4`)."] ReservedD4 = 0xd4,
+    #[doc = "JVM opcode `reserved_d5` (`0xd5`)."] ReservedD5 = 0xd5,
+    #[doc = "JVM opcode `reserved_d6` (`0xd6`)."] ReservedD6 = 0xd6,
+    #[doc = "JVM opcode `reserved_d7` (`0xd7`)."] ReservedD7 = 0xd7,
+    #[doc = "JVM opcode `reserved_d8` (`0xd8`)."] ReservedD8 = 0xd8,
+    #[doc = "JVM opcode `reserved_d9` (`0xd9`)."] ReservedD9 = 0xd9,
+    #[doc = "JVM opcode `reserved_da` (`0xda`)."] ReservedDA = 0xda,
+    #[doc = "JVM opcode `reserved_db` (`0xdb`)."] ReservedDB = 0xdb,
+    #[doc = "JVM opcode `reserved_dc` (`0xdc`)."] ReservedDC = 0xdc,
+    #[doc = "JVM opcode `reserved_dd` (`0xdd`)."] ReservedDD = 0xdd,
+    #[doc = "JVM opcode `reserved_de` (`0xde`)."] ReservedDE = 0xde,
+    #[doc = "JVM opcode `reserved_df` (`0xdf`)."] ReservedDF = 0xdf,
+    #[doc = "JVM opcode `reserved_e0` (`0xe0`)."] ReservedE0 = 0xe0,
+    #[doc = "JVM opcode `reserved_e1` (`0xe1`)."] ReservedE1 = 0xe1,
+    #[doc = "JVM opcode `reserved_e2` (`0xe2`)."] ReservedE2 = 0xe2,
+    #[doc = "JVM opcode `reserved_e3` (`0xe3`)."] ReservedE3 = 0xe3,
+    #[doc = "JVM opcode `reserved_e4` (`0xe4`)."] ReservedE4 = 0xe4,
+    #[doc = "JVM opcode `reserved_e5` (`0xe5`)."] ReservedE5 = 0xe5,
+    #[doc = "JVM opcode `reserved_e6` (`0xe6`)."] ReservedE6 = 0xe6,
+    #[doc = "JVM opcode `reserved_e7` (`0xe7`)."] ReservedE7 = 0xe7,
+    #[doc = "JVM opcode `reserved_e8` (`0xe8`)."] ReservedE8 = 0xe8,
+    #[doc = "JVM opcode `reserved_e9` (`0xe9`)."] ReservedE9 = 0xe9,
+    #[doc = "JVM opcode `reserved_ea` (`0xea`)."] ReservedEA = 0xea,
+    #[doc = "JVM opcode `reserved_eb` (`0xeb`)."] ReservedEB = 0xeb,
+    #[doc = "JVM opcode `reserved_ec` (`0xec`)."] ReservedEC = 0xec,
+    #[doc = "JVM opcode `reserved_ed` (`0xed`)."] ReservedED = 0xed,
+    #[doc = "JVM opcode `reserved_ee` (`0xee`)."] ReservedEE = 0xee,
+    #[doc = "JVM opcode `reserved_ef` (`0xef`)."] ReservedEF = 0xef,
+    #[doc = "JVM opcode `reserved_f0` (`0xf0`)."] ReservedF0 = 0xf0,
+    #[doc = "JVM opcode `reserved_f1` (`0xf1`)."] ReservedF1 = 0xf1,
+    #[doc = "JVM opcode `reserved_f2` (`0xf2`)."] ReservedF2 = 0xf2,
+    #[doc = "JVM opcode `reserved_f3` (`0xf3`)."] ReservedF3 = 0xf3,
+    #[doc = "JVM opcode `reserved_f4` (`0xf4`)."] ReservedF4 = 0xf4,
+    #[doc = "JVM opcode `reserved_f5` (`0xf5`)."] ReservedF5 = 0xf5,
+    #[doc = "JVM opcode `reserved_f6` (`0xf6`)."] ReservedF6 = 0xf6,
+    #[doc = "JVM opcode `reserved_f7` (`0xf7`)."] ReservedF7 = 0xf7,
+    #[doc = "JVM opcode `reserved_f8` (`0xf8`)."] ReservedF8 = 0xf8,
+    #[doc = "JVM opcode `reserved_f9` (`0xf9`)."] ReservedF9 = 0xf9,
+    #[doc = "JVM opcode `reserved_fa` (`0xfa`)."] ReservedFA = 0xfa,
+    #[doc = "JVM opcode `reserved_fb` (`0xfb`)."] ReservedFB = 0xfb,
+    #[doc = "JVM opcode `reserved_fc` (`0xfc`)."] ReservedFC = 0xfc,
+    #[doc = "JVM opcode `reserved_fd` (`0xfd`)."] ReservedFD = 0xfd,
+    #[doc = "JVM opcode `impdep1` (`0xfe`)."] Impdep1 = 0xfe,
+    #[doc = "JVM opcode `impdep2` (`0xff`)."] Impdep2 = 0xff,
 }
 
 /// Generated metadata for one JVM opcode byte.
