@@ -4,8 +4,8 @@ use sim_index_core::{
     AnchorId, CanonicalFeatureKey, DeclarationFact, DeclarationRole, DiscoveredAnchor,
     DiscoveredSpecimen, DiscoveredSurface, FeatureDraft, FeatureId, FeatureRecord, GrammarContract,
     IndexDoc, IndexEdge, ProtocolRelation, ProtocolResolution, RouteId, RouteRecord, RouteStep,
-    SourceLocation, SpecimenId, SubjectId, SubjectRecord, SurfaceId, SyntaxBound, UnresolvedReason,
-    Visibility,
+    SourceCompleteness, SourceLocation, SourceReachability, SourceUnit, SpecimenId, SubjectId,
+    SubjectRecord, SurfaceId, SyntaxBound, UnresolvedReason, Visibility,
 };
 use sim_kernel::{Expr, NumberLiteral, Symbol};
 use sim_value::build::entry as field;
@@ -22,6 +22,12 @@ pub fn expr_from_index_doc(doc: &IndexDoc) -> Expr {
         field("subjects", list(doc.subjects.iter().map(subject_expr))),
         field("anchors", list(doc.anchors.iter().map(anchor_expr))),
     ];
+    if !doc.source_units.is_empty() {
+        entries.push(field(
+            "source-units",
+            list(doc.source_units.iter().map(source_unit_expr)),
+        ));
+    }
     if !doc.declarations.is_empty() {
         entries.push(field(
             "declarations",
@@ -54,6 +60,7 @@ pub fn index_doc_from_expr(expr: &Expr) -> Result<IndexDoc, CodecError> {
         visibility: visibility_from_name(string_field(root, "visibility")?)?,
         subjects: map_list_field(root, "subjects", subject_from_expr)?,
         anchors: map_list_field(root, "anchors", anchor_from_expr)?,
+        source_units: optional_map_list_field(root, "source-units", source_unit_from_expr)?,
         declarations: optional_map_list_field(root, "declarations", declaration_from_expr)?,
         protocol_relations: optional_map_list_field(
             root,
@@ -66,6 +73,59 @@ pub fn index_doc_from_expr(expr: &Expr) -> Result<IndexDoc, CodecError> {
         features: map_list_field(root, "features", feature_from_expr)?,
         routes: map_list_field(root, "routes", route_from_expr)?,
         edges: map_list_field(root, "edges", edge_from_expr)?,
+    })
+}
+
+fn source_unit_expr(unit: &SourceUnit) -> Expr {
+    map(vec![
+        field("subject", text(unit.subject.as_str())),
+        field("path", text(&unit.path)),
+        field(
+            "reachability",
+            text(match unit.reachability {
+                SourceReachability::Reachable => "reachable",
+                SourceReachability::Unreachable => "unreachable",
+            }),
+        ),
+        field("completeness", text(unit.completeness.as_str())),
+        field("reason", text(&unit.reason)),
+        field("retained-bound", syntax_bound_expr(unit.retained_bound)),
+        field("declaration-count", unsigned(unit.declaration_count)),
+    ])
+}
+
+fn source_unit_from_expr(expr: &Expr) -> Result<SourceUnit, CodecError> {
+    let entries = expect_map(expr, "source unit")?;
+    let reachability = match string_field(entries, "reachability")? {
+        "reachable" => SourceReachability::Reachable,
+        "unreachable" => SourceReachability::Unreachable,
+        other => {
+            return Err(CodecError::Shape(format!(
+                "unsupported source reachability {other:?}"
+            )));
+        }
+    };
+    let completeness = match string_field(entries, "completeness")? {
+        "complete" => SourceCompleteness::Complete,
+        "malformed" => SourceCompleteness::Malformed,
+        "unreadable" => SourceCompleteness::Unreadable,
+        "truncated" => SourceCompleteness::Truncated,
+        "unsupported" => SourceCompleteness::Unsupported,
+        "unresolved" => SourceCompleteness::Unresolved,
+        other => {
+            return Err(CodecError::Shape(format!(
+                "unsupported source completeness {other:?}"
+            )));
+        }
+    };
+    Ok(SourceUnit {
+        subject: SubjectId::new(string_field(entries, "subject")?),
+        path: string_field(entries, "path")?.to_owned(),
+        reachability,
+        completeness,
+        reason: string_field(entries, "reason")?.to_owned(),
+        retained_bound: syntax_bound_from_expr(required(entries, "retained-bound")?)?,
+        declaration_count: usize_field(entries, "declaration-count")?,
     })
 }
 

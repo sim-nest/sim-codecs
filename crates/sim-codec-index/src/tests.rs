@@ -2,9 +2,9 @@ use sim_codec::{Input, decode_with_codec, encode_with_codec};
 use sim_index_core::{
     AnchorId, DeclarationFact, DeclarationRole, DiscoveredAnchor, DiscoveredSpecimen,
     DiscoveredSurface, FeatureId, FeatureRecord, GrammarContract, IndexDoc, IndexEdge, IndexError,
-    ProtocolRelation, ProtocolResolution, RouteId, RouteRecord, RouteStep, SourceLocation,
-    SpecimenId, SubjectId, SubjectRecord, SurfaceId, SyntaxBound, UnresolvedReason, Visibility,
-    key::canonical_feature_key,
+    ProtocolRelation, ProtocolResolution, RouteId, RouteRecord, RouteStep, SourceCompleteness,
+    SourceLocation, SourceReachability, SourceUnit, SpecimenId, SubjectId, SubjectRecord,
+    SurfaceId, SyntaxBound, UnresolvedReason, Visibility, key::canonical_feature_key,
 };
 use sim_kernel::{EncodeOptions, EncodePosition, Expr, ReadPolicy, Symbol};
 
@@ -54,6 +54,7 @@ fn valid_doc() -> IndexDoc {
                 kind: "doc".to_owned(),
             },
         ],
+        source_units: Vec::new(),
         declarations: Vec::new(),
         protocol_relations: Vec::new(),
         surfaces: vec![DiscoveredSurface {
@@ -146,6 +147,84 @@ fn source_fact_doc() -> IndexDoc {
         },
     });
     doc
+}
+
+fn source_unit(state: SourceCompleteness) -> SourceUnit {
+    SourceUnit {
+        subject: SubjectId::new("crate/sim-run"),
+        path: format!("src/{}.rs", state.as_str()),
+        reachability: SourceReachability::Unreachable,
+        completeness: state,
+        reason: if state == SourceCompleteness::Complete {
+            String::new()
+        } else {
+            format!("{} source", state.as_str())
+        },
+        retained_bound: SyntaxBound {
+            max_bytes: 1024,
+            truncated: state == SourceCompleteness::Truncated,
+        },
+        declaration_count: 3,
+    }
+}
+
+#[test]
+fn source_scan_states_roundtrip_byte_stably_in_both_forms() {
+    let mut doc = valid_doc();
+    doc.source_units = [
+        SourceCompleteness::Complete,
+        SourceCompleteness::Malformed,
+        SourceCompleteness::Unreadable,
+        SourceCompleteness::Truncated,
+        SourceCompleteness::Unsupported,
+        SourceCompleteness::Unresolved,
+    ]
+    .into_iter()
+    .map(source_unit)
+    .collect();
+    doc.source_units.sort();
+
+    for form in [IndexForm::Sx, IndexForm::Json] {
+        let first = IndexCodec
+            .encode(&doc, EncodePosition::Data, form)
+            .expect("encode states");
+        let decoded = IndexCodec.decode(form, &first).expect("decode states");
+        let second = IndexCodec
+            .encode(&decoded, EncodePosition::Data, form)
+            .expect("re-encode states");
+        assert_eq!(decoded, doc);
+        assert_eq!(second, first);
+    }
+}
+
+#[test]
+fn source_scan_schema_rejects_unknown_states_and_oversized_reasons() {
+    let mut future = valid_doc();
+    future
+        .source_units
+        .push(source_unit(SourceCompleteness::Malformed));
+    let mut expr = expr_from_index_doc(&future);
+    let Expr::Map(root) = &mut expr else {
+        panic!("index map")
+    };
+    let (_, Expr::List(units)) = root.iter_mut().find(|(key, _)| matches!(key, Expr::Symbol(symbol) if symbol.name.as_ref() == "source-units")).expect("source units") else { panic!("source unit list") };
+    let Expr::Map(unit) = &mut units[0] else {
+        panic!("source unit map")
+    };
+    let (_, state) = unit.iter_mut().find(|(key, _)| matches!(key, Expr::Symbol(symbol) if symbol.name.as_ref() == "completeness")).expect("completeness");
+    *state = Expr::String("future-state".to_owned());
+    assert!(
+        matches!(index_doc_from_expr(&expr), Err(CodecError::Shape(message)) if message.contains("future-state"))
+    );
+
+    let mut doc = valid_doc();
+    let mut unit = source_unit(SourceCompleteness::Malformed);
+    unit.reason = "x".repeat(513);
+    doc.source_units.push(unit);
+    assert!(matches!(
+        IndexCodec.encode_fragment(&doc, EncodePosition::Data, IndexForm::Sx),
+        Err(CodecError::Index(IndexError::InvalidSourceUnit { .. }))
+    ));
 }
 
 fn large_doc() -> IndexDoc {
