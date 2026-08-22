@@ -21,6 +21,8 @@ sim-codec-algol = { version = "0.1.4", path = "../sim-codec-algol" }
 sim-codec = { version = "0.1.8", path = "../sim-codec" }
 sim-codec-json = { version = "0.2.2", path = "../sim-codec-json" }
 sim-codec-lisp = { version = "0.2.1", path = "../sim-codec-lisp" }
+sim-kernel = { version = "0.2.0", features = ["test-support"] }
+sim-test-support = { version = "0.1.2", path = "../sim-test-support" }
 
 [[bin]]
 name = "report"

@@ -5,43 +5,9 @@ use sim_codec_binary::BinaryCodecLib;
 use sim_codec_bitwise::BitwiseCodecLib;
 use sim_codec_json::JsonCodecLib;
 use sim_codec_lisp::LispCodecLib;
-use std::sync::Arc;
 
 use sim_codec::{Input, Output, decode_with_codec, encode_with_codec};
-use sim_kernel::{
-    Cx, DefaultFactory, EagerPolicy, EncodeOptions, Expr, HandleSeed, ReadPolicy, Symbol,
-};
-
-fn cx() -> Cx {
-    let mut cx = Cx::new(
-        Arc::new(EagerPolicy),
-        Arc::new(DefaultFactory),
-        HandleSeed::new(1),
-    );
-    for (id, name) in [
-        (sim_kernel::CORE_CLASS_CLASS_ID, "Class"),
-        (sim_kernel::CORE_CODEC_CLASS_ID, "Codec"),
-        (sim_kernel::CORE_NUMBER_CLASS_ID, "Number"),
-        (sim_kernel::CORE_SYMBOL_CLASS_ID, "Symbol"),
-        (sim_kernel::CORE_STRING_CLASS_ID, "String"),
-        (sim_kernel::CORE_EXPR_CLASS_ID, "Expr"),
-        (sim_kernel::CORE_SHAPE_CLASS_ID, "Shape"),
-        (sim_kernel::CORE_BOOL_CLASS_ID, "Bool"),
-        (sim_kernel::CORE_LIST_CLASS_ID, "List"),
-        (sim_kernel::CORE_BYTES_CLASS_ID, "Bytes"),
-        (sim_kernel::CORE_TABLE_CLASS_ID, "Table"),
-        (sim_kernel::CORE_FUNCTION_CLASS_ID, "Function"),
-        (sim_kernel::CORE_CARD_CLASS_ID, "Card"),
-        (sim_kernel::CORE_NUMBER_DOMAIN_CLASS_ID, "NumberDomain"),
-    ] {
-        let symbol = Symbol::qualified("core", name);
-        let value = cx.factory().class_stub(id, symbol.clone()).unwrap();
-        cx.registry_mut()
-            .register_class_value(symbol, value)
-            .unwrap();
-    }
-    cx
-}
+use sim_kernel::{Cx, EncodeOptions, Expr, ReadPolicy, Symbol};
 
 fn roundtrip(cx: &mut Cx, codec: &str, expr: &Expr) -> Expr {
     let symbol = Symbol::qualified("codec", codec);
@@ -80,7 +46,8 @@ fn platform_record() -> Expr {
 
 #[test]
 fn every_general_codec_roundtrips_platform_and_domain_values() {
-    let mut cx = cx();
+    let mut cx = sim_kernel::testing::eager_cx();
+    sim_test_support::register_core_classes(&mut cx);
     let binary = BinaryCodecLib::new(cx.registry_mut().fresh_codec_id());
     cx.load_lib(&binary).unwrap();
     let bitwise = BitwiseCodecLib::new(cx.registry_mut().fresh_codec_id());
