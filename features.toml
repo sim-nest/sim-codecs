@@ -92,6 +92,22 @@ claims_specimens = ["spec-test/sim-codecs/crates/sim-wasm-abi/src/tests/roundtri
 supports = ["feature/sim-codecs/codec"]
 
 [[feature]]
+id = "feature/sim-codecs/openai-provider-wires"
+title = "Canonical OpenAI chat and Responses wires"
+summary = "Project one bounded canonical model contract through the explicit OpenAI Chat Completions and Responses request, response, and SSE wire families."
+owner = "crate/sim-codec-chat"
+audiences = ["code", "framework"]
+guidance = "Select openai_profile for Chat Completions compatibility or openai_responses_profile for the native Responses input/output protocol. Both decode to the same canonical ModelResponse; Responses reasoning payloads remain provider-private."
+claims_anchors = [
+  "anchor/crate/sim-codec-chat",
+  "anchor/runtime-lib/sim-codec-chat/open-ai-codec-lib",
+]
+claims_specimens = [
+  "spec-test/sim-codecs/crates/sim-codec-chat/src/tests/openai_responses",
+]
+supports = ["feature/sim-codecs/codec"]
+
+[[feature]]
 id = "feature/sim-codecs/classfile-inspection"
 title = "JVM-free classfile inspection"
 summary = "Decode and re-encode retained JVM classfiles while browsing bounded constants, attributes, and byte-located instructions without starting a JVM."

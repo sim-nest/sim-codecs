@@ -70,6 +70,16 @@ pub fn openai_profile() -> CodecProfile {
     )
 }
 
+/// Profile for OpenAI's Responses API on the shared OpenAI codec.
+pub fn openai_responses_profile() -> CodecProfile {
+    CodecProfile::new(
+        Symbol::qualified("codec", "openai"),
+        Symbol::new("openai"),
+        RequestWire::OpenAiResponses,
+        StreamWire::Sse,
+    )
+}
+
 /// Profile for the native Anthropic provider codec.
 pub fn anthropic_profile() -> CodecProfile {
     CodecProfile::new(

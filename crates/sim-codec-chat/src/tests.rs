@@ -19,6 +19,7 @@ use crate::{
 mod anthropic;
 mod ollama;
 mod openai_compat;
+mod openai_responses;
 mod output_grammar;
 mod strict;
 
@@ -272,7 +273,7 @@ fn cookbook_profile_and_transcript_functions_run() {
     assert_eq!(field_string(&transcript, "codec"), Some("codec/chat"));
 
     let profiles = call_report(&mut cx, Symbol::qualified("chat", "provider-profiles"));
-    assert_eq!(field_string(&profiles, "count"), Some("5"));
+    assert_eq!(field_string(&profiles, "count"), Some("6"));
 }
 
 #[test]

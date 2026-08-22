@@ -1,0 +1,3 @@
+event: response.future_required
+data: {"type":"response.future_required","required":{"unknown":true}}
+
