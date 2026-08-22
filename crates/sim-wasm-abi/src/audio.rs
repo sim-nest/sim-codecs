@@ -16,15 +16,15 @@ pub const EXPORT_RESET: &str = "sim_audio_reset";
 /// Required wasm export processing one host-provided audio block.
 pub const EXPORT_PROCESS: &str = "sim_audio_process";
 
-/// Required wasm import module for host callbacks.
+/// Contract name of the wasm import module used for audio callbacks.
 pub const IMPORT_MODULE: &str = "env";
-/// Required wasm import returning the current host block frame count.
+/// Contract declaration for importing the current block frame count.
 pub const IMPORT_FRAME_COUNT: &str = "host_frame_count";
-/// Required wasm import reading one input sample.
+/// Contract declaration for importing one input sample.
 pub const IMPORT_AUDIO_READ: &str = "host_audio_read";
-/// Required wasm import writing one output sample.
+/// Contract declaration for importing one output sample.
 pub const IMPORT_AUDIO_WRITE: &str = "host_audio_write";
-/// Required wasm import reading one host parameter value.
+/// Contract declaration for importing one parameter value.
 pub const IMPORT_PARAM_GET: &str = "host_param_get";
 
 /// Flat manifest written by a wasm audio guest to linear memory.

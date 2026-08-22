@@ -3,7 +3,6 @@ use crate::runtime::pack_frame_ref;
 use crate::{
     AbiValue, FrameRef, InMemoryWasmRuntime, WasmFrameLimits, WasmHost, WasmRuntime, WasmiRuntime,
     encode_exports_frame, encode_manifest_frame, encode_value_frame, load_wasm_lib_from_bytes,
-    load_wasm_lib_from_file,
 };
 use sim_kernel::{Expr, Symbol};
 use std::sync::Arc;
@@ -232,14 +231,6 @@ fn wasmi_runtime_exposes_minimal_host_imports() {
         result.object().as_expr(&mut cx).unwrap(),
         Expr::List(vec![Expr::String("callback".to_owned())])
     );
-}
-
-#[test]
-fn wasm_file_loader_reports_missing_path() {
-    let runtime = Arc::new(InMemoryWasmRuntime::new());
-    let missing = std::env::temp_dir().join("sim-no-such-module.wasm");
-    let err = load_wasm_lib_from_file(runtime, &missing).err().unwrap();
-    assert!(matches!(err, sim_kernel::Error::HostError(_)));
 }
 
 #[test]

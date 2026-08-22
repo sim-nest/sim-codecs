@@ -15,7 +15,8 @@ use std::sync::Arc;
 
 use sim_codec::{Input, Output, decode_with_codec, encode_with_codec};
 use sim_kernel::{
-    ClassId, Cx, DefaultFactory, EagerPolicy, EncodeOptions, Expr, Lib, ReadPolicy, Symbol,
+    ClassId, Cx, DefaultFactory, EagerPolicy, EncodeOptions, Expr, HandleSeed, Lib, ReadPolicy,
+    Symbol,
 };
 
 pub use sim_value::build::{float, int, map, sym, text};
@@ -61,7 +62,11 @@ pub fn register_core_classes(cx: &mut Cx) {
 /// A fresh `Cx` (eager policy, default factory) with the core class stubs
 /// registered.
 pub fn core_cx() -> Cx {
-    let mut cx = Cx::new(Arc::new(EagerPolicy), Arc::new(DefaultFactory));
+    let mut cx = Cx::new(
+        Arc::new(EagerPolicy),
+        Arc::new(DefaultFactory),
+        HandleSeed::new(1),
+    );
     register_core_classes(&mut cx);
     cx
 }

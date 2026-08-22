@@ -77,7 +77,19 @@ claims_anchors = [
 ]
 claims_specimens = [
   "spec-test/sim-codecs/crates/sim-codec/src/implementation/runtime",
+  "spec-test/sim-codecs/crates/sim-codec-compare/src/platform_roundtrip_tests",
 ]
+
+[[feature]]
+id = "feature/sim-codecs/wasm-abi-contract"
+title = "Pure wasm ABI contract"
+summary = "Describe wasm manifests, byte frames, imports, and exports without observing the host that carries them."
+owner = "crate/sim-wasm-abi"
+audiences = ["code", "framework"]
+guidance = "Pass admitted module bytes to load_wasm_lib_from_bytes through the platform-selected LoaderPort. Treat audio import and export names as declarations only; perform loader, mount, clock, and audio work through platform and audio ports. The ABI crate never reads paths, chooses devices, samples clocks, or adds a codec-specific host API."
+claims_anchors = ["anchor/crate/sim-wasm-abi", "anchor/runtime-lib/sim-wasm-abi/wasm-lib"]
+claims_specimens = ["spec-test/sim-codecs/crates/sim-wasm-abi/src/tests/roundtrip", "spec-test/sim-codecs/crates/sim-codec-compare/src/platform_roundtrip_tests"]
+supports = ["feature/sim-codecs/codec"]
 
 [[feature]]
 id = "feature/sim-codecs/classfile-inspection"

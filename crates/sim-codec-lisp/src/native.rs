@@ -37,7 +37,11 @@ mod lisp_native {
     }
 
     fn with_lisp_context<T>(f: impl FnOnce(&mut Cx, &Symbol) -> Result<T>) -> Result<T> {
-        let mut cx = Cx::new(Arc::new(NoopEvalPolicy), Arc::new(DefaultFactory));
+        let mut cx = Cx::new(
+            Arc::new(NoopEvalPolicy),
+            Arc::new(DefaultFactory),
+            sim_kernel::HandleSeed::new(1),
+        );
         cx.load_lib(&F64NumbersLib::new())?;
         let codec = Symbol::qualified("codec", "lisp");
         let lib = LispCodecLib::new(cx.registry_mut().fresh_codec_id())?;

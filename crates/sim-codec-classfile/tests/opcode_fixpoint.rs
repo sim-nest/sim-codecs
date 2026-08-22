@@ -1,9 +1,11 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::sync::atomic::{AtomicU64, Ordering};
 
 use sim_codec_classfile::{OPCODES, Opcode};
+
+static NEXT_MOUNT: AtomicU64 = AtomicU64::new(1);
 
 fn crate_root() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -18,10 +20,7 @@ fn run_generator(root: &Path, arguments: &[&str]) -> std::process::Output {
 }
 
 fn scratch_copy() -> PathBuf {
-    let nonce = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .expect("clock after epoch")
-        .as_nanos();
+    let nonce = NEXT_MOUNT.fetch_add(1, Ordering::Relaxed);
     let destination = std::env::temp_dir().join(format!(
         "sim-codec-classfile-opcodes-{}-{nonce}",
         std::process::id()

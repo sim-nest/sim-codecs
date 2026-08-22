@@ -144,5 +144,9 @@ fn encode_json_expr(expr: &Expr) -> Result<String, CodecError> {
 }
 
 fn bare_cx() -> Cx {
-    Cx::new(Arc::new(NoopEvalPolicy), Arc::new(DefaultFactory))
+    Cx::new(
+        Arc::new(NoopEvalPolicy),
+        Arc::new(DefaultFactory),
+        sim_kernel::HandleSeed::new(1),
+    )
 }

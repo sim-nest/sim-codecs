@@ -32,9 +32,7 @@ pub use codec::{
     decode_exports_frame, decode_manifest_frame, decode_value_frame, encode_exports_frame,
     encode_manifest_frame, encode_value_frame,
 };
-pub use library::{
-    WasmLib, load_wasm_lib_from_bytes, load_wasm_lib_from_file, register_stub_exports,
-};
+pub use library::{WasmLib, load_wasm_lib_from_bytes, register_stub_exports};
 pub use runtime::{InMemoryWasmRuntime, WasmiRuntime};
 pub use types::{
     AbiValue, Frame, FrameRef, Handle, WasmDependency, WasmExport, WasmFrameLimits,

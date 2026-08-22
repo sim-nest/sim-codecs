@@ -4,7 +4,7 @@ use crate::{
     encode_value_frame, register_stub_exports,
 };
 use sim_kernel::{
-    Cx, DefaultFactory, EagerPolicy, Expr, Lib, LibManifest, LibTarget, Result, Symbol,
+    Cx, DefaultFactory, EagerPolicy, Expr, HandleSeed, Lib, LibManifest, LibTarget, Result, Symbol,
     read_construct_capability,
 };
 use std::sync::Arc;
@@ -141,7 +141,11 @@ pub(super) fn manifest_with_codec_export() -> WasmManifest {
 }
 
 pub(super) fn wasm_test_cx() -> Cx {
-    let mut cx = Cx::new(Arc::new(EagerPolicy), Arc::new(DefaultFactory));
+    let mut cx = Cx::new(
+        Arc::new(EagerPolicy),
+        Arc::new(DefaultFactory),
+        HandleSeed::new(1),
+    );
     cx.grant(read_construct_capability());
     cx
 }
