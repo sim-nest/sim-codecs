@@ -17,7 +17,7 @@ sim-shape = "0.2.3"
 sim-text = "0.1.0"
 
 [build-dependencies]
-sim-cookbook = { version = "0.2.0" }
+sim-cookbook-build = { version = "0.1.0" }
 
 [lints]
 workspace = true

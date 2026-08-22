@@ -16,7 +16,7 @@ sim-cookbook = { version = "0.2.0" }
 sim-kernel = { version = "0.2.0" }
 
 [build-dependencies]
-sim-cookbook = { version = "0.2.0" }
+sim-cookbook-build = { version = "0.1.0" }
 
 [dev-dependencies]
 sim-test-support = { version = "0.1.1", path = "../sim-test-support" }

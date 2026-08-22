@@ -23,4 +23,4 @@ sim-codec-lisp = { version = "0.2.0", path = "../sim-codec-lisp" }
 sim-test-support = { version = "0.1.1", path = "../sim-test-support" }
 
 [build-dependencies]
-sim-cookbook = { version = "0.2.0" }
+sim-cookbook-build = { version = "0.1.0" }
