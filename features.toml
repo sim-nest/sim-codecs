@@ -81,6 +81,17 @@ claims_specimens = [
 ]
 
 [[feature]]
+id = "feature/sim-codecs/json-schema-2020-12"
+title = "Bounded JSON Schema 2020-12 organ"
+summary = "Retain, identify, compile, validate, diagnose, and conservatively adapt complete Draft 2020-12 schema documents without ambient resource access."
+owner = "crate/sim-codec-json"
+audiences = ["code", "framework"]
+guidance = "Use SchemaDocument as the authoritative schema at JSON, MCP, skill HTTP, and OpenAI boundaries. Inject an explicit bounded retriever for external resources; never substitute Shape when shape_projection returns None."
+claims_anchors = ["anchor/crate/sim-codec-json"]
+claims_specimens = ["spec-test/sim-codecs/crates/sim-codec-json/src/schema_document/tests"]
+supports = ["feature/sim-codecs/codec"]
+
+[[feature]]
 id = "feature/sim-codecs/mcp-schema-oracle"
 title = "Dated MCP schema coverage oracle"
 summary = "Pin the final MCP 2026-07-28 vocabulary and prove every normalized source definition has an owned Rust mapping and positive and negative vectors."

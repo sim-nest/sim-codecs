@@ -13,3 +13,13 @@ SIM workspace package for sim codec json.
 ## Crate Documentation
 
 General-purpose JSON codec for the SIM runtime.
+
+It also owns SIM's complete, bounded JSON Schema Draft 2020-12 document
+boundary. `SchemaDocument` retains every standard, annotation, and extension
+keyword as semantic JSON (but not lexical whitespace or byte layout), pins the
+dialect and resource identity, validates with explicit work/diagnostic budgets,
+and has no ambient network or filesystem resolver. A caller may inject a
+bounded retriever; otherwise external references fail closed. Representable
+schemas can be projected to `Shape` vocabulary for local matching, while the
+authoritative document remains available and unknown constraints are never
+lowered to `Any`.

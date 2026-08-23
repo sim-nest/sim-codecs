@@ -77,6 +77,7 @@ mod helpers;
 mod json_tree;
 mod projection;
 mod schema;
+mod schema_document;
 #[cfg(test)]
 mod tests;
 mod tree_json;
@@ -96,4 +97,8 @@ pub use projection::{
     project_json_to_expr_budgeted,
 };
 pub use schema::{ShapeSchema, shape_to_json_schema};
+pub use schema_document::{
+    DRAFT_2020_12, ResourceIdentity, RetrievedResource, SchemaDocument, SchemaError, SchemaLimits,
+    SchemaRetriever,
+};
 pub use tree_json::{json_to_located_expr, json_to_tree, located_expr_to_json, tree_to_json};
