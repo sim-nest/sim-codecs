@@ -40,6 +40,7 @@ claims_anchors = [
   "anchor/crate/sim-codec-lisp",
   "anchor/crate/sim-codec-lua",
   "anchor/crate/sim-codec-mcp",
+  "anchor/crate/sim-codec-sql",
   "anchor/crate/sim-test-support",
   "anchor/crate/sim-wasm-abi",
   "anchor/export/sim-codec-binary-base64/codec/binary-base64",
@@ -194,6 +195,17 @@ supports = [
   "feature/sim-codecs/codec",
   "feature/sim-codecs/pratt",
 ]
+
+[[feature]]
+id = "feature/sim-codecs/sql-projection"
+title = "Behavior-backed bounded SQL projection"
+summary = "Lower admitted relational plans and migrations through sealed SQLite and PostgreSQL dialect behavior, identifier quoting, ordered value bindings, cache-complete prepared artifacts, and untrusted bounded DDL drafts."
+owner = "crate/sim-codec-sql"
+audiences = ["code", "framework"]
+guidance = "Use sim-codec-sql only at SQL-backed provider boundaries. Pass admitted plans, select executable dialect behavior, and admit decoded SchemaDraft values separately; never execute caller-authored SQL or treat parsed DDL as a trusted schema."
+claims_anchors = ["anchor/crate/sim-codec-sql"]
+claims_specimens = ["spec-test/sim-codecs/crates/sim-codec-sql/src/tests"]
+supports = ["feature/sim-codecs/codec"]
 
 [[feature]]
 id = "feature/sim-codecs/javascript-source-frontend"

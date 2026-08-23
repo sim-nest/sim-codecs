@@ -7,6 +7,7 @@ members = [
   "crates/sim-codec-classfile",
   "crates/sim-codec-pratt",
   "crates/sim-codec-python",
+  "crates/sim-codec-sql",
   "crates/sim-codec-binary",
   "crates/sim-codec-binary-base64",
   "crates/sim-codec-bitwise",
