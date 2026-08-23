@@ -94,12 +94,15 @@ supports = ["feature/sim-codecs/codec"]
 [[feature]]
 id = "feature/sim-codecs/mcp-schema-oracle"
 title = "Dated MCP schema coverage oracle"
-summary = "Pin the final MCP 2026-07-28 vocabulary and prove every normalized source definition has an owned Rust mapping and positive and negative vectors."
+summary = "Own the final MCP 2026-07-28 and delivered 2025-03-26 wire profiles, typed metadata and messages, extension negotiation, full JSON Schema values, header projection, cache policy, and exhaustive schema coverage."
 owner = "crate/sim-codec-mcp"
 audiences = ["code", "framework"]
-guidance = "Extend the checked schema inventory and its one-to-one coverage ledger when MCP behavior evolves. Keep 2026-07-28 and delivered 2025-03-26 as exact profiles; never fetch a schema during a build or add a parallel wire model."
+guidance = "Use sim-codec-mcp as the sole transport-independent MCP wire authority. Extend its checked method registry and one-to-one coverage ledger when MCP behavior evolves; preserve full SchemaDocument and semantic extension JSON, and derive rather than reinterpret headers."
 claims_anchors = ["anchor/crate/sim-codec-mcp"]
-claims_specimens = ["spec-test/sim-codecs/crates/sim-codec-mcp/tests/schema_oracle"]
+claims_specimens = [
+  "spec-test/sim-codecs/crates/sim-codec-mcp/tests/schema_oracle",
+  "spec-test/sim-codecs/crates/sim-codec-mcp/src/wire_authority/tests",
+]
 supports = ["feature/sim-codecs/codec"]
 
 [[feature]]
