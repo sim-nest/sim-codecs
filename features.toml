@@ -81,6 +81,17 @@ claims_specimens = [
 ]
 
 [[feature]]
+id = "feature/sim-codecs/mcp-schema-oracle"
+title = "Dated MCP schema coverage oracle"
+summary = "Pin the final MCP 2026-07-28 vocabulary and prove every normalized source definition has an owned Rust mapping and positive and negative vectors."
+owner = "crate/sim-codec-mcp"
+audiences = ["code", "framework"]
+guidance = "Extend the checked schema inventory and its one-to-one coverage ledger when MCP behavior evolves. Keep 2026-07-28 and delivered 2025-03-26 as exact profiles; never fetch a schema during a build or add a parallel wire model."
+claims_anchors = ["anchor/crate/sim-codec-mcp"]
+claims_specimens = ["spec-test/sim-codecs/crates/sim-codec-mcp/tests/schema_oracle"]
+supports = ["feature/sim-codecs/codec"]
+
+[[feature]]
 id = "feature/sim-codecs/wasm-abi-contract"
 title = "Pure wasm ABI contract"
 summary = "Describe wasm manifests, byte frames, imports, and exports without observing the host that carries them."

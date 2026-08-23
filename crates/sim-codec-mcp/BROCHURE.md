@@ -1,5 +1,10 @@
 # sim-codec-mcp
 
+`sim-codec-mcp` makes protocol completeness mechanically visible. Its bounded,
+pinned 2026-07-28 schema oracle generates wire vocabulary and rejects coverage
+drift before compilation, while preserving the delivered 2025-03-26 profile as
+an explicit compatibility boundary. No build contacts the network.
+
 In one line: It reads and writes the message envelopes of the Model Context Protocol, checking each one is well formed.
 
 ## What it gives you

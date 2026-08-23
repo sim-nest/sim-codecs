@@ -24,6 +24,7 @@ mod canonical;
 mod envelope;
 mod error;
 mod expr;
+mod schema_oracle;
 mod wire_keys;
 
 #[cfg(test)]
@@ -40,6 +41,10 @@ pub use error::{
     METHOD_NOT_FOUND, NOT_FOUND, PARSE_ERROR, RATE_LIMITED,
 };
 pub use expr::{envelope_to_expr, expr_to_envelope};
+pub use schema_oracle::{
+    CoverageEntry, CoverageLedger, MCP_2026_07_28_VOCABULARY, ProtocolProfile, SchemaDefinition,
+    SchemaInventory, coverage_ledger, modern_schema, protocol_profiles,
+};
 
 /// Cookbook recipes for this codec, embedded at build time.
 pub static RECIPES: sim_cookbook::EmbeddedDir =

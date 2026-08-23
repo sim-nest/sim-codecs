@@ -1,0 +1,1 @@
+{"jsonrpc":"2.0","id":"coverage","method":"server/discover","params":{"_meta":{"protocolVersion":"unsupported","clientCapabilities":null}},"expectedError":"UnsupportedProtocolVersion"}

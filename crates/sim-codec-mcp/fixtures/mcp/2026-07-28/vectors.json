@@ -1,0 +1,18 @@
+{
+  "schema":"sim.mcp-vectors/v1",
+  "cases":[
+    {"id":"required-metadata","positive":{"_meta":{"protocolVersion":"2026-07-28","clientCapabilities":{}}},"negative":{"_meta":{"protocolVersion":"2026-07-28"}}},
+    {"id":"legacy-absent-result-type","profile":"2025-03-26","positive":{"result":{}},"normalizesTo":"complete"},
+    {"id":"extension-result-type","positive":{"resultType":"com.example/review"},"requiresNegotiatedExtension":"com.example"},
+    {"id":"server-info","positive":{"resultType":"complete","serverInfo":{"name":"fixture","version":"1"}}},
+    {"id":"header-safe-base64","positive":{"MCP-Client-Capabilities":"eyJ0b29scyI6e319"},"decoded":{"tools":{}}},
+    {"id":"header-mismatch","negative":{"code":-32020,"name":"HeaderMismatch"}},
+    {"id":"unsupported-protocol-version","negative":{"code":-32022,"name":"UnsupportedProtocolVersion","data":{"supported":["2026-07-28","2025-03-26"]}}},
+    {"id":"missing-capability","negative":{"code":-32021,"name":"MissingRequiredClientCapability"}},
+    {"id":"tracing","positive":{"traceparent":"00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01","tracestate":"vendor=value","baggage":"key=value"}},
+    {"id":"mrtr","positive":{"resultType":"input_required","inputRequests":{"answer":{"type":"string"}},"requestState":"opaque"},"negative":{"resultType":"input_required"}},
+    {"id":"subscriptions","positive":{"method":"subscriptions/listen","subscriptionId":"sub-1"}},
+    {"id":"caching","positive":{"cacheable":true,"maxAge":60},"negative":{"resultType":"input_required","cacheable":true}},
+    {"id":"discovery","positive":{"method":"server/discover","resultType":"complete","supportedVersions":["2026-07-28","2025-03-26"]}}
+  ]
+}
