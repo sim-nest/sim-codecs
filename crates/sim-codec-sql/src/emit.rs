@@ -413,9 +413,19 @@ pub fn prepare_mutation(
             conflict,
             returning,
         } => {
-            if !matches!(conflict, ConflictAction::Fail) {
+            let has_conflict = !matches!(conflict, ConflictAction::Fail);
+            if has_conflict {
                 crate::dialect::require(dialect, Capability::Conflict, dialect.caps().conflict)?;
             }
+            let input = e.rel(input)?;
+            // SQLite parses `ON` after a SELECT as a possible join clause.
+            // The outer predicate is the documented disambiguation and keeps
+            // arbitrary admitted inputs valid without rewriting their clauses.
+            let input = if has_conflict {
+                format!("SELECT * FROM ({input}) AS \"__sim_insert\" WHERE TRUE")
+            } else {
+                input
+            };
             let conflict = conflict_sql(&mut e, conflict)?;
             let returning = returning_sql(&mut e, returning)?;
             format!(
@@ -426,7 +436,7 @@ pub fn prepare_mutation(
                     .map(|v| e.ident(v.symbol()))
                     .collect::<Result<Vec<_>, _>>()?
                     .join(", "),
-                e.rel(input)?,
+                input,
                 conflict,
                 returning
             )

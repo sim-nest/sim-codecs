@@ -208,6 +208,58 @@ fn sqlite_values_and_unary_relations_keep_executable_binding_scope() {
 }
 
 #[test]
+fn sqlite_insert_select_disambiguates_conflict_from_join() {
+    let (domains, schema) = fixture();
+    let row_type = RowType::new([
+        FieldType {
+            name: name("id"),
+            domain: BaseDomain::I64.id(),
+            nullable: false,
+        },
+        FieldType {
+            name: name("select"),
+            domain: BaseDomain::Text.id(),
+            nullable: false,
+        },
+    ])
+    .unwrap();
+    let mutation = admit_mutation(
+        Mutation::Insert {
+            table: name("order"),
+            columns: vec![name("id"), name("select")],
+            input: Box::new(Rel::Values {
+                bind: name("input"),
+                row_type: row_type.clone(),
+                rows: vec![
+                    Row::new(
+                        row_type,
+                        [
+                            Cell::new(BaseDomain::I64.id(), Some(i64_datum(7))),
+                            Cell::new(BaseDomain::Text.id(), Some(Datum::String("kept".into()))),
+                        ],
+                    )
+                    .unwrap(),
+                ],
+            }),
+            conflict: ConflictAction::DoNothing {
+                target: sim_relation_plan::ConflictTarget::PrimaryKey,
+            },
+            returning: vec![],
+        },
+        &schema,
+        &domains,
+        RowType::new([]).unwrap(),
+        AdmissionLimits::default(),
+    )
+    .unwrap();
+
+    assert_eq!(
+        prepare_mutation(&mutation, &SqliteDialect).unwrap().text(),
+        "INSERT INTO \"order\" (\"id\", \"select\") SELECT * FROM (SELECT * FROM (SELECT ?1 AS \"id\", ?2 AS \"select\") AS \"input\") AS \"__sim_insert\" WHERE TRUE ON CONFLICT DO NOTHING"
+    );
+}
+
+#[test]
 fn capabilities_are_explicit_and_behavior_is_not_a_string_map() {
     let sqlite = SqliteDialect.caps();
     let postgres = PostgreSqlDialect.caps();
