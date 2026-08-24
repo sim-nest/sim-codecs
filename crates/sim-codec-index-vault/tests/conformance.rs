@@ -1,3 +1,5 @@
+// conformance: every vault profile round-trips semantically and rejects corrupted or false legacy claims.
+
 use sim_codec_index_vault::{
     LegacyVaultBundle, LegacyVaultEntry, PROFILES, VaultDecoder, VaultEncoder,
     legacy_projection_v1, resolve_legacy_profile, resolve_profile, verify_legacy_v1, verify_v2,

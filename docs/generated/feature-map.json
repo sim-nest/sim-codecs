@@ -64,7 +64,17 @@
     {
       "features": [],
       "group": "workspace",
+      "package": "sim-codec-feed"
+    },
+    {
+      "features": [],
+      "group": "workspace",
       "package": "sim-codec-index"
+    },
+    {
+      "features": [],
+      "group": "workspace",
+      "package": "sim-codec-index-vault"
     },
     {
       "features": [],
@@ -115,6 +125,21 @@
       "features": [],
       "group": "workspace",
       "package": "sim-codec-python"
+    },
+    {
+      "features": [],
+      "group": "workspace",
+      "package": "sim-codec-robots"
+    },
+    {
+      "features": [],
+      "group": "workspace",
+      "package": "sim-codec-search-searxng"
+    },
+    {
+      "features": [],
+      "group": "workspace",
+      "package": "sim-codec-sql"
     },
     {
       "features": [],

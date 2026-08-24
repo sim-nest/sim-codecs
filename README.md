@@ -68,6 +68,12 @@ runtime `Value`) back into bytes or text on the way out. Lisp is one codec
 here, not the identity of the system: SIM presents many codec surfaces over a
 single shared expression model.
 
+Index vault export follows the same owner split: `sim-index-vault-core` makes a
+pure projection from canonical `IndexRowRef` values, `sim-codec-index-vault`
+composes that projection with `sim-codec-doc`, and tooling alone materializes
+files. Decode reconstructs and verifies the bundle; it never imports notes and
+never writes a vault.
+
 The kernel types this repository builds on (`Expr`, `Value`, `Symbol`,
 `Shape`, `Origin`, `Cx`, `ReadPolicy`, `EncodeOptions`, `EncodePosition`,
 `LocatedExpr`, `LocatedExprTree`) are defined in `sim-kernel`. This README is

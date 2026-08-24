@@ -102,7 +102,7 @@ guidance = "Use sim-codec-mcp as the sole transport-independent MCP wire authori
 claims_anchors = ["anchor/crate/sim-codec-mcp"]
 claims_specimens = [
   "spec-test/sim-codecs/crates/sim-codec-mcp/tests/schema_oracle",
-  "spec-test/sim-codecs/crates/sim-codec-mcp/src/wire_authority/tests",
+  "spec-test/sim-codecs/crates/sim-codec-mcp/src/wire_authority",
 ]
 supports = ["feature/sim-codecs/codec"]
 
@@ -145,7 +145,6 @@ claims_anchors = [
   "anchor/runtime-lib/sim-codec-classfile/classfile-codec-lib",
 ]
 claims_specimens = [
-  "recipe/sim-codecs/crates/sim-codec-classfile/01-inspection/retained-classfile",
   "spec-test/sim-codecs/crates/sim-codec-classfile/tests/index_coverage",
 ]
 supports = [
@@ -235,7 +234,7 @@ title = "Domain syntax grammars"
 summary = "Read and write binary, bitwise, chat, config, document, index, and MCP grammar surfaces."
 owner = "crate/sim-codec"
 audiences = ["code", "framework"]
-guidance = "Use this row when finding a domain codec grammar for data, packets, configuration, or generated index text. Document profiles that need metadata envelopes or wikilinks must configure sim-codec-doc's bounded MarkdownDialect and compose its shared MarkupDoc parser/writer; they must not implement a parallel Markdown parser."
+guidance = "Use this row when finding a domain codec grammar for data, packets, configuration, generated index text, or a Markdown dialect. Generic CommonMark links, wikilinks, attribute envelopes, and outline mappings are bounded MarkdownDialect evidence owned by sim-codec-doc; domain profiles compose its shared MarkupDoc parser/writer and must not implement a parallel Markdown parser."
 claims_surfaces = [
   "syntax/binary",
   "syntax/binary-base64",
@@ -253,6 +252,24 @@ claims_specimens = [
 ]
 supports = [
   "feature/sim-codecs/codec",
+]
+
+[[feature]]
+id = "feature/sim-codecs/index-vault-codec"
+title = "SIM Index vault bundle codec"
+summary = "Encode and semantically verify deterministic v2 portable, Obsidian, SeqLog, and Logseq file-graph bundles, while reading bounded historical v1 bundles for migration."
+owner = "crate/sim-codec-index-vault"
+audiences = ["code", "framework"]
+guidance = "Compose sim-index-vault-core projection with this pure codec before any filesystem materialization. The codec owns v2 profiles, bounded decode-only v1 readers, semantic verification, compatibility fixtures, and migration evidence; decode reconstructs data and never imports notes or mutates a vault. Logseq support is limited to Markdown file graphs, never DB graphs."
+claims_anchors = [
+  "anchor/crate/sim-codec-index-vault",
+]
+claims_specimens = [
+  "spec-test/sim-codecs/crates/sim-codec-index-vault/tests/conformance",
+]
+supports = [
+  "feature/sim-codecs/domain-syntax-grammars",
+  "feature/sim-foundation/index-vault-projection",
 ]
 
 [[feature]]
@@ -455,7 +472,7 @@ owner = "crate/sim-codec-doc"
 audiences = ["code", "framework"]
 guidance = "Use the HTML MarkupBackend for shared document semantics, sim-codec-feed for one FeedDoc, and sim-codec-robots for parser and match precedence. Supply bytes explicitly; fetching, HTTP policy, ranking, and citation are outside these codecs."
 claims_anchors = ["anchor/crate/sim-codec-doc", "anchor/crate/sim-codec-feed", "anchor/crate/sim-codec-robots"]
-claims_specimens = ["spec-test/sim-codecs/crates/sim-codec-doc/src/html/tests", "spec-test/sim-codecs/crates/sim-codec-feed/src/tests", "spec-test/sim-codecs/crates/sim-codec-robots/src/tests"]
+claims_specimens = ["spec-test/sim-codecs/crates/sim-codec-doc/src/html"]
 supports = ["feature/sim-codecs/codec"]
 
 [[route]]
@@ -464,7 +481,7 @@ task = "Interpret saved HTML, feeds, and robots"
 audiences = ["code", "framework"]
 steps = [
   { feature = "feature/sim-codecs/saved-web-documents", why = "The codec organ owns bounded inert parsing and projections for all three saved web formats." },
-  { specimen = "spec-test/sim-codecs/crates/sim-codec-robots/src/tests", why = "The RFC precedence table demonstrates grouped selection, percent comparison, wildcards, end anchors, and equal-length allow behavior." },
+  { specimen = "spec-test/sim-codecs/crates/sim-codec-doc/src/html", why = "The checked document specimen proves bounded inert HTML decoding into the shared document model." },
 ]
 
 [[feature]]
@@ -477,7 +494,6 @@ guidance = "Compose this pure codec behind SearchWireCodec and the generic HTTP 
 claims_anchors = ["anchor/crate/sim-codec-search-searxng"]
 claims_specimens = [
   "spec-test/sim-codecs/crates/sim-codec-search-searxng/src/tests",
-  "recipe/sim-codecs/crates/sim-codec-search-searxng/01-basics/request-response",
 ]
 supports = ["feature/sim-codecs/codec"]
 

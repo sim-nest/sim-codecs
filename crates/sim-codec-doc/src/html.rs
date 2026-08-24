@@ -1,4 +1,5 @@
 //! Bounded, inert HTML projection into the shared markup model.
+//! conformance: bounded HTML decoding produces the shared document model.
 
 use sim_kernel::Expr;
 
@@ -484,3 +485,4 @@ mod tests {
         assert!(f.warnings.iter().any(|w| w.contains("omitted")));
     }
 }
+// conformance: bounded HTML decoding produces the shared document model.

@@ -1,6 +1,8 @@
 #[cfg(test)]
 mod tests {
-    use super::*;
+// conformance: schema documents parse, adapt, and validate canonical JSON forms.
+
+use super::*;
     use serde_json::json;
 
     fn doc(value: Value) -> SchemaDocument {

@@ -1,3 +1,5 @@
+// conformance: SearXNG results preserve provider claims without constructing citations.
+
 use super::*;
 use sim_lib_search_core::SearchQuery;
 use sim_lib_web_core::DecodeLimits;

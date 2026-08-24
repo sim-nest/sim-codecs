@@ -263,6 +263,7 @@ fn pattern_matches(pattern: &str, path: &str) -> bool {
 
 #[cfg(test)]
 mod tests {
+    // conformance: robots rules apply RFC precedence and matching boundaries.
     use super::*;
     #[test]
     fn precedence_table() {

@@ -729,6 +729,7 @@ fn check_header(
 
 #[cfg(test)]
 mod tests {
+    // conformance: wire authority accepts only the declared MCP protocol surface.
     use super::*;
     use sim_codec_json::{ResourceIdentity, SchemaLimits};
 

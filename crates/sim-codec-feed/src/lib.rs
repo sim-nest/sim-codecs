@@ -370,6 +370,7 @@ fn depth(v: &serde_json::Value, d: usize, m: usize) -> Result<(), FeedError> {
 
 #[cfg(test)]
 mod tests {
+    // conformance: feed documents retain canonical entries under bounded decoding.
     use super::*;
     #[test]
     fn dialects_and_extensions() {

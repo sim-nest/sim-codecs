@@ -1,5 +1,5 @@
 {
-  "card_count": 22,
+  "card_count": 26,
   "cards": [
     {
       "id": "browse/catalog",
@@ -122,10 +122,34 @@
       "summary": "Bounded lossless Python source parsing."
     },
     {
+      "id": "cookbook/codec/search-searxng",
+      "kind": "cookbook-recipe",
+      "owner": "sim-codec-search-searxng",
+      "summary": "Pure request and response translation for an operator-selected SearXNG site."
+    },
+    {
       "id": "cookbook/codec/typescript",
       "kind": "cookbook-recipe",
       "owner": "sim-codec-typescript",
       "summary": "Bounded, lossless TypeScript and TSX source parsing."
+    },
+    {
+      "id": "cookbook/sim-codec-feed",
+      "kind": "cookbook-recipe",
+      "owner": "sim-codec-feed",
+      "summary": ""
+    },
+    {
+      "id": "cookbook/sim-codec-robots",
+      "kind": "cookbook-recipe",
+      "owner": "sim-codec-robots",
+      "summary": ""
+    },
+    {
+      "id": "cookbook/sim-codec-sql",
+      "kind": "cookbook-recipe",
+      "owner": "sim-codec-sql",
+      "summary": ""
     },
     {
       "id": "registry/catalog",

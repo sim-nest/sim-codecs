@@ -1,4 +1,5 @@
 //! Cross-codec proof that platform contracts remain values, not host access.
+// conformance: platform contracts round-trip across general-purpose codecs.
 
 use sim_codec_algol::AlgolCodecLib;
 use sim_codec_binary::BinaryCodecLib;

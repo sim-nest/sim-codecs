@@ -1,3 +1,5 @@
+// conformance: OpenAI Responses payloads preserve the canonical model exchange record.
+
 use sim_codec::{DecodeLimits, Input};
 use sim_kernel::{Error, Expr, Symbol};
 use sim_value::access::field as map_field;

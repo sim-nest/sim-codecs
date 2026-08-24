@@ -1,3 +1,5 @@
+// conformance: native and wasm ABI values round-trip without semantic loss.
+
 use super::support::{FakeHost, StubWasmLib, manifest, manifest_with_codec_export, wasm_test_cx};
 use crate::{
     AbiValue, Frame, Handle, WasmExport, WasmHost, WasmLib, WasmManifest, WasmRuntime,

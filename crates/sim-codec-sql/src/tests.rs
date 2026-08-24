@@ -1,3 +1,5 @@
+// conformance: SQL syntax round-trips through the canonical relation plan vocabulary.
+
 use super::*;
 use sim_kernel::{Datum, Symbol};
 use sim_relation_core::*;

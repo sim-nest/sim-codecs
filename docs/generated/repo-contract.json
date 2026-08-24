@@ -1,5 +1,5 @@
 {
-  "card_count": 22,
+  "card_count": 26,
   "cards": [
     {
       "id": "browse/catalog",
@@ -122,10 +122,34 @@
       "summary": "Bounded lossless Python source parsing."
     },
     {
+      "id": "cookbook/codec/search-searxng",
+      "kind": "cookbook-recipe",
+      "owner": "sim-codec-search-searxng",
+      "summary": "Pure request and response translation for an operator-selected SearXNG site."
+    },
+    {
       "id": "cookbook/codec/typescript",
       "kind": "cookbook-recipe",
       "owner": "sim-codec-typescript",
       "summary": "Bounded, lossless TypeScript and TSX source parsing."
+    },
+    {
+      "id": "cookbook/sim-codec-feed",
+      "kind": "cookbook-recipe",
+      "owner": "sim-codec-feed",
+      "summary": ""
+    },
+    {
+      "id": "cookbook/sim-codec-robots",
+      "kind": "cookbook-recipe",
+      "owner": "sim-codec-robots",
+      "summary": ""
+    },
+    {
+      "id": "cookbook/sim-codec-sql",
+      "kind": "cookbook-recipe",
+      "owner": "sim-codec-sql",
+      "summary": ""
     },
     {
       "id": "registry/catalog",
@@ -155,7 +179,9 @@
       "sim-codec-compare",
       "sim-codec-config",
       "sim-codec-doc",
+      "sim-codec-feed",
       "sim-codec-index",
+      "sim-codec-index-vault",
       "sim-codec-javascript",
       "sim-codec-json",
       "sim-codec-lisp",
@@ -163,6 +189,9 @@
       "sim-codec-mcp",
       "sim-codec-pratt",
       "sim-codec-python",
+      "sim-codec-robots",
+      "sim-codec-search-searxng",
+      "sim-codec-sql",
       "sim-codec-typescript",
       "sim-test-support",
       "sim-wasm-abi",
@@ -188,7 +217,7 @@
       "reason": "test-only f64 number-domain fixture for codec boundary tests"
     }
   ],
-  "package_count": 24,
+  "package_count": 29,
   "packages": [
     {
       "crate_name": "sim_codec",
@@ -803,6 +832,41 @@
       "crate_name": "sim_codec_compare",
       "dependencies": [
         {
+          "kind": "dev",
+          "optional": false,
+          "package": "sim-codec",
+          "rename": null,
+          "target": null
+        },
+        {
+          "kind": "dev",
+          "optional": false,
+          "package": "sim-codec-algol",
+          "rename": null,
+          "target": null
+        },
+        {
+          "kind": "dev",
+          "optional": false,
+          "package": "sim-codec-json",
+          "rename": null,
+          "target": null
+        },
+        {
+          "kind": "dev",
+          "optional": false,
+          "package": "sim-codec-lisp",
+          "rename": null,
+          "target": null
+        },
+        {
+          "kind": "dev",
+          "optional": false,
+          "package": "sim-test-support",
+          "rename": null,
+          "target": null
+        },
+        {
           "kind": "normal",
           "optional": false,
           "package": "sim-codec-binary",
@@ -922,13 +986,6 @@
         {
           "kind": "dev",
           "optional": false,
-          "package": "sim-codec-json",
-          "rename": null,
-          "target": null
-        },
-        {
-          "kind": "dev",
-          "optional": false,
           "package": "sim-codec-lisp",
           "rename": null,
           "target": null
@@ -944,6 +1001,13 @@
           "kind": "normal",
           "optional": false,
           "package": "sim-codec",
+          "rename": null,
+          "target": null
+        },
+        {
+          "kind": "normal",
+          "optional": false,
+          "package": "sim-codec-json",
           "rename": null,
           "target": null
         }
@@ -991,6 +1055,44 @@
           ],
           "name": "build-script-build",
           "src": "crates/sim-codec-doc/build.rs"
+        }
+      ]
+    },
+    {
+      "crate_name": "sim_codec_feed",
+      "dependencies": [],
+      "description": "Bounded inert RSS, Atom, and JSON Feed codec for SIM.",
+      "features": [],
+      "group": "workspace",
+      "manifest": "crates/sim-codec-feed/Cargo.toml",
+      "name": "sim-codec-feed",
+      "publish": "true",
+      "root": "crates/sim-codec-feed",
+      "rustdoc_summary": "Bounded, transport-free RSS 2.0, Atom 1.0, and JSON Feed projection.",
+      "target_kinds": [
+        "custom-build",
+        "lib"
+      ],
+      "targets": [
+        {
+          "crate_types": [
+            "lib"
+          ],
+          "kind": [
+            "lib"
+          ],
+          "name": "sim_codec_feed",
+          "src": "crates/sim-codec-feed/src/lib.rs"
+        },
+        {
+          "crate_types": [
+            "bin"
+          ],
+          "kind": [
+            "custom-build"
+          ],
+          "name": "build-script-build",
+          "src": "crates/sim-codec-feed/build.rs"
         }
       ]
     },
@@ -1047,6 +1149,59 @@
           ],
           "name": "sim_codec_index",
           "src": "crates/sim-codec-index/src/lib.rs"
+        }
+      ]
+    },
+    {
+      "crate_name": "sim_codec_index_vault",
+      "dependencies": [
+        {
+          "kind": "normal",
+          "optional": false,
+          "package": "sim-codec-doc",
+          "rename": null,
+          "target": null
+        },
+        {
+          "kind": "normal",
+          "optional": false,
+          "package": "sim-codec-index",
+          "rename": null,
+          "target": null
+        }
+      ],
+      "description": "Pure v2 Markdown bundle codec for complete SIM Index vault projections.",
+      "features": [],
+      "group": "workspace",
+      "manifest": "crates/sim-codec-index-vault/Cargo.toml",
+      "name": "sim-codec-index-vault",
+      "publish": "true",
+      "root": "crates/sim-codec-index-vault",
+      "rustdoc_summary": "Pure v2 bundle encoding for complete SIM Index vault projections.",
+      "target_kinds": [
+        "lib",
+        "test"
+      ],
+      "targets": [
+        {
+          "crate_types": [
+            "lib"
+          ],
+          "kind": [
+            "lib"
+          ],
+          "name": "sim_codec_index_vault",
+          "src": "crates/sim-codec-index-vault/src/lib.rs"
+        },
+        {
+          "crate_types": [
+            "bin"
+          ],
+          "kind": [
+            "test"
+          ],
+          "name": "conformance",
+          "src": "crates/sim-codec-index-vault/tests/conformance.rs"
         }
       ]
     },
@@ -1378,7 +1533,8 @@
       "rustdoc_summary": "MCP JSON-RPC envelope codec for SIM.",
       "target_kinds": [
         "custom-build",
-        "lib"
+        "lib",
+        "test"
       ],
       "targets": [
         {
@@ -1390,6 +1546,16 @@
           ],
           "name": "sim_codec_mcp",
           "src": "crates/sim-codec-mcp/src/lib.rs"
+        },
+        {
+          "crate_types": [
+            "bin"
+          ],
+          "kind": [
+            "test"
+          ],
+          "name": "schema_oracle",
+          "src": "crates/sim-codec-mcp/tests/schema_oracle.rs"
         },
         {
           "crate_types": [
@@ -1513,6 +1679,124 @@
           ],
           "name": "build-script-build",
           "src": "crates/sim-codec-python/build.rs"
+        }
+      ]
+    },
+    {
+      "crate_name": "sim_codec_robots",
+      "dependencies": [],
+      "description": "Bounded RFC 9309 robots.txt parser and matcher for SIM.",
+      "features": [],
+      "group": "workspace",
+      "manifest": "crates/sim-codec-robots/Cargo.toml",
+      "name": "sim-codec-robots",
+      "publish": "true",
+      "root": "crates/sim-codec-robots",
+      "rustdoc_summary": "RFC 9309 robots.txt records and deterministic path matching, without HTTP policy.",
+      "target_kinds": [
+        "custom-build",
+        "lib"
+      ],
+      "targets": [
+        {
+          "crate_types": [
+            "lib"
+          ],
+          "kind": [
+            "lib"
+          ],
+          "name": "sim_codec_robots",
+          "src": "crates/sim-codec-robots/src/lib.rs"
+        },
+        {
+          "crate_types": [
+            "bin"
+          ],
+          "kind": [
+            "custom-build"
+          ],
+          "name": "build-script-build",
+          "src": "crates/sim-codec-robots/build.rs"
+        }
+      ]
+    },
+    {
+      "crate_name": "sim_codec_search_searxng",
+      "dependencies": [
+        {
+          "kind": "normal",
+          "optional": false,
+          "package": "sim-codec",
+          "rename": null,
+          "target": null
+        },
+        {
+          "kind": "normal",
+          "optional": false,
+          "package": "sim-codec-json",
+          "rename": null,
+          "target": null
+        }
+      ],
+      "description": "Pure bounded SearXNG request and response codec for SIM.",
+      "features": [],
+      "group": "workspace",
+      "manifest": "crates/sim-codec-search-searxng/Cargo.toml",
+      "name": "sim-codec-search-searxng",
+      "publish": "true",
+      "root": "crates/sim-codec-search-searxng",
+      "rustdoc_summary": "Pure bounded SearXNG /config and JSON /search wire translation.",
+      "target_kinds": [
+        "custom-build",
+        "lib"
+      ],
+      "targets": [
+        {
+          "crate_types": [
+            "lib"
+          ],
+          "kind": [
+            "lib"
+          ],
+          "name": "sim_codec_search_searxng",
+          "src": "crates/sim-codec-search-searxng/src/lib.rs"
+        },
+        {
+          "crate_types": [
+            "bin"
+          ],
+          "kind": [
+            "custom-build"
+          ],
+          "name": "build-script-build",
+          "src": "crates/sim-codec-search-searxng/build.rs"
+        }
+      ]
+    },
+    {
+      "crate_name": "sim_codec_sql",
+      "dependencies": [],
+      "description": "Bounded SQL projection for admitted SIM relational plans and migrations.",
+      "features": [],
+      "group": "workspace",
+      "manifest": "crates/sim-codec-sql/Cargo.toml",
+      "name": "sim-codec-sql",
+      "publish": "true",
+      "root": "crates/sim-codec-sql",
+      "rustdoc_summary": "Bounded SQL projection for admitted relational plans and migrations.",
+      "target_kinds": [
+        "lib"
+      ],
+      "targets": [
+        {
+          "crate_types": [
+            "lib"
+          ],
+          "kind": [
+            "lib"
+          ],
+          "name": "sim_codec_sql",
+          "src": "crates/sim-codec-sql/src/lib.rs"
         }
       ]
     },
@@ -1684,10 +1968,10 @@
     "generated_by": "cargo run -p xtask -- simdoc",
     "generation_timestamp": "2026-07-16T02:55:26+02:00",
     "generator": "xtask repo-contract v1",
-    "git_commit": "e1780c6c26550c85e4ed12b76f01ff532ea6c382",
+    "git_commit": "a84c4abcfeffe37be5f0113d3587910e69addeb0",
     "repo": "sim-codecs",
     "schema": "sim.provenance.v1",
-    "source_commit": "e1780c6c26550c85e4ed12b76f01ff532ea6c382",
+    "source_commit": "a84c4abcfeffe37be5f0113d3587910e69addeb0",
     "source_remote": "https://github.com/sim-nest/sim-codecs",
     "validation_commands": [
       "cargo fmt --all --check",
@@ -1700,9 +1984,9 @@
       "cargo run -p xtask -- validation-matrix --check --repo .",
       "cargo run -p xtask -- crate-catalog --check --repo ."
     ],
-    "workspace_hash": "d3f6dcd4e8c1b299",
+    "workspace_hash": "7ad831b0e0d087d1",
     "workspace_hash_algorithm": "fnv1a64",
-    "workspace_hash_input_count": 372,
+    "workspace_hash_input_count": 418,
     "workspace_hash_inputs": [
       "Cargo.toml",
       "crates/sim-codec/Cargo.toml",
@@ -1845,6 +2129,7 @@
       "crates/sim-codec-chat/src/providers/openai/common.rs",
       "crates/sim-codec-chat/src/providers/openai/decode.rs",
       "crates/sim-codec-chat/src/providers/openai/encode.rs",
+      "crates/sim-codec-chat/src/providers/openai/responses.rs",
       "crates/sim-codec-chat/src/providers/openai/runtime.rs",
       "crates/sim-codec-chat/src/providers/openai.rs",
       "crates/sim-codec-chat/src/providers/openai_compat.rs",
@@ -1852,6 +2137,7 @@
       "crates/sim-codec-chat/src/tests/anthropic.rs",
       "crates/sim-codec-chat/src/tests/ollama.rs",
       "crates/sim-codec-chat/src/tests/openai_compat.rs",
+      "crates/sim-codec-chat/src/tests/openai_responses.rs",
       "crates/sim-codec-chat/src/tests/output_grammar.rs",
       "crates/sim-codec-chat/src/tests/strict.rs",
       "crates/sim-codec-chat/src/tests.rs",
@@ -1896,6 +2182,7 @@
       "crates/sim-codec-compare/src/corpus.rs",
       "crates/sim-codec-compare/src/findings_tests.rs",
       "crates/sim-codec-compare/src/lib.rs",
+      "crates/sim-codec-compare/src/platform_roundtrip_tests.rs",
       "crates/sim-codec-compare/src/report.rs",
       "crates/sim-codec-compare/src/size.rs",
       "crates/sim-codec-compare/src/speed.rs",
@@ -1913,6 +2200,7 @@
       "crates/sim-codec-doc/build.rs",
       "crates/sim-codec-doc/recipes/01-basics/backend-catalog/recipe.toml",
       "crates/sim-codec-doc/recipes/01-basics/document-chunks/recipe.toml",
+      "crates/sim-codec-doc/recipes/01-basics/html-extraction/recipe.toml",
       "crates/sim-codec-doc/recipes/01-basics/markdown-to-typst/recipe.toml",
       "crates/sim-codec-doc/recipes/book.toml",
       "crates/sim-codec-doc/src/asciidoc.rs",
@@ -1929,6 +2217,7 @@
       "crates/sim-codec-doc/src/edit.rs",
       "crates/sim-codec-doc/src/edit_tests.rs",
       "crates/sim-codec-doc/src/functions.rs",
+      "crates/sim-codec-doc/src/html.rs",
       "crates/sim-codec-doc/src/latex.rs",
       "crates/sim-codec-doc/src/latex_support.rs",
       "crates/sim-codec-doc/src/latex_tests.rs",
@@ -1946,6 +2235,11 @@
       "crates/sim-codec-doc/src/typst_backend.rs",
       "crates/sim-codec-doc/src/typst_writer.rs",
       "crates/sim-codec-doc/tests/conformance.rs",
+      "crates/sim-codec-feed/Cargo.toml",
+      "crates/sim-codec-feed/build.rs",
+      "crates/sim-codec-feed/recipes/01-basics/decode-saved-feed/recipe.toml",
+      "crates/sim-codec-feed/recipes/book.toml",
+      "crates/sim-codec-feed/src/lib.rs",
       "crates/sim-codec-index/Cargo.toml",
       "crates/sim-codec-index/src/error.rs",
       "crates/sim-codec-index/src/expr.rs",
@@ -1954,6 +2248,9 @@
       "crates/sim-codec-index/src/lib.rs",
       "crates/sim-codec-index/src/runtime.rs",
       "crates/sim-codec-index/src/tests.rs",
+      "crates/sim-codec-index-vault/Cargo.toml",
+      "crates/sim-codec-index-vault/src/lib.rs",
+      "crates/sim-codec-index-vault/tests/conformance.rs",
       "crates/sim-codec-javascript/Cargo.toml",
       "crates/sim-codec-javascript/recipes/01-basics/lossless-source/recipe.toml",
       "crates/sim-codec-javascript/recipes/book.toml",
@@ -1978,6 +2275,13 @@
       "crates/sim-codec-json/src/lib.rs",
       "crates/sim-codec-json/src/projection.rs",
       "crates/sim-codec-json/src/schema.rs",
+      "crates/sim-codec-json/src/schema_document/adaptation.rs",
+      "crates/sim-codec-json/src/schema_document/document.rs",
+      "crates/sim-codec-json/src/schema_document/pattern.rs",
+      "crates/sim-codec-json/src/schema_document/pattern_parser.rs",
+      "crates/sim-codec-json/src/schema_document/tests.rs",
+      "crates/sim-codec-json/src/schema_document/validation.rs",
+      "crates/sim-codec-json/src/schema_document.rs",
       "crates/sim-codec-json/src/tests.rs",
       "crates/sim-codec-json/src/tree_json.rs",
       "crates/sim-codec-json/tests/grammar_check_equivalence.rs",
@@ -2021,6 +2325,7 @@
       "crates/sim-codec-lua/src/tests.rs",
       "crates/sim-codec-mcp/Cargo.toml",
       "crates/sim-codec-mcp/build.rs",
+      "crates/sim-codec-mcp/build_support/schema_oracle.rs",
       "crates/sim-codec-mcp/recipes/01-basics/envelope-descriptor/recipe.toml",
       "crates/sim-codec-mcp/recipes/book.toml",
       "crates/sim-codec-mcp/src/canonical.rs",
@@ -2028,8 +2333,11 @@
       "crates/sim-codec-mcp/src/error.rs",
       "crates/sim-codec-mcp/src/expr.rs",
       "crates/sim-codec-mcp/src/lib.rs",
+      "crates/sim-codec-mcp/src/schema_oracle.rs",
       "crates/sim-codec-mcp/src/tests.rs",
+      "crates/sim-codec-mcp/src/wire_authority.rs",
       "crates/sim-codec-mcp/src/wire_keys.rs",
+      "crates/sim-codec-mcp/tests/schema_oracle.rs",
       "crates/sim-codec-pratt/Cargo.toml",
       "crates/sim-codec-pratt/build.rs",
       "crates/sim-codec-pratt/recipes/book.toml",
@@ -2051,6 +2359,28 @@
       "crates/sim-codec-python/src/parser.rs",
       "crates/sim-codec-python/src/tests.rs",
       "crates/sim-codec-python/src/types.rs",
+      "crates/sim-codec-robots/Cargo.toml",
+      "crates/sim-codec-robots/build.rs",
+      "crates/sim-codec-robots/recipes/01-basics/match-path/recipe.toml",
+      "crates/sim-codec-robots/recipes/book.toml",
+      "crates/sim-codec-robots/src/lib.rs",
+      "crates/sim-codec-search-searxng/Cargo.toml",
+      "crates/sim-codec-search-searxng/build.rs",
+      "crates/sim-codec-search-searxng/recipes/01-basics/request-response/recipe.toml",
+      "crates/sim-codec-search-searxng/recipes/book.toml",
+      "crates/sim-codec-search-searxng/src/codec.rs",
+      "crates/sim-codec-search-searxng/src/lib.rs",
+      "crates/sim-codec-search-searxng/src/tests.rs",
+      "crates/sim-codec-sql/Cargo.toml",
+      "crates/sim-codec-sql/recipes/01-basics/inspect-ddl/recipe.toml",
+      "crates/sim-codec-sql/recipes/book.toml",
+      "crates/sim-codec-sql/src/ddl.rs",
+      "crates/sim-codec-sql/src/dialect.rs",
+      "crates/sim-codec-sql/src/emit.rs",
+      "crates/sim-codec-sql/src/lib.rs",
+      "crates/sim-codec-sql/src/prepared.rs",
+      "crates/sim-codec-sql/src/registry.rs",
+      "crates/sim-codec-sql/src/tests.rs",
       "crates/sim-codec-typescript/Cargo.toml",
       "crates/sim-codec-typescript/recipes/01-basics/lossless-source/recipe.toml",
       "crates/sim-codec-typescript/recipes/book.toml",
@@ -2078,7 +2408,7 @@
       "xtask/Cargo.toml"
     ]
   },
-  "recipe_book_count": 20,
+  "recipe_book_count": 24,
   "recipes": [
     {
       "book": "codec/core",
@@ -2314,7 +2644,7 @@
       "card_id": "cookbook/codec/doc",
       "group": "workspace",
       "package": "sim-codec-doc",
-      "recipe_count": 3,
+      "recipe_count": 4,
       "recipes": [
         {
           "card_id": "codec/doc/01-basics/backend-catalog",
@@ -2333,6 +2663,14 @@
           "title": "Document chunks"
         },
         {
+          "card_id": "codec/doc/01-basics/html-extraction",
+          "codec": "lisp",
+          "id": "html-extraction",
+          "package": "sim-codec-doc",
+          "recipe_toml": "crates/sim-codec-doc/recipes/01-basics/html-extraction/recipe.toml",
+          "title": "Extract inert HTML"
+        },
+        {
           "card_id": "codec/doc/01-basics/markdown-to-typst",
           "codec": "lisp",
           "id": "markdown-to-typst",
@@ -2343,6 +2681,26 @@
       ],
       "summary": "Document decoding and provenance-preserving chunk descriptors.",
       "title": "Document Codec"
+    },
+    {
+      "book": "sim-codec-feed",
+      "book_toml": "crates/sim-codec-feed/recipes/book.toml",
+      "card_id": "cookbook/sim-codec-feed",
+      "group": "workspace",
+      "package": "sim-codec-feed",
+      "recipe_count": 1,
+      "recipes": [
+        {
+          "card_id": "sim-codec-feed/01-basics/decode-saved-feed",
+          "codec": "lisp",
+          "id": "decode-saved-feed",
+          "package": "sim-codec-feed",
+          "recipe_toml": "crates/sim-codec-feed/recipes/01-basics/decode-saved-feed/recipe.toml",
+          "title": "Decode a saved feed"
+        }
+      ],
+      "summary": "",
+      "title": "Feed codec recipes"
     },
     {
       "book": "codec/javascript",
@@ -2482,6 +2840,66 @@
       ],
       "summary": "Bounded lossless Python source parsing.",
       "title": "Python 3.14 Source Frontend"
+    },
+    {
+      "book": "sim-codec-robots",
+      "book_toml": "crates/sim-codec-robots/recipes/book.toml",
+      "card_id": "cookbook/sim-codec-robots",
+      "group": "workspace",
+      "package": "sim-codec-robots",
+      "recipe_count": 1,
+      "recipes": [
+        {
+          "card_id": "sim-codec-robots/01-basics/match-path",
+          "codec": "lisp",
+          "id": "match-path",
+          "package": "sim-codec-robots",
+          "recipe_toml": "crates/sim-codec-robots/recipes/01-basics/match-path/recipe.toml",
+          "title": "Match a saved robots file"
+        }
+      ],
+      "summary": "",
+      "title": "Robots codec recipes"
+    },
+    {
+      "book": "codec/search-searxng",
+      "book_toml": "crates/sim-codec-search-searxng/recipes/book.toml",
+      "card_id": "cookbook/codec/search-searxng",
+      "group": "workspace",
+      "package": "sim-codec-search-searxng",
+      "recipe_count": 1,
+      "recipes": [
+        {
+          "card_id": "codec/search-searxng/01-basics/request-response",
+          "codec": "lisp",
+          "id": "request-response",
+          "package": "sim-codec-search-searxng",
+          "recipe_toml": "crates/sim-codec-search-searxng/recipes/01-basics/request-response/recipe.toml",
+          "title": "Translate a saved SearXNG exchange"
+        }
+      ],
+      "summary": "Pure request and response translation for an operator-selected SearXNG site.",
+      "title": "SearXNG wire codec recipes"
+    },
+    {
+      "book": "sim-codec-sql",
+      "book_toml": "crates/sim-codec-sql/recipes/book.toml",
+      "card_id": "cookbook/sim-codec-sql",
+      "group": "workspace",
+      "package": "sim-codec-sql",
+      "recipe_count": 1,
+      "recipes": [
+        {
+          "card_id": "sim-codec-sql/01-basics/inspect-ddl",
+          "codec": "",
+          "id": "inspect-ddl",
+          "package": "sim-codec-sql",
+          "recipe_toml": "crates/sim-codec-sql/recipes/01-basics/inspect-ddl/recipe.toml",
+          "title": "Inspect bounded DDL"
+        }
+      ],
+      "summary": "",
+      "title": "SQL codec"
     },
     {
       "book": "codec/typescript",

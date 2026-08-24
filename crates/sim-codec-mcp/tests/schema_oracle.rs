@@ -1,3 +1,5 @@
+// conformance: the MCP schema oracle checks the delivered compatibility contract.
+
 #[path = "../build_support/schema_oracle.rs"]
 mod validator;
 
