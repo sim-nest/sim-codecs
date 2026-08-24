@@ -1,4 +1,7 @@
-use sim_codec_index_vault::{PROFILES, VaultDecoder, VaultEncoder, resolve_profile, verify_v2};
+use sim_codec_index_vault::{
+    LegacyVaultBundle, LegacyVaultEntry, PROFILES, VaultDecoder, VaultEncoder,
+    legacy_projection_v1, resolve_legacy_profile, resolve_profile, verify_legacy_v1, verify_v2,
+};
 use sim_index_core::{
     AnchorId, DeclarationFact, DeclarationRole, DiscoveredAnchor, DiscoveredSpecimen,
     DiscoveredSurface, FeatureDraft, FeatureId, FeatureRecord, GrammarContract, IndexDoc,
@@ -291,4 +294,29 @@ fn v2_deliberate_spelling_changes_are_documented() {
     ] {
         assert!(!PROFILES.iter().any(|p| p.id.as_str() == legacy));
     }
+}
+
+#[test]
+fn legacy_v1_is_bounded_decode_only_and_semantically_checked() {
+    let doc = IndexDoc::public("legacy-v1-fixture");
+    let expected = legacy_projection_v1(&doc, VaultGranularity::Compact).unwrap();
+    let bytes = b"---\nsim_profile: \"portable-markdown-v1\"\ngranularity: \"compact\"\nschema: \"sim.index/v1\"\ngenerated-by: \"fixture\"\n---\n\n# SIM Index Vault\n\n## Navigation\n".to_vec();
+    let bundle = LegacyVaultBundle {
+        profile: resolve_legacy_profile("portable-markdown-v1").unwrap(),
+        granularity: VaultGranularity::Compact,
+        entries: vec![LegacyVaultEntry {
+            path: "README.md".into(),
+            bytes,
+        }],
+    };
+    let verified = verify_legacy_v1(&bundle, &expected).unwrap();
+    assert!(verified.note_identities.is_empty());
+    assert_eq!(verified.known_absent_families, &["declaration", "protocol"]);
+
+    let mut drift = bundle;
+    drift.entries[0].bytes = String::from_utf8(drift.entries[0].bytes.clone())
+        .unwrap()
+        .replace("portable-markdown-v1", "foreign-markdown-v1")
+        .into_bytes();
+    assert!(verify_legacy_v1(&drift, &expected).is_err());
 }

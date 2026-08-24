@@ -32,6 +32,14 @@ pub enum AttributeEnvelope {
     None,
     /// A canonical JSON object between `---json` and `---` lines.
     JsonFrontMatter,
+    /// Decode-only legacy YAML string properties between `---` lines.
+    ///
+    /// This deliberately accepts only the frozen `key: "JSON string"` subset
+    /// emitted by the former Index vault renderer. Encoding is rejected so a
+    /// compatibility reader cannot become a second live v1 writer.
+    LegacyYamlStringFrontMatter,
+    /// Decode-only legacy `key:: value` string properties.
+    LegacyDoubleColonStrings,
     /// Consecutive `key:: JSON-value` lines followed by a blank line.
     DoubleColon,
 }
@@ -205,6 +213,39 @@ fn decode_attributes(
             let pairs = parse_json_object_pairs(&input[8..end])?;
             attrs_from_pairs(pairs, dialect, end + 5)
         }
+        AttributeEnvelope::LegacyYamlStringFrontMatter => {
+            if !input.starts_with("---\n") {
+                return Ok((BTreeMap::new(), 0));
+            }
+            let end = input[4..].find("\n---\n").ok_or_else(|| {
+                MarkupError::Decode("unterminated legacy YAML front matter".to_owned())
+            })? + 4;
+            if end > dialect.max_attribute_bytes {
+                return Err(MarkupError::Decode(
+                    "legacy YAML front matter exceeds dialect byte bound".to_owned(),
+                ));
+            }
+            let mut pairs = Vec::new();
+            for line in input[4..end].lines() {
+                let (key, value) = line.split_once(':').ok_or_else(|| {
+                    MarkupError::Decode(format!("invalid legacy YAML property {line:?}"))
+                })?;
+                let key = key.trim();
+                validate_key(key)?;
+                let value = serde_json::from_str(value.trim()).map_err(|error| {
+                    MarkupError::Decode(format!(
+                        "legacy YAML property {key:?} is not a quoted string: {error}"
+                    ))
+                })?;
+                if !matches!(value, JsonValue::String(_)) {
+                    return Err(MarkupError::Decode(format!(
+                        "legacy YAML property {key:?} is not a string"
+                    )));
+                }
+                pairs.push((key.to_owned(), value));
+            }
+            legacy_string_attrs(pairs, dialect, end + 5)
+        }
         AttributeEnvelope::DoubleColon => {
             let Some(end) = input.find("\n\n") else {
                 return Ok((BTreeMap::new(), 0));
@@ -230,7 +271,60 @@ fn decode_attributes(
             }
             attrs_from_pairs(pairs, dialect, end + 2)
         }
+        AttributeEnvelope::LegacyDoubleColonStrings => {
+            let Some(end) = input.find("\n\n") else {
+                return Ok((BTreeMap::new(), 0));
+            };
+            let prelude = &input[..end];
+            if prelude.is_empty() || !prelude.lines().all(|line| line.contains("::")) {
+                return Ok((BTreeMap::new(), 0));
+            }
+            if end > dialect.max_attribute_bytes {
+                return Err(MarkupError::Decode(
+                    "legacy property prelude exceeds dialect byte bound".to_owned(),
+                ));
+            }
+            let pairs = prelude
+                .lines()
+                .map(|line| {
+                    let (key, value) = line.split_once("::").expect("checked above");
+                    let key = key.trim();
+                    validate_key(key)?;
+                    Ok((key.to_owned(), JsonValue::String(value.trim().to_owned())))
+                })
+                .collect::<Result<Vec<_>, MarkupError>>()?;
+            legacy_string_attrs(pairs, dialect, end + 2)
+        }
     }
+}
+
+fn legacy_string_attrs(
+    pairs: Vec<(String, JsonValue)>,
+    dialect: MarkdownDialect,
+    body_start: usize,
+) -> Result<(BTreeMap<String, sim_kernel::Expr>, usize), MarkupError> {
+    if pairs.len() > dialect.max_attributes {
+        return Err(MarkupError::Decode(
+            "legacy attribute count exceeds dialect bound".to_owned(),
+        ));
+    }
+    let mut attrs = BTreeMap::new();
+    for (key, value) in pairs {
+        let JsonValue::String(value) = value else {
+            return Err(MarkupError::Decode(format!(
+                "legacy property {key:?} is not a string"
+            )));
+        };
+        if attrs
+            .insert(key.clone(), sim_kernel::Expr::String(value))
+            .is_some()
+        {
+            return Err(MarkupError::Decode(format!(
+                "duplicate legacy attribute key {key:?}"
+            )));
+        }
+    }
+    Ok((attrs, body_start))
 }
 
 fn attrs_from_pairs(
@@ -284,6 +378,16 @@ fn encode_attributes(
             serde_json::to_string(&JsonValue::Object(object))
                 .map_err(|e| MarkupError::Encode(e.to_string()))?
         ),
+        AttributeEnvelope::LegacyYamlStringFrontMatter => {
+            return Err(MarkupError::Encode(
+                "legacy YAML front matter is decode-only".to_owned(),
+            ));
+        }
+        AttributeEnvelope::LegacyDoubleColonStrings => {
+            return Err(MarkupError::Encode(
+                "legacy double-colon properties are decode-only".to_owned(),
+            ));
+        }
         AttributeEnvelope::DoubleColon => {
             let mut out = String::new();
             for (key, value) in object {

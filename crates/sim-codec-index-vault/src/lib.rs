@@ -157,25 +157,25 @@ pub struct LegacyVaultProfile {
 pub const LEGACY_PROFILES: [LegacyVaultProfile; 4] = [
     legacy_profile(
         LegacyVaultProfileId::PortableMarkdownV1,
-        AttributeEnvelope::None,
+        AttributeEnvelope::LegacyYamlStringFrontMatter,
         LinkDialect::CommonMark,
         OutlineMapping::HeadingsAndLists,
     ),
     legacy_profile(
         LegacyVaultProfileId::ObsidianMarkdownV1,
-        AttributeEnvelope::None,
+        AttributeEnvelope::LegacyYamlStringFrontMatter,
         LinkDialect::WikiLink,
         OutlineMapping::HeadingsAndLists,
     ),
     legacy_profile(
         LegacyVaultProfileId::SeqlogMarkdownV1,
-        AttributeEnvelope::None,
+        AttributeEnvelope::LegacyYamlStringFrontMatter,
         LinkDialect::CommonMark,
         OutlineMapping::HeadingsAndLists,
     ),
     legacy_profile(
         LegacyVaultProfileId::LogseqFileV1,
-        AttributeEnvelope::DoubleColon,
+        AttributeEnvelope::LegacyDoubleColonStrings,
         LinkDialect::WikiLink,
         OutlineMapping::IndentedLists,
     ),
@@ -205,6 +205,135 @@ pub fn resolve_legacy_profile(name: &str) -> Result<LegacyVaultProfile, VaultCod
 
 /// Row families deliberately absent from every delivered v1 vault.
 pub const LEGACY_V1_KNOWN_ABSENT_FAMILIES: [&str; 2] = ["declaration", "protocol"];
+
+/// One caller-supplied file from a read-only v1 bundle.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct LegacyVaultEntry {
+    /// Normalized vault-relative path.
+    pub path: String,
+    /// Exact historical bytes.
+    pub bytes: Vec<u8>,
+}
+
+/// Bounded caller-supplied v1 bundle. It has deliberately no encoder.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct LegacyVaultBundle {
+    /// Exact historical profile descriptor.
+    pub profile: LegacyVaultProfile,
+    /// Historical projection density.
+    pub granularity: VaultGranularity,
+    /// Sorted managed files, excluding the ownership manifest.
+    pub entries: Vec<LegacyVaultEntry>,
+}
+
+/// Result of semantic v1 verification.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct LegacyVaultVerification {
+    /// Stable identities found in the historical notes.
+    pub note_identities: BTreeSet<(String, String)>,
+    /// Row families intentionally not represented by v1.
+    pub known_absent_families: &'static [&'static str],
+}
+
+/// Decode a historical bundle and compare its note identities to the explicit
+/// incomplete legacy projection. This accepts bytes only from the caller and
+/// performs no filesystem or reverse-import operation.
+pub fn verify_legacy_v1(
+    bundle: &LegacyVaultBundle,
+    expected: &VaultProjection,
+) -> Result<LegacyVaultVerification, VaultCodecError> {
+    if bundle.entries.len() > MAX_NOTES + 1 {
+        return Err(VaultCodecError::BoundExceeded("legacy notes"));
+    }
+    let total = bundle.entries.iter().try_fold(0usize, |total, entry| {
+        total
+            .checked_add(entry.bytes.len())
+            .ok_or(VaultCodecError::BoundExceeded("legacy bundle bytes"))
+    })?;
+    if total > MAX_BUNDLE_BYTES {
+        return Err(VaultCodecError::BoundExceeded("legacy bundle bytes"));
+    }
+    let backend = DialectMarkdownBackend::new(MarkdownDialect {
+        attributes: bundle.profile.attributes,
+        links: bundle.profile.links,
+        ..MarkdownDialect::default()
+    })
+    .map_err(VaultCodecError::Markup)?;
+    let mut paths = BTreeSet::new();
+    let mut identities = BTreeSet::new();
+    let mut readme = false;
+    for entry in &bundle.entries {
+        if entry.bytes.len() > MAX_NOTE_BYTES {
+            return Err(VaultCodecError::BoundExceeded("legacy note bytes"));
+        }
+        if entry.path.starts_with('/')
+            || entry.path.contains('\\')
+            || entry
+                .path
+                .split('/')
+                .any(|part| part.is_empty() || part == "." || part == "..")
+            || !paths.insert(entry.path.clone())
+        {
+            return Err(VaultCodecError::PathConflict(entry.path.clone()));
+        }
+        let text = std::str::from_utf8(&entry.bytes)
+            .map_err(|_| VaultCodecError::InvalidUtf8(entry.path.clone()))?;
+        let (doc, fidelity) = backend
+            .decode(
+                text,
+                &MarkupDecodeOptions {
+                    preserve_source: false,
+                    preserve_raw: false,
+                },
+            )
+            .map_err(VaultCodecError::Markup)?;
+        if !fidelity.dropped.is_empty() || !fidelity.warnings.is_empty() {
+            return Err(VaultCodecError::MarkupLoss);
+        }
+        let profile = string_attr(&doc, "sim_profile")?;
+        if profile != bundle.profile.id.as_str() {
+            return Err(VaultCodecError::ProfileDisagreement);
+        }
+        let granularity = string_attr(&doc, "granularity")?;
+        if granularity != granularity_name(bundle.granularity) {
+            return Err(VaultCodecError::GranularityDisagreement);
+        }
+        if entry.path == "README.md" {
+            if readme || doc.title.as_deref() != Some("SIM Index Vault") {
+                return Err(VaultCodecError::StrayNavigation);
+            }
+            readme = true;
+            continue;
+        }
+        let id = string_attr(&doc, "sim_id")?.to_owned();
+        let kind = string_attr(&doc, "kind")?.to_owned();
+        if doc.title.as_deref().is_none() || !identities.insert((kind, id)) {
+            return Err(VaultCodecError::DuplicateRow);
+        }
+    }
+    if !readme {
+        return Err(VaultCodecError::MissingMetadata("README"));
+    }
+    let expected_identities = expected
+        .notes()
+        .iter()
+        .map(|note| (kind_name(note.kind).to_owned(), note.id.as_str().to_owned()))
+        .collect::<BTreeSet<_>>();
+    if identities != expected_identities {
+        return Err(VaultCodecError::LegacySemanticDrift);
+    }
+    Ok(LegacyVaultVerification {
+        note_identities: identities,
+        known_absent_families: &LEGACY_V1_KNOWN_ABSENT_FAMILIES,
+    })
+}
+
+fn string_attr<'a>(doc: &'a MarkupDoc, name: &'static str) -> Result<&'a str, VaultCodecError> {
+    match doc.attrs.get(name) {
+        Some(Expr::String(value)) => Ok(value),
+        _ => Err(VaultCodecError::MissingMetadata(name)),
+    }
+}
 
 /// Builds the exact incomplete July projection used to judge legacy semantics.
 ///
@@ -1046,6 +1175,8 @@ pub enum VaultCodecError {
     StrayNavigation,
     /// Canonical reconstruction or claim closure failed.
     Reconstruction(String),
+    /// Historical note identities differ from the explicit v1 projection.
+    LegacySemanticDrift,
 }
 impl fmt::Display for VaultCodecError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -1082,6 +1213,9 @@ impl fmt::Display for VaultCodecError {
                 f.write_str("missing, duplicate, or semantically invalid README navigation")
             }
             Self::Reconstruction(v) => write!(f, "vault projection reconstruction failed: {v}"),
+            Self::LegacySemanticDrift => {
+                f.write_str("legacy vault semantics disagree with the declared v1 projection")
+            }
         }
     }
 }
