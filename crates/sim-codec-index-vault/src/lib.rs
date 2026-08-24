@@ -114,6 +114,111 @@ pub const PROFILES: [VaultProfile; 4] = [
         "logseq-file-graph-markdown",
     ),
 ];
+
+/// Exact identities of the four historical, decode-only vault profiles.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum LegacyVaultProfileId {
+    /// July portable Markdown.
+    PortableMarkdownV1,
+    /// July Obsidian Markdown.
+    ObsidianMarkdownV1,
+    /// July Seqlog Markdown.
+    SeqlogMarkdownV1,
+    /// July Logseq file graph.
+    LogseqFileV1,
+}
+
+impl LegacyVaultProfileId {
+    /// Stable historical profile id.
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            Self::PortableMarkdownV1 => "portable-markdown-v1",
+            Self::ObsidianMarkdownV1 => "obsidian-markdown-v1",
+            Self::SeqlogMarkdownV1 => "seqlog-markdown-v1",
+            Self::LogseqFileV1 => "logseq-file-v1",
+        }
+    }
+}
+
+/// Frozen syntax descriptor for a historical decode-only profile.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct LegacyVaultProfile {
+    /// Exact historical identity.
+    pub id: LegacyVaultProfileId,
+    /// Historical metadata envelope.
+    pub attributes: AttributeEnvelope,
+    /// Historical link spelling.
+    pub links: LinkDialect,
+    /// Historical outline mapping.
+    pub outline: OutlineMapping,
+}
+
+/// Closed set of readable v1 profiles. No encoder accepts this type.
+pub const LEGACY_PROFILES: [LegacyVaultProfile; 4] = [
+    legacy_profile(
+        LegacyVaultProfileId::PortableMarkdownV1,
+        AttributeEnvelope::None,
+        LinkDialect::CommonMark,
+        OutlineMapping::HeadingsAndLists,
+    ),
+    legacy_profile(
+        LegacyVaultProfileId::ObsidianMarkdownV1,
+        AttributeEnvelope::None,
+        LinkDialect::WikiLink,
+        OutlineMapping::HeadingsAndLists,
+    ),
+    legacy_profile(
+        LegacyVaultProfileId::SeqlogMarkdownV1,
+        AttributeEnvelope::None,
+        LinkDialect::CommonMark,
+        OutlineMapping::HeadingsAndLists,
+    ),
+    legacy_profile(
+        LegacyVaultProfileId::LogseqFileV1,
+        AttributeEnvelope::DoubleColon,
+        LinkDialect::WikiLink,
+        OutlineMapping::IndentedLists,
+    ),
+];
+
+const fn legacy_profile(
+    id: LegacyVaultProfileId,
+    attributes: AttributeEnvelope,
+    links: LinkDialect,
+    outline: OutlineMapping,
+) -> LegacyVaultProfile {
+    LegacyVaultProfile {
+        id,
+        attributes,
+        links,
+        outline,
+    }
+}
+
+/// Resolves only an exact historical id; friendly aliases always select v2.
+pub fn resolve_legacy_profile(name: &str) -> Result<LegacyVaultProfile, VaultCodecError> {
+    LEGACY_PROFILES
+        .into_iter()
+        .find(|profile| profile.id.as_str() == name)
+        .ok_or_else(|| VaultCodecError::UnknownProfile(name.into()))
+}
+
+/// Row families deliberately absent from every delivered v1 vault.
+pub const LEGACY_V1_KNOWN_ABSENT_FAMILIES: [&str; 2] = ["declaration", "protocol"];
+
+/// Builds the exact incomplete July projection used to judge legacy semantics.
+///
+/// This value is comparison evidence only. It cannot be encoded by this crate.
+pub fn legacy_projection_v1(
+    doc: &IndexDoc,
+    granularity: VaultGranularity,
+) -> Result<VaultProjection, VaultCodecError> {
+    let mut legacy = doc.clone();
+    legacy.declarations.clear();
+    legacy.protocol_relations.clear();
+    VaultProjection::from_complete(&legacy, granularity)
+        .map_err(|error| VaultCodecError::Reconstruction(error.to_string()))
+}
 const fn profile(
     id: VaultProfileId,
     attributes: AttributeEnvelope,
