@@ -1,5 +1,7 @@
 # sim-codec-doc
 
+HTML joins the existing markup organ as a tolerant, bounded extraction backend. It preserves source fidelity and semantic structure while stripping active behavior and never fetching subresources.
+
 In one line: It reads and writes Markdown, Typst, AsciiDoc, and LaTeX as one structured document value.
 
 ## What it gives you

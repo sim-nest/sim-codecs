@@ -1,0 +1,8 @@
+id = "match-path"
+title = "Match a saved robots file"
+codec = "lisp"
+setup = "setup.siml"
+purpose = "purpose.md"
+order = 10
+tags = ["codec", "robots", "pure"]
+requires = ["core", "codec/lisp"]

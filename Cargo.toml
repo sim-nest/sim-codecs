@@ -17,6 +17,8 @@ members = [
   "crates/sim-codec-chat",
   "crates/sim-codec-config",
   "crates/sim-codec-doc",
+  "crates/sim-codec-feed",
+  "crates/sim-codec-robots",
   "crates/sim-codec-index",
   "crates/sim-codec-json",
   "crates/sim-codec-lisp",

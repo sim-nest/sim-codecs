@@ -39,6 +39,7 @@ pub fn backend_catalog() -> Vec<BackendInfo> {
             "latex",
             "Safe LaTeX article-subset backend over tree-sitter.",
         ),
+        implemented("html", "Tolerant inert HTML semantic projection."),
         implemented(
             "markdown",
             "CommonMark/GFM-compatible Markdown read/write backend.",

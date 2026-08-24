@@ -1,0 +1,8 @@
+id = "html-extraction"
+title = "Extract inert HTML"
+codec = "lisp"
+setup = "setup.siml"
+purpose = "purpose.md"
+order = 20
+tags = ["codec", "doc", "html", "pure"]
+requires = ["core", "codec/lisp", "codec/doc"]
