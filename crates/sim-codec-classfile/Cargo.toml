@@ -23,5 +23,5 @@ sim-cookbook = { version = "0.2.0" }
 workspace = true
 
 [dev-dependencies]
-sha2 = "0.10"
-toml = "0.8"
+sha2 = "0.11"
+toml = "1.1"
