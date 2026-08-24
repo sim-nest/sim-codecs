@@ -465,3 +465,27 @@ steps = [
   { feature = "feature/sim-codecs/saved-web-documents", why = "The codec organ owns bounded inert parsing and projections for all three saved web formats." },
   { specimen = "spec-test/sim-codecs/crates/sim-codec-robots/src/tests", why = "The RFC precedence table demonstrates grouped selection, percent comparison, wildcards, end anchors, and equal-length allow behavior." },
 ]
+
+[[feature]]
+id = "feature/sim-codecs/searxng-search-wire"
+title = "SearXNG search wire codec"
+summary = "Translate generic search queries and caller-supplied SearXNG config and JSON search responses with bounded open fields, provider claims, and honest partial failures."
+owner = "crate/sim-codec-search-searxng"
+audiences = ["code", "framework"]
+guidance = "Compose this pure codec behind SearchWireCodec and the generic HTTP search transport for an operator-selected SearXNG site. Default to form-encoded POST, retain raw JSON and partial-row notices, and never use it for HTTP, provider discovery, ranking, HTML fallback, page observations, or citations."
+claims_anchors = ["anchor/crate/sim-codec-search-searxng"]
+claims_specimens = [
+  "spec-test/sim-codecs/crates/sim-codec-search-searxng/src/tests",
+  "recipe/sim-codecs/crates/sim-codec-search-searxng/01-basics/request-response",
+]
+supports = ["feature/sim-codecs/codec"]
+
+[[route]]
+id = "route/add-a-search-wire-site"
+task = "Add a search wire codec site"
+audiences = ["code", "framework"]
+steps = [
+  { feature = "feature/sim-codecs/codec", why = "Begin with the shared bounded codec contract and wire-syntax ownership rules." },
+  { feature = "feature/sim-codecs/searxng-search-wire", why = "The SearXNG row demonstrates one transport-free SearchWireCodec site without becoming the search architecture." },
+  { specimen = "recipe/sim-codecs/crates/sim-codec-search-searxng/01-basics/request-response", why = "The checked pure recipe supplies request and saved-response bytes without opening a socket." },
+]

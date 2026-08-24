@@ -1,0 +1,3 @@
+title = "Pure wire translation"
+order = 10
+summary = "Translate caller-supplied requests and saved JSON responses without HTTP."

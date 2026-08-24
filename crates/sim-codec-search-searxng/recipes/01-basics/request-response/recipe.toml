@@ -1,0 +1,8 @@
+id = "request-response"
+title = "Translate a saved SearXNG exchange"
+codec = "lisp"
+setup = "setup.siml"
+purpose = "purpose.md"
+order = 10
+tags = ["codec", "search", "searxng", "pure"]
+requires = ["search-core", "codec/json", "codec/lisp"]

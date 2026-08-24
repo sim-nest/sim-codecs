@@ -1,0 +1,24 @@
+[package]
+name = "sim-codec-search-searxng"
+version = "0.1.0"
+edition = "2024"
+license = "MPL-2.0"
+description = "Pure bounded SearXNG request and response codec for SIM."
+readme = "README.md"
+publish = true
+repository = "https://github.com/sim-nest/sim-codecs"
+homepage = "https://github.com/sim-nest/sim-codecs"
+
+[dependencies]
+sim-codec = { version = "0.1.8", path = "../sim-codec" }
+sim-codec-json = { version = "0.2.2", path = "../sim-codec-json" }
+sim-kernel = { version = "0.2.1" }
+sim-lib-search-core = { version = "0.1.0", path = "../../../sim-foundation/crates/sim-lib-search-core" }
+sim-lib-web-core = { version = "0.1.0", path = "../../../sim-foundation/crates/sim-lib-web-core" }
+sim-cookbook = { version = "0.2.1", path = "../../../sim-foundation/crates/sim-cookbook" }
+
+[build-dependencies]
+sim-cookbook-build = { version = "0.1.0", path = "../../../sim-foundation/crates/sim-cookbook-build" }
+
+[lints]
+workspace = true

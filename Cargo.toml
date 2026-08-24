@@ -19,6 +19,7 @@ members = [
   "crates/sim-codec-doc",
   "crates/sim-codec-feed",
   "crates/sim-codec-robots",
+  "crates/sim-codec-search-searxng",
   "crates/sim-codec-index",
   "crates/sim-codec-json",
   "crates/sim-codec-lisp",
@@ -39,3 +40,6 @@ homepage = "https://github.com/sim-nest/sim-codecs"
 
 [workspace.lints.rust]
 unsafe_code = "forbid"
+
+[patch.crates-io]
+sim-cookbook-build = { path = "../sim-foundation/crates/sim-cookbook-build" }

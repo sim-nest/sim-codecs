@@ -1,0 +1,5 @@
+book = "codec/search-searxng"
+title = "SearXNG wire codec recipes"
+summary = "Pure request and response translation for an operator-selected SearXNG site."
+order = 275
+chapters = ["01-basics"]
