@@ -21,6 +21,7 @@ members = [
   "crates/sim-codec-robots",
   "crates/sim-codec-search-searxng",
   "crates/sim-codec-index",
+  "crates/sim-codec-index-vault",
   "crates/sim-codec-json",
   "crates/sim-codec-lisp",
   "crates/sim-codec-lua",

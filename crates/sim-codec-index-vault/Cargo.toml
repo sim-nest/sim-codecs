@@ -1,0 +1,26 @@
+[package]
+name = "sim-codec-index-vault"
+version = "0.1.0"
+edition = "2024"
+license = "MPL-2.0"
+description = "Pure v2 Markdown bundle codec for complete SIM Index vault projections."
+readme = "README.md"
+publish = true
+repository = "https://github.com/sim-nest/sim-codecs"
+homepage = "https://github.com/sim-nest/sim-codecs"
+
+[package.metadata.sim-recipes]
+policy = "rustdoc"
+reason = "The pure bundle codec is taught by its crate-level example and conformance fixtures."
+
+[dependencies]
+sha2 = "0.10"
+sim-codec-doc = { version = "0.1.4", path = "../sim-codec-doc" }
+sim-index-vault-core = { version = "0.1.0", path = "../../../sim-foundation/crates/sim-index-vault-core" }
+sim-kernel = { version = "0.2.1" }
+
+[dev-dependencies]
+sim-index-core = { version = "0.2.0", path = "../../../sim-foundation/crates/sim-index-core" }
+
+[lints]
+workspace = true
