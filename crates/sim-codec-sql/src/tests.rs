@@ -313,6 +313,31 @@ fn exact_legacy_forms_lift_and_arbitrary_statements_fail_closed() {
 }
 
 #[test]
+fn hsqldb_ledger_ddl_inventory_is_explicit_and_diagnostic() {
+    let draft = DdlCodec
+        .decode(
+            r#"CREATE CACHED TABLE "konto"("k_nr" INTEGER NOT NULL PRIMARY KEY,"k_namn" VARCHAR(50))
+CREATE MEMORY TABLE "ver"("v_nr" INTEGER NOT NULL,CONSTRAINT "ver_pk" PRIMARY KEY("v_nr"))
+ALTER TABLE "ver" ALTER COLUMN "v_nr" RESTART WITH 11612
+SET TABLE "ver" INDEX'134576 94648 11611'"#,
+            LegacyDdl::Hsqldb,
+        )
+        .unwrap();
+    assert_eq!(draft.tables[0].primary_key, ["k_nr"]);
+    assert_eq!(draft.tables[1].primary_key, ["v_nr"]);
+    assert_eq!(draft.tables[1].restart_with, Some(11_612));
+    assert_eq!(draft.tables[1].index_roots, [134_576, 94_648]);
+    assert!(matches!(
+        DdlCodec.decode("SET DATABASE COLLATION SQL_TEXT", LegacyDdl::Hsqldb),
+        Err(SqlError::Ddl(message)) if message.contains("bounded CREATE TABLE domain")
+    ));
+    assert!(matches!(
+        DdlCodec.decode("DELETE FROM ledger", LegacyDdl::Hsqldb),
+        Err(SqlError::Ddl(message)) if message.contains("bounded CREATE TABLE domain")
+    ));
+}
+
+#[test]
 fn registrations_keep_statement_decode_out_of_the_runtime_domain() {
     let registrations = sql_codec_registrations();
     assert_eq!(

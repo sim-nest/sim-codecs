@@ -18,6 +18,8 @@ pub struct DraftColumn {
     pub storage_type: String,
     /// Whether the declaration permits NULL.
     pub nullable: bool,
+    /// Whether the column declaration carries an inline primary key.
+    pub primary_key: bool,
 }
 /// One parsed, untrusted table declaration.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -26,6 +28,12 @@ pub struct DraftTable {
     pub name: String,
     /// Declared columns in source order.
     pub columns: Vec<DraftColumn>,
+    /// Primary-key column names in declaration order.
+    pub primary_key: Vec<String>,
+    /// HSQLDB identity high-water mark, when declared by `RESTART WITH`.
+    pub restart_with: Option<i64>,
+    /// HSQLDB cache index roots. The trailing row-count marker is excluded.
+    pub index_roots: Vec<i64>,
 }
 /// Diagnostic attached to a bounded DDL draft.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -58,12 +66,24 @@ impl DdlCodec {
             return Err(SqlError::Ddl("DDL byte budget exceeded".into()));
         }
         let mut tables = vec![];
-        for raw in split_statements(source)? {
+        let statements = match grammar {
+            LegacyDdl::Sqlite => split_statements(source)?,
+            LegacyDdl::Hsqldb => source.lines().map(ToOwned::to_owned).collect(),
+        };
+        for raw in statements {
             let statement = raw.trim();
             if statement.is_empty() {
                 continue;
             }
             let upper = statement.to_ascii_uppercase();
+            if grammar == LegacyDdl::Hsqldb && upper.starts_with("ALTER TABLE ") {
+                apply_restart(&mut tables, statement)?;
+                continue;
+            }
+            if grammar == LegacyDdl::Hsqldb && upper.starts_with("SET TABLE ") {
+                apply_index_roots(&mut tables, statement)?;
+                continue;
+            }
             let prefix = match grammar {
                 LegacyDdl::Sqlite if upper.starts_with("CREATE TABLE ") => "CREATE TABLE ",
                 LegacyDdl::Sqlite if upper.starts_with("CREATE TEMP TABLE ") => {
@@ -93,6 +113,7 @@ impl DdlCodec {
             }
             let name = unquote(body[..open].trim())?;
             let mut columns = vec![];
+            let mut primary_key = vec![];
             let mut diagnostics = vec![];
             for item in split_commas(&body[open + 1..body.len() - 1])? {
                 let words = words(&item)?;
@@ -104,6 +125,12 @@ impl DdlCodec {
                     first.as_str(),
                     "PRIMARY" | "UNIQUE" | "CONSTRAINT" | "FOREIGN" | "CHECK"
                 ) {
+                    if first == "PRIMARY"
+                        || (first == "CONSTRAINT"
+                            && item.to_ascii_uppercase().contains(" PRIMARY KEY"))
+                    {
+                        primary_key = parse_primary_key(&item)?;
+                    }
                     diagnostics.push(DdlDiagnostic {
                         offset: source.find(&item).unwrap_or(0),
                         message: format!("retained table constraint: {item}"),
@@ -120,16 +147,31 @@ impl DdlCodec {
                 {
                     return Err(SqlError::Ddl("unsupported storage type spelling".into()));
                 }
+                let inline_primary = item.to_ascii_uppercase().contains(" PRIMARY KEY");
+                let column_name = unquote(&words[0])?;
+                if inline_primary {
+                    primary_key.push(column_name.clone());
+                }
                 columns.push(DraftColumn {
-                    name: unquote(&words[0])?,
+                    name: column_name,
                     storage_type,
                     nullable: !item.to_ascii_uppercase().contains("NOT NULL"),
+                    primary_key: inline_primary,
                 });
             }
             if columns.is_empty() {
                 return Err(SqlError::Ddl("table has no decodable columns".into()));
             }
-            tables.push((DraftTable { name, columns }, diagnostics));
+            tables.push((
+                DraftTable {
+                    name,
+                    columns,
+                    primary_key,
+                    restart_with: None,
+                    index_roots: vec![],
+                },
+                diagnostics,
+            ));
         }
         if tables.is_empty() {
             return Err(SqlError::Ddl("DDL contains no tables".into()));
@@ -164,10 +206,11 @@ impl DdlCodec {
                         .columns
                         .iter()
                         .map(|c| format!(
-                            "{} {}{}",
+                            "{} {}{}{}",
                             quote(&c.name),
                             c.storage_type,
-                            if c.nullable { "" } else { " NOT NULL" }
+                            if c.nullable { "" } else { " NOT NULL" },
+                            if c.primary_key { " PRIMARY KEY" } else { "" }
                         ))
                         .collect::<Vec<_>>()
                         .join(", ")
@@ -175,6 +218,119 @@ impl DdlCodec {
             })
             .collect::<Result<Vec<_>, _>>()
             .map(|v| v.join("\n"))
+    }
+}
+
+fn apply_restart(
+    tables: &mut [(DraftTable, Vec<DdlDiagnostic>)],
+    statement: &str,
+) -> Result<(), SqlError> {
+    let words = words(statement)?;
+    if words.len() != 9
+        || !words[0].eq_ignore_ascii_case("ALTER")
+        || !words[1].eq_ignore_ascii_case("TABLE")
+        || !words[3].eq_ignore_ascii_case("ALTER")
+        || !words[4].eq_ignore_ascii_case("COLUMN")
+        || !words[6].eq_ignore_ascii_case("RESTART")
+        || !words[7].eq_ignore_ascii_case("WITH")
+    {
+        return Err(SqlError::Ddl(
+            "unsupported HSQLDB ALTER TABLE; expected ALTER COLUMN ... RESTART WITH integer".into(),
+        ));
+    }
+    let table = unquote(&words[2])?;
+    let column = unquote(&words[5])?;
+    let next = words[8]
+        .trim_end_matches(';')
+        .parse::<i64>()
+        .map_err(|_| SqlError::Ddl("HSQLDB RESTART WITH requires an i64 integer".into()))?;
+    let draft = find_table_mut(tables, &table)?;
+    if !draft
+        .columns
+        .iter()
+        .any(|candidate| candidate.name == column)
+    {
+        return Err(SqlError::Ddl(
+            "HSQLDB RESTART column is not declared by its table".into(),
+        ));
+    }
+    draft.restart_with = Some(next);
+    Ok(())
+}
+
+fn apply_index_roots(
+    tables: &mut [(DraftTable, Vec<DdlDiagnostic>)],
+    statement: &str,
+) -> Result<(), SqlError> {
+    let rest = statement
+        .get("SET TABLE ".len()..)
+        .ok_or_else(|| SqlError::Ddl("invalid HSQLDB SET TABLE".into()))?
+        .trim_start();
+    let (table, rest) = take_identifier(rest)?;
+    let payload = rest
+        .strip_prefix("INDEX'")
+        .or_else(|| rest.strip_prefix("index'"))
+        .ok_or_else(|| {
+            SqlError::Ddl("unsupported HSQLDB SET TABLE; expected INDEX roots".into())
+        })?;
+    let payload = payload
+        .strip_suffix('\'')
+        .ok_or_else(|| SqlError::Ddl("unterminated HSQLDB INDEX roots".into()))?;
+    let mut roots = payload
+        .split_whitespace()
+        .map(str::parse::<i64>)
+        .collect::<Result<Vec<_>, _>>()
+        .map_err(|_| SqlError::Ddl("HSQLDB INDEX roots require i64 integers".into()))?;
+    if roots.pop().is_none() {
+        return Err(SqlError::Ddl(
+            "HSQLDB INDEX roots require a trailing row-count marker".into(),
+        ));
+    }
+    find_table_mut(tables, &table)?.index_roots = roots;
+    Ok(())
+}
+
+fn find_table_mut<'a>(
+    tables: &'a mut [(DraftTable, Vec<DdlDiagnostic>)],
+    name: &str,
+) -> Result<&'a mut DraftTable, SqlError> {
+    tables
+        .iter_mut()
+        .find(|(table, _)| table.name == name)
+        .map(|(table, _)| table)
+        .ok_or_else(|| {
+            SqlError::Ddl("HSQLDB metadata precedes or names an undeclared table".into())
+        })
+}
+
+fn parse_primary_key(item: &str) -> Result<Vec<String>, SqlError> {
+    let upper = item.to_ascii_uppercase();
+    let key = upper
+        .find("PRIMARY KEY")
+        .ok_or_else(|| SqlError::Ddl("invalid primary key constraint".into()))?;
+    let tail = &item[key + "PRIMARY KEY".len()..];
+    let open = tail
+        .find('(')
+        .ok_or_else(|| SqlError::Ddl("primary key requires columns".into()))?;
+    let close = tail
+        .rfind(')')
+        .ok_or_else(|| SqlError::Ddl("primary key requires closing parenthesis".into()))?;
+    split_commas(&tail[open + 1..close])?
+        .iter()
+        .map(|name| unquote(name))
+        .collect()
+}
+
+fn take_identifier(input: &str) -> Result<(String, &str), SqlError> {
+    if let Some(quoted) = input.strip_prefix('"') {
+        let end = quoted
+            .find('"')
+            .ok_or_else(|| SqlError::Ddl("unterminated identifier".into()))?
+            + 1;
+        Ok((unquote(&input[..=end])?, input[end + 1..].trim_start()))
+    } else {
+        let end = input.find(char::is_whitespace).unwrap_or(input.len());
+        Ok((unquote(&input[..end])?, input[end..].trim_start()))
     }
 }
 fn quote(value: &str) -> String {

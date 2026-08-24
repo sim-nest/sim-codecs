@@ -199,10 +199,10 @@ supports = [
 [[feature]]
 id = "feature/sim-codecs/sql-projection"
 title = "Behavior-backed bounded SQL projection"
-summary = "Lower admitted relational plans and migrations through sealed SQLite and PostgreSQL dialect behavior, identifier quoting, ordered value bindings, cache-complete prepared artifacts, and untrusted bounded DDL drafts."
+summary = "Lower admitted relational plans and migrations through sealed SQLite and PostgreSQL dialect behavior, and decode the bounded SQLite and HSQLDB table, column, key, identity-restart, and cache-index DDL subset into diagnostic untrusted drafts."
 owner = "crate/sim-codec-sql"
 audiences = ["code", "framework"]
-guidance = "Use sim-codec-sql only at SQL-backed provider boundaries. Pass admitted plans, select executable dialect behavior, and admit decoded SchemaDraft values separately; never execute caller-authored SQL or treat parsed DDL as a trusted schema."
+guidance = "Use sim-codec-sql at SQL-backed provider boundaries and as the sole owner of bounded legacy SQL grammar. Pass admitted plans, select executable dialect behavior, and admit decoded SchemaDraft values separately against the product domain catalog; unknown statements and domains fail closed, and parsed DDL is never executable or trusted schema."
 claims_anchors = ["anchor/crate/sim-codec-sql"]
 claims_specimens = ["spec-test/sim-codecs/crates/sim-codec-sql/src/tests"]
 supports = ["feature/sim-codecs/codec"]
