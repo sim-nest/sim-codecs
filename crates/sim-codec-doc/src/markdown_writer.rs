@@ -1,17 +1,20 @@
 //! Deterministic Markdown writer for the shared markup IR.
 
 use crate::backend::{MarkupEncodeOptions, MarkupFidelity, MarkupLoss};
+use crate::markdown::LinkDialect;
 use crate::markup::{BackendId, Inline, MarkupBlock, MarkupDoc};
 
 pub(crate) struct MarkdownEncoder {
     preserve_raw: bool,
+    links: LinkDialect,
     pub(crate) fidelity: MarkupFidelity,
 }
 
 impl MarkdownEncoder {
-    pub(crate) fn new(opts: &MarkupEncodeOptions) -> Self {
+    pub(crate) fn new(opts: &MarkupEncodeOptions, links: LinkDialect) -> Self {
         Self {
             preserve_raw: opts.preserve_raw,
+            links,
             fidelity: MarkupFidelity::exact(BackendId::new("markdown")),
         }
     }
@@ -138,13 +141,25 @@ impl MarkdownEncoder {
                     out.push_str(value);
                     out.push('`');
                 }
-                Inline::Link { label, target } => {
-                    out.push('[');
-                    self.write_inlines(label, out);
-                    out.push_str("](");
-                    out.push_str(target);
-                    out.push(')');
-                }
+                Inline::Link { label, target } => match self.links {
+                    LinkDialect::CommonMark => {
+                        out.push('[');
+                        self.write_inlines(label, out);
+                        out.push_str("](");
+                        out.push_str(target);
+                        out.push(')');
+                    }
+                    LinkDialect::WikiLink => {
+                        out.push_str("[[");
+                        out.push_str(&escape_wikilink(target));
+                        let label_text = inline_plain_text(label);
+                        if label_text != *target {
+                            out.push('|');
+                            out.push_str(&escape_wikilink(&label_text));
+                        }
+                        out.push_str("]]");
+                    }
+                },
                 Inline::Math(source) => {
                     out.push('$');
                     out.push_str(&source.text);
@@ -166,4 +181,28 @@ impl MarkdownEncoder {
             });
         }
     }
+}
+
+fn inline_plain_text(items: &[Inline]) -> String {
+    let mut text = String::new();
+    for item in items {
+        match item {
+            Inline::Text(value) | Inline::Code(value) => text.push_str(value),
+            Inline::Emph(children) | Inline::Strong(children) => {
+                text.push_str(&inline_plain_text(children))
+            }
+            Inline::Link { label, .. } => text.push_str(&inline_plain_text(label)),
+            Inline::Math(source) => text.push_str(&source.text),
+            Inline::Raw { text: raw, .. } => text.push_str(raw),
+        }
+    }
+    text
+}
+
+fn escape_wikilink(value: &str) -> String {
+    value
+        .replace('%', "%25")
+        .replace('\\', "%5C")
+        .replace('|', "%7C")
+        .replace(']', "%5D")
 }

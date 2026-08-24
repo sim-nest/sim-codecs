@@ -235,7 +235,7 @@ title = "Domain syntax grammars"
 summary = "Read and write binary, bitwise, chat, config, document, index, and MCP grammar surfaces."
 owner = "crate/sim-codec"
 audiences = ["code", "framework"]
-guidance = "Use this row when finding a domain codec grammar for data, packets, configuration, or generated index text."
+guidance = "Use this row when finding a domain codec grammar for data, packets, configuration, or generated index text. Document profiles that need metadata envelopes or wikilinks must configure sim-codec-doc's bounded MarkdownDialect and compose its shared MarkupDoc parser/writer; they must not implement a parallel Markdown parser."
 claims_surfaces = [
   "syntax/binary",
   "syntax/binary-base64",
@@ -249,6 +249,7 @@ claims_surfaces = [
 ]
 claims_specimens = [
   "spec-test/sim-codecs/crates/sim-codec-json/src/tests",
+  "spec-test/sim-codecs/crates/sim-codec-doc/tests/conformance",
 ]
 supports = [
   "feature/sim-codecs/codec",

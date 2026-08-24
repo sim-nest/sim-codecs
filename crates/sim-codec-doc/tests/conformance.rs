@@ -1,9 +1,11 @@
 use std::collections::BTreeSet;
 
 use sim_codec_doc::{
-    AsciiDocBackend, BackendStatus, LatexBackend, MarkdownBackend, MarkupBackend, MarkupBlock,
+    AsciiDocBackend, AttributeEnvelope, BackendStatus, DialectMarkdownBackend, Inline,
+    LatexBackend, LinkDialect, MarkdownBackend, MarkdownDialect, MarkupBackend, MarkupBlock,
     MarkupDecodeOptions, MarkupDoc, MarkupEncodeOptions, TypstBackend, backend_catalog,
 };
+use sim_kernel::Expr;
 
 struct Fixture {
     id: &'static str,
@@ -169,6 +171,128 @@ fn semantic_doc(mut doc: MarkupDoc) -> MarkupDoc {
     doc.source = None;
     doc.blocks = doc.blocks.into_iter().map(block_without_span).collect();
     doc
+}
+
+#[test]
+fn markdown_dialect_matrix_roundtrips_attrs_and_links() {
+    let mut attrs = std::collections::BTreeMap::new();
+    attrs.insert("empty".to_owned(), Expr::String(String::new()));
+    attrs.insert(
+        "quote\"unicode".to_owned(),
+        Expr::String("räksmörgås\\\nline".to_owned()),
+    );
+    attrs.insert(
+        "values".to_owned(),
+        Expr::List(vec![
+            Expr::Nil,
+            Expr::Bool(true),
+            Expr::String("[]|()".to_owned()),
+        ]),
+    );
+    let doc = MarkupDoc {
+        title: None,
+        blocks: vec![MarkupBlock::Paragraph {
+            content: vec![Inline::Link {
+                label: vec![Inline::Text("label | [] () \\ 世界".to_owned())],
+                target: "target-unicode-世界".to_owned(),
+            }],
+            span: None,
+        }],
+        attrs,
+        source: None,
+    };
+    for attributes in [
+        AttributeEnvelope::JsonFrontMatter,
+        AttributeEnvelope::DoubleColon,
+    ] {
+        for links in [LinkDialect::CommonMark, LinkDialect::WikiLink] {
+            let backend = DialectMarkdownBackend::new(MarkdownDialect {
+                attributes,
+                links,
+                ..MarkdownDialect::default()
+            })
+            .unwrap();
+            let (encoded, fidelity) = backend
+                .encode(&doc, &MarkupEncodeOptions::default())
+                .unwrap();
+            assert!(fidelity.dropped.is_empty());
+            let (decoded, fidelity) = backend
+                .decode(
+                    &encoded,
+                    &MarkupDecodeOptions {
+                        preserve_source: false,
+                        preserve_raw: true,
+                    },
+                )
+                .unwrap();
+            assert!(fidelity.dropped.is_empty());
+            assert_eq!(decoded.attrs, doc.attrs);
+            assert_eq!(first_link(&decoded), first_link(&doc));
+        }
+    }
+}
+
+fn first_link(doc: &MarkupDoc) -> (String, String) {
+    let MarkupBlock::Paragraph { content, .. } = &doc.blocks[0] else {
+        panic!("expected paragraph")
+    };
+    let Inline::Link { label, target } = &content[0] else {
+        panic!("expected link")
+    };
+    let label = label
+        .iter()
+        .map(|inline| match inline {
+            Inline::Text(text) => text.as_str(),
+            _ => panic!("expected plain link label"),
+        })
+        .collect();
+    (label, target.clone())
+}
+
+#[test]
+fn markdown_default_is_byte_identical_and_dialect_errors_are_typed() {
+    let source = include_str!("fixtures/simple.md");
+    let opts = MarkupDecodeOptions {
+        preserve_source: false,
+        preserve_raw: true,
+    };
+    let (doc, old_fidelity) = MarkdownBackend.decode(source, &opts).unwrap();
+    let configured = DialectMarkdownBackend::new(MarkdownDialect::default()).unwrap();
+    let (same_doc, new_fidelity) = configured.decode(source, &opts).unwrap();
+    assert_eq!(doc, same_doc);
+    assert_eq!(old_fidelity, new_fidelity);
+    assert_eq!(
+        MarkdownBackend
+            .encode(&doc, &MarkupEncodeOptions::default())
+            .unwrap(),
+        configured
+            .encode(&doc, &MarkupEncodeOptions::default())
+            .unwrap()
+    );
+
+    let json = DialectMarkdownBackend::new(MarkdownDialect {
+        attributes: AttributeEnvelope::JsonFrontMatter,
+        ..MarkdownDialect::default()
+    })
+    .unwrap();
+    assert!(
+        json.decode(
+            "---json\n{\"x\":{\"$expr\":\"nil\"},\"x\":{\"$expr\":\"nil\"}}\n---\nbody",
+            &opts
+        )
+        .is_err()
+    );
+    let wiki = DialectMarkdownBackend::new(MarkdownDialect {
+        links: LinkDialect::WikiLink,
+        ..MarkdownDialect::default()
+    })
+    .unwrap();
+    for malformed in ["[[", "[[]]", "[[bad\0link]]", "[[bad\\q]]"] {
+        assert!(
+            wiki.decode(malformed, &opts).is_err(),
+            "accepted {malformed:?}"
+        );
+    }
 }
 
 fn block_without_span(block: MarkupBlock) -> MarkupBlock {

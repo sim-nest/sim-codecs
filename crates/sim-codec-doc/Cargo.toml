@@ -14,6 +14,9 @@ sim-codec = { version = "0.1.8", path = "../sim-codec" }
 sim-cookbook = { version = "0.2.0" }
 sim-kernel = { version = "0.2.0" }
 sim-value = { version = "0.2.0" }
+sim-codec-json = { version = "0.2.0", path = "../sim-codec-json" }
+serde_json = "1"
+serde = "1"
 pulldown-cmark = "0.13.4"
 asciidork-ast = "0.38.0"
 asciidork-parser = "0.38.1"
@@ -22,7 +25,6 @@ tree-sitter = "0.25.10"
 codebook-tree-sitter-latex = "0.6.1"
 
 [dev-dependencies]
-sim-codec-json = { version = "0.2.0", path = "../sim-codec-json" }
 sim-codec-lisp = { version = "0.2.0", path = "../sim-codec-lisp" }
 sim-test-support = { version = "0.1.1", path = "../sim-test-support" }
 
