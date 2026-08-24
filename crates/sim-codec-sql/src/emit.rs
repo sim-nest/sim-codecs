@@ -96,6 +96,14 @@ impl<'a> Emitter<'a> {
             Aggregate::Max(v) => format!("MAX({})", self.scalar(v)?),
         })
     }
+    fn input_alias(&self, input: &Rel) -> Result<String, SqlError> {
+        sole_binding(input)
+            .map(|binding| self.ident(binding.symbol()))
+            .transpose()?
+            .ok_or(SqlError::InvalidPlan(
+                "relation input exposes more than one binding",
+            ))
+    }
     fn rel(&mut self, rel: &Rel) -> Result<String, SqlError> {
         Ok(match rel {
             Rel::Scan {
@@ -113,77 +121,115 @@ impl<'a> Emitter<'a> {
                 row_type,
                 rows,
             } => {
-                let mut rendered = Vec::new();
-                for row in rows {
-                    rendered.push(format!(
-                        "({})",
-                        row.cells()
-                            .iter()
-                            .cloned()
-                            .map(|c| self.bind(SqlBinding::Literal(c)))
-                            .collect::<Vec<_>>()
-                            .join(", ")
-                    ));
-                }
                 let columns = row_type
                     .fields()
                     .iter()
                     .map(|f| self.ident(f.name.symbol()))
-                    .collect::<Result<Vec<_>, _>>()?
-                    .join(", ");
+                    .collect::<Result<Vec<_>, _>>()?;
+                if columns.is_empty() {
+                    return Err(SqlError::InvalidPlan(
+                        "SQL values require at least one column",
+                    ));
+                }
+                let mut selects = Vec::new();
+                if rows.is_empty() {
+                    selects.push(format!(
+                        "SELECT {} WHERE 0 = 1",
+                        columns
+                            .iter()
+                            .map(|column| format!("NULL AS {column}"))
+                            .collect::<Vec<_>>()
+                            .join(", ")
+                    ));
+                } else {
+                    for (row_index, row) in rows.iter().enumerate() {
+                        let cells = row
+                            .cells()
+                            .iter()
+                            .cloned()
+                            .map(|cell| self.bind(SqlBinding::Literal(cell)))
+                            .collect::<Vec<_>>();
+                        let fields = if row_index == 0 {
+                            cells
+                                .iter()
+                                .zip(&columns)
+                                .map(|(cell, column)| format!("{cell} AS {column}"))
+                                .collect::<Vec<_>>()
+                        } else {
+                            cells
+                        };
+                        selects.push(format!("SELECT {}", fields.join(", ")));
+                    }
+                }
                 format!(
-                    "SELECT * FROM (VALUES {}) AS {} ({})",
-                    rendered.join(", "),
-                    self.ident(bind.symbol())?,
-                    columns
+                    "SELECT * FROM ({}) AS {}",
+                    selects.join(" UNION ALL "),
+                    self.ident(bind.symbol())?
                 )
             }
             Rel::Project {
                 input,
-                bind,
+                bind: _,
                 fields,
-            } => format!(
-                "SELECT {} FROM ({}) AS {}",
-                fields
-                    .iter()
-                    .map(|f| Ok(format!(
-                        "{} AS {}",
-                        self.scalar(&f.scalar)?,
-                        self.ident(f.name.symbol())?
-                    )))
-                    .collect::<Result<Vec<_>, SqlError>>()?
-                    .join(", "),
-                self.rel(input)?,
-                self.ident(bind.symbol())?
-            ),
-            Rel::Filter { input, predicate } => format!(
-                "SELECT * FROM ({}) AS _filter WHERE {}",
-                self.rel(input)?,
-                self.scalar(predicate)?
-            ),
+            } => {
+                let input_sql = self.rel(input)?;
+                let alias = self.input_alias(input)?;
+                format!(
+                    "SELECT {} FROM ({}) AS {}",
+                    fields
+                        .iter()
+                        .map(|f| Ok(format!(
+                            "{} AS {}",
+                            self.scalar(&f.scalar)?,
+                            self.ident(f.name.symbol())?
+                        )))
+                        .collect::<Result<Vec<_>, SqlError>>()?
+                        .join(", "),
+                    input_sql,
+                    alias
+                )
+            }
+            Rel::Filter { input, predicate } => {
+                let input_sql = self.rel(input)?;
+                let alias = self.input_alias(input)?;
+                format!(
+                    "SELECT * FROM ({}) AS {} WHERE {}",
+                    input_sql,
+                    alias,
+                    self.scalar(predicate)?
+                )
+            }
             Rel::Join {
                 left,
                 right,
                 kind,
                 on,
-            } => format!(
-                "SELECT * FROM ({}) AS _left {} JOIN ({}) AS _right{}",
-                self.rel(left)?,
-                match kind {
-                    JoinKind::Inner => "INNER",
-                    JoinKind::Left => "LEFT",
-                    JoinKind::Cross => "CROSS",
-                },
-                self.rel(right)?,
-                if *kind == JoinKind::Cross {
-                    String::new()
-                } else {
-                    format!(" ON {}", self.scalar(on)?)
-                }
-            ),
+            } => {
+                let left_sql = self.rel(left)?;
+                let left_alias = self.input_alias(left)?;
+                let right_sql = self.rel(right)?;
+                let right_alias = self.input_alias(right)?;
+                format!(
+                    "SELECT * FROM ({}) AS {} {} JOIN ({}) AS {}{}",
+                    left_sql,
+                    left_alias,
+                    match kind {
+                        JoinKind::Inner => "INNER",
+                        JoinKind::Left => "LEFT",
+                        JoinKind::Cross => "CROSS",
+                    },
+                    right_sql,
+                    right_alias,
+                    if *kind == JoinKind::Cross {
+                        String::new()
+                    } else {
+                        format!(" ON {}", self.scalar(on)?)
+                    }
+                )
+            }
             Rel::Group {
                 input,
-                bind,
+                bind: _,
                 keys,
                 aggregates,
                 having,
@@ -209,11 +255,13 @@ impl<'a> Emitter<'a> {
                         })
                         .collect::<Result<Vec<_>, SqlError>>()?,
                 );
+                let input_sql = self.rel(input)?;
+                let alias = self.input_alias(input)?;
                 format!(
                     "SELECT {} FROM ({}) AS {}{}{}",
                     fields.join(", "),
-                    self.rel(input)?,
-                    self.ident(bind.symbol())?,
+                    input_sql,
+                    alias,
                     if key_sql.is_empty() {
                         String::new()
                     } else {
@@ -237,34 +285,59 @@ impl<'a> Emitter<'a> {
                     SetOp::Except => " EXCEPT ",
                 }),
             Rel::Distinct(input) => {
-                format!("SELECT DISTINCT * FROM ({}) AS _distinct", self.rel(input)?)
+                let input_sql = self.rel(input)?;
+                let alias = self.input_alias(input)?;
+                format!("SELECT DISTINCT * FROM ({input_sql}) AS {alias}")
             }
-            Rel::Order { input, keys } => format!(
-                "SELECT * FROM ({}) AS _ordered ORDER BY {}",
-                self.rel(input)?,
-                keys.iter()
-                    .map(|v| Ok(format!(
-                        "{} {}",
-                        self.scalar(&v.scalar)?,
-                        match v.direction {
-                            OrderDirection::Asc => "ASC",
-                            OrderDirection::Desc => "DESC",
-                        }
-                    )))
-                    .collect::<Result<Vec<_>, SqlError>>()?
-                    .join(", ")
-            ),
+            Rel::Order { input, keys } => {
+                let input_sql = self.rel(input)?;
+                let alias = self.input_alias(input)?;
+                format!(
+                    "SELECT * FROM ({}) AS {} ORDER BY {}",
+                    input_sql,
+                    alias,
+                    keys.iter()
+                        .map(|v| Ok(format!(
+                            "{} {}",
+                            self.scalar(&v.scalar)?,
+                            match v.direction {
+                                OrderDirection::Asc => "ASC",
+                                OrderDirection::Desc => "DESC",
+                            }
+                        )))
+                        .collect::<Result<Vec<_>, SqlError>>()?
+                        .join(", ")
+                )
+            }
             Rel::Limit {
                 input,
                 count,
                 offset,
-            } => format!(
-                "SELECT * FROM ({}) AS _limited LIMIT {} OFFSET {}",
-                self.rel(input)?,
-                count.map_or_else(|| "ALL".into(), |v| v.to_string()),
-                offset
-            ),
+            } => {
+                let input_sql = self.rel(input)?;
+                let alias = self.input_alias(input)?;
+                format!(
+                    "SELECT * FROM ({}) AS {} LIMIT {} OFFSET {}",
+                    input_sql,
+                    alias,
+                    count.map_or_else(|| "ALL".into(), |v| v.to_string()),
+                    offset
+                )
+            }
         })
+    }
+}
+fn sole_binding(rel: &Rel) -> Option<&sim_relation_core::BindingName> {
+    match rel {
+        Rel::Scan { bind, .. }
+        | Rel::Values { bind, .. }
+        | Rel::Project { bind, .. }
+        | Rel::Group { bind, .. } => Some(bind),
+        Rel::Filter { input, .. }
+        | Rel::Distinct(input)
+        | Rel::Order { input, .. }
+        | Rel::Limit { input, .. } => sole_binding(input),
+        Rel::Join { .. } | Rel::Set { .. } => None,
     }
 }
 fn one(parts: &[String]) -> Result<&str, SqlError> {

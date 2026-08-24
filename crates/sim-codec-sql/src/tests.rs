@@ -10,6 +10,12 @@ where
 {
     T::try_from(Symbol::new(value)).unwrap()
 }
+fn i64_datum(value: i64) -> Datum {
+    Datum::Number(sim_kernel::NumberLiteral {
+        domain: Symbol::qualified("core", "i64"),
+        canonical: value.to_string(),
+    })
+}
 fn fixture() -> (DomainCatalog, Schema) {
     let domains = DomainCatalog::new([BaseDomain::I64.spec(), BaseDomain::Text.spec()]).unwrap();
     let table = TableBuilder::new(name("order"))
@@ -67,6 +73,13 @@ fn dialects_quote_the_same_attack_and_bind_every_value_differently() {
     assert!(sqlite.text().contains("\"x\"\"; DROP TABLE audit; --\""));
     assert!(!sqlite.text().contains("Robert"));
     assert!(sqlite.text().contains("?1"));
+    assert!(
+        sqlite.text().contains(
+            ") AS \"x\"\"; DROP TABLE audit; --\" WHERE (\"x\"\"; DROP TABLE audit; --\".\"select\""
+        ),
+        "{}",
+        sqlite.text()
+    );
     assert!(postgres.text().contains("$1"));
     assert_ne!(sqlite.text(), postgres.text());
     assert_eq!(sqlite.bindings().len(), 1);
@@ -74,6 +87,124 @@ fn dialects_quote_the_same_attack_and_bind_every_value_differently() {
     assert_eq!(sqlite.cache_key().catalog_id, *query.catalog_id());
     assert_eq!(sqlite.cache_key().plan_id, *query.plan_id());
     assert_eq!(sqlite.role(), StatementRole::Query);
+}
+
+#[test]
+fn sqlite_values_and_unary_relations_keep_executable_binding_scope() {
+    let (domains, schema) = fixture();
+    let input: BindingName = name("input");
+    let row_type = RowType::new([
+        FieldType {
+            name: name("id"),
+            domain: BaseDomain::I64.id(),
+            nullable: false,
+        },
+        FieldType {
+            name: name("select"),
+            domain: BaseDomain::Text.id(),
+            nullable: false,
+        },
+    ])
+    .unwrap();
+    let row = Row::new(
+        row_type.clone(),
+        [
+            Cell::new(BaseDomain::I64.id(), Some(i64_datum(7))),
+            Cell::new(BaseDomain::Text.id(), Some(Datum::String("kept".into()))),
+        ],
+    )
+    .unwrap();
+    let mutation = admit_mutation(
+        Mutation::Insert {
+            table: name("order"),
+            columns: vec![name("id"), name("select")],
+            input: Box::new(Rel::Values {
+                bind: input,
+                row_type,
+                rows: vec![row],
+            }),
+            conflict: ConflictAction::Fail,
+            returning: vec![],
+        },
+        &schema,
+        &domains,
+        RowType::new([]).unwrap(),
+        AdmissionLimits::default(),
+    )
+    .unwrap();
+    let prepared = prepare_mutation(&mutation, &SqliteDialect).unwrap();
+    assert_eq!(
+        prepared.text(),
+        "INSERT INTO \"order\" (\"id\", \"select\") SELECT * FROM (SELECT ?1 AS \"id\", ?2 AS \"select\") AS \"input\""
+    );
+
+    let row_binding: BindingName = name("row");
+    let query = admit_query(
+        Rel::Project {
+            input: Box::new(Rel::Limit {
+                input: Box::new(Rel::Order {
+                    input: Box::new(Rel::Filter {
+                        input: Box::new(Rel::Scan {
+                            source: name("main"),
+                            table: name("order"),
+                            bind: row_binding.clone(),
+                        }),
+                        predicate: Scalar::Call(
+                            ScalarOp::Eq,
+                            vec![
+                                Scalar::Field(FieldRef {
+                                    binding: row_binding.clone(),
+                                    field: name("id"),
+                                }),
+                                Scalar::Literal(Cell::new(
+                                    BaseDomain::I64.id(),
+                                    Some(i64_datum(7)),
+                                )),
+                            ],
+                        ),
+                    }),
+                    keys: vec![OrderKey {
+                        scalar: Scalar::Field(FieldRef {
+                            binding: row_binding.clone(),
+                            field: name("id"),
+                        }),
+                        direction: OrderDirection::Asc,
+                    }],
+                }),
+                count: Some(1),
+                offset: 0,
+            }),
+            bind: name("output"),
+            fields: vec![NamedScalar {
+                name: name("select"),
+                scalar: Scalar::Field(FieldRef {
+                    binding: row_binding,
+                    field: name("select"),
+                }),
+            }],
+        },
+        &schema,
+        &domains,
+        RowType::new([]).unwrap(),
+        AdmissionLimits::default(),
+    )
+    .unwrap();
+    let prepared = prepare_query(&query, &SqliteDialect).unwrap();
+    assert!(
+        prepared
+            .text()
+            .contains("AS \"row\" WHERE (\"row\".\"id\" = ?1)"),
+        "{}",
+        prepared.text()
+    );
+    assert!(
+        prepared
+            .text()
+            .contains("AS \"row\" ORDER BY \"row\".\"id\" ASC")
+    );
+    assert!(prepared.text().contains("AS \"row\" LIMIT 1 OFFSET 0"));
+    assert!(prepared.text().ends_with("AS \"row\""));
+    assert!(!prepared.text().contains("AS \"output\""));
 }
 
 #[test]
