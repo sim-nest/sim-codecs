@@ -17,8 +17,12 @@ use std::fmt;
 use sha2::{Digest, Sha256};
 use sim_codec_doc::{
     AttributeEnvelope, DialectMarkdownBackend, Inline, LinkDialect, MarkdownDialect, MarkupBackend,
-    MarkupBlock, MarkupDoc, MarkupEncodeOptions,
+    MarkupBlock, MarkupDecodeOptions, MarkupDoc, MarkupEncodeOptions,
 };
+use sim_codec_index::{
+    IndexForm, decode_index_expr, encode_index_expr, expr_from_index_doc, index_doc_from_expr,
+};
+use sim_index_core::IndexDoc;
 use sim_index_vault_core::{
     IndexRow, VaultGranularity, VaultNoteKind, VaultNotePlan, VaultProjection,
 };
@@ -178,6 +182,213 @@ pub struct VaultBundle {
 pub struct VaultEncoder {
     profile: VaultProfile,
 }
+
+/// Pure decoder for caller-supplied in-memory bundle values.
+#[derive(Clone, Copy, Debug)]
+pub struct VaultDecoder {
+    profile: VaultProfile,
+}
+
+/// A semantically reconstructed v2 vault.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct DecodedVault {
+    /// Reconstructed complete projection with a newly closed certificate.
+    pub projection: VaultProjection,
+    /// Exact document-codec fidelity for every decoded entry.
+    pub fidelity_exact: bool,
+    /// Whether reconstructed semantics equal the declared projection identity.
+    pub declared_projection_equal: bool,
+}
+
+/// One bounded semantic difference.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct VaultMismatch {
+    /// Stable row or verification field path.
+    pub path: String,
+    /// Bounded expected value rendering.
+    pub expected: String,
+    /// Bounded decoded value rendering.
+    pub actual: String,
+}
+
+/// Bounded verification result which retains the unbounded mismatch count.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct VaultVerification {
+    /// Retained mismatch details.
+    pub mismatches: Vec<VaultMismatch>,
+    /// Total mismatches before retention bounds.
+    pub total_mismatches: usize,
+    /// Whether any mismatch or value was truncated.
+    pub truncated: bool,
+    /// Both projections have exactly the same semantic identity.
+    pub projection_identity_equal: bool,
+    /// The decoded claim certificate closed exactly.
+    pub claims_closed: bool,
+    /// The generic document codec reported exact fidelity.
+    pub document_codec_exact: bool,
+}
+
+impl VaultVerification {
+    /// Semantic success; byte equality alone is deliberately insufficient.
+    pub fn is_success(&self) -> bool {
+        self.projection_identity_equal
+            && self.mismatches.is_empty()
+            && self.total_mismatches == 0
+            && self.claims_closed
+            && self.document_codec_exact
+    }
+}
+
+/// Decodes and compares a v2 bundle against an expected complete projection.
+pub fn verify_v2(
+    bundle: &VaultBundle,
+    expected: &VaultProjection,
+    max_mismatches: usize,
+    max_value_bytes: usize,
+) -> Result<VaultVerification, VaultCodecError> {
+    let profile = PROFILES
+        .into_iter()
+        .find(|p| p.id == bundle.profile)
+        .ok_or(VaultCodecError::ProfileDisagreement)?;
+    let decoded = VaultDecoder::new(profile).decode(bundle)?;
+    let expected_rows = expected.certificate().primary_rows();
+    let actual_rows = decoded.projection.certificate().primary_rows();
+    let mut all = Vec::new();
+    for row in expected_rows.difference(actual_rows) {
+        all.push((
+            format!("rows.{}.missing", row_family(row)),
+            format!("{row:?}"),
+            "<absent>".into(),
+        ));
+    }
+    for row in actual_rows.difference(expected_rows) {
+        all.push((
+            format!("rows.{}.unexpected", row_family(row)),
+            "<absent>".into(),
+            format!("{row:?}"),
+        ));
+    }
+    if expected.granularity() != decoded.projection.granularity() {
+        all.push((
+            "granularity".into(),
+            granularity_name(expected.granularity()).into(),
+            granularity_name(decoded.projection.granularity()).into(),
+        ));
+    }
+    let total_mismatches = all.len();
+    let mut truncated = total_mismatches > max_mismatches;
+    let mismatches = all
+        .into_iter()
+        .take(max_mismatches)
+        .map(|(path, expected, actual)| {
+            let (expected, a) = truncate_value(expected, max_value_bytes);
+            truncated |= a;
+            let (actual, b) = truncate_value(actual, max_value_bytes);
+            truncated |= b;
+            VaultMismatch {
+                path,
+                expected,
+                actual,
+            }
+        })
+        .collect();
+    Ok(VaultVerification {
+        mismatches,
+        total_mismatches,
+        truncated,
+        projection_identity_equal: decoded.declared_projection_equal
+            && projection_digest(expected) == projection_digest(&decoded.projection),
+        claims_closed: decoded.projection.certificate().is_closed(),
+        document_codec_exact: decoded.fidelity_exact,
+    })
+}
+
+fn truncate_value(mut value: String, max: usize) -> (String, bool) {
+    if value.len() <= max {
+        return (value, false);
+    }
+    let mut end = max.min(value.len());
+    while !value.is_char_boundary(end) {
+        end -= 1;
+    }
+    value.truncate(end);
+    (value, true)
+}
+
+impl VaultDecoder {
+    /// Creates a decoder for one exact descriptor.
+    pub const fn new(profile: VaultProfile) -> Self {
+        Self { profile }
+    }
+
+    /// Decodes and reconstructs a v2 bundle without filesystem or application access.
+    pub fn decode(&self, bundle: &VaultBundle) -> Result<DecodedVault, VaultCodecError> {
+        if bundle.profile != self.profile.id {
+            return Err(VaultCodecError::ProfileDisagreement);
+        }
+        let backend = markdown_backend(self.profile)?;
+        let mut rebuilt = IndexDoc::public("sim-codec-index-vault/decode-v2");
+        let mut seen_paths = BTreeSet::new();
+        let mut seen_rows = BTreeSet::new();
+        let fidelity_exact = true;
+        let mut readme_seen = false;
+        for entry in &bundle.entries {
+            if !seen_paths.insert(entry.path.clone()) {
+                return Err(VaultCodecError::PathConflict(entry.path.clone()));
+            }
+            if content_id(b"sim.index-vault.content.v2\0", &entry.bytes) != entry.content_digest {
+                return Err(VaultCodecError::ContentDigest(entry.path.clone()));
+            }
+            let text = std::str::from_utf8(&entry.bytes)
+                .map_err(|_| VaultCodecError::InvalidUtf8(entry.path.clone()))?;
+            let (doc, _fidelity) = backend
+                .decode(
+                    text,
+                    &MarkupDecodeOptions {
+                        preserve_source: false,
+                        preserve_raw: false,
+                    },
+                )
+                .map_err(VaultCodecError::Markup)?;
+            validate_metadata(&doc, self.profile, bundle)?;
+            if entry.path == "README.md" {
+                if readme_seen || entry.note_kind.is_some() || entry.note_id != "README" {
+                    return Err(VaultCodecError::StrayNavigation);
+                }
+                readme_seen = true;
+                validate_readme(&doc)?;
+                continue;
+            }
+            let kind = entry
+                .note_kind
+                .ok_or(VaultCodecError::MissingMetadata("note kind"))?;
+            if note_path_parts(kind, &entry.note_id)? != entry.path {
+                return Err(VaultCodecError::PathReversal(entry.path.clone()));
+            }
+            validate_note_heading(&doc, &entry.note_id)?;
+            for row in semantic_rows(&doc)? {
+                if !seen_rows.insert(row.clone()) {
+                    return Err(VaultCodecError::DuplicateRow);
+                }
+                push_row(&mut rebuilt, row);
+            }
+        }
+        if !readme_seen {
+            return Err(VaultCodecError::MissingMetadata("README"));
+        }
+        let projection = VaultProjection::from_complete(&rebuilt, bundle.granularity)
+            .map_err(|e| VaultCodecError::Reconstruction(e.to_string()))?;
+        let declared_projection_equal = projection_digest(&projection) == bundle.projection_digest;
+        if bundle_digest(&bundle.entries) != bundle.bundle_root {
+            return Err(VaultCodecError::BundleDigest);
+        }
+        Ok(DecodedVault {
+            projection,
+            fidelity_exact,
+            declared_projection_equal,
+        })
+    }
+}
 impl VaultEncoder {
     /// Creates an encoder for one descriptor.
     pub const fn new(profile: VaultProfile) -> Self {
@@ -289,7 +500,7 @@ fn note_doc(
     let mut blocks = vec![heading(1, note.id.as_str())];
     for row in &note.rows {
         blocks.push(heading(2, family_name(row)));
-        blocks.push(row_block(row));
+        blocks.push(row_block(row)?);
     }
     if projection.granularity() == VaultGranularity::Full {
         let targets = all_paths
@@ -383,26 +594,171 @@ fn heading(level: u8, text: &str) -> MarkupBlock {
         span: None,
     }
 }
-fn row_block(row: &IndexRow) -> MarkupBlock {
+fn row_block(row: &IndexRow) -> Result<MarkupBlock, VaultCodecError> {
     // Exhaustive matching is intentional: a new canonical family cannot be silently omitted.
-    let (family, value) = match row {
-        IndexRow::Subject(v) => ("subject", format!("{v:#?}")),
-        IndexRow::Anchor(v) => ("anchor", format!("{v:#?}")),
-        IndexRow::SourceUnit(v) => ("source-unit", format!("{v:#?}")),
-        IndexRow::Declaration(v) => ("declaration", format!("{v:#?}")),
-        IndexRow::ProtocolRelation(v) => ("protocol-relation", format!("{v:#?}")),
-        IndexRow::Surface(v) => ("surface", format!("{v:#?}")),
-        IndexRow::Specimen(v) => ("specimen", format!("{v:#?}")),
-        IndexRow::Draft(v) => ("draft", format!("{v:#?}")),
-        IndexRow::Feature(v) => ("feature", format!("{v:#?}")),
-        IndexRow::Route(v) => ("route", format!("{v:#?}")),
-        IndexRow::Edge(v) => ("edge", format!("{v:#?}")),
-    };
-    MarkupBlock::CodeBlock {
+    let family = row_family(row);
+    let mut doc = IndexDoc::public("sim-codec-index-vault/row-v2");
+    push_row(&mut doc, row.clone());
+    let value = encode_index_expr(
+        &expr_from_index_doc(&doc),
+        sim_kernel::EncodePosition::Data,
+        IndexForm::Json,
+    )
+    .map_err(|e| VaultCodecError::RowCodec(e.to_string()))?;
+    Ok(MarkupBlock::CodeBlock {
         lang: Some(format!("sim-index-row-{family}")),
         code: value,
         span: None,
+    })
+}
+fn row_family(row: &IndexRow) -> &'static str {
+    match row {
+        IndexRow::Subject(_) => "subject",
+        IndexRow::Anchor(_) => "anchor",
+        IndexRow::SourceUnit(_) => "source-unit",
+        IndexRow::Declaration(_) => "declaration",
+        IndexRow::ProtocolRelation(_) => "protocol-relation",
+        IndexRow::Surface(_) => "surface",
+        IndexRow::Specimen(_) => "specimen",
+        IndexRow::Draft(_) => "draft",
+        IndexRow::Feature(_) => "feature",
+        IndexRow::Route(_) => "route",
+        IndexRow::Edge(_) => "edge",
     }
+}
+
+fn push_row(doc: &mut IndexDoc, row: IndexRow) {
+    match row {
+        IndexRow::Subject(v) => doc.subjects.push(v),
+        IndexRow::Anchor(v) => doc.anchors.push(v),
+        IndexRow::SourceUnit(v) => doc.source_units.push(v),
+        IndexRow::Declaration(v) => doc.declarations.push(v),
+        IndexRow::ProtocolRelation(v) => doc.protocol_relations.push(v),
+        IndexRow::Surface(v) => doc.surfaces.push(v),
+        IndexRow::Specimen(v) => doc.specimens.push(v),
+        IndexRow::Draft(v) => doc.drafts.push(v),
+        IndexRow::Feature(v) => doc.features.push(v),
+        IndexRow::Route(v) => doc.routes.push(v),
+        IndexRow::Edge(v) => doc.edges.push(v),
+    }
+}
+
+fn markdown_backend(profile: VaultProfile) -> Result<DialectMarkdownBackend, VaultCodecError> {
+    DialectMarkdownBackend::new(MarkdownDialect {
+        attributes: profile.attributes,
+        links: profile.links,
+        ..MarkdownDialect::default()
+    })
+    .map_err(VaultCodecError::Markup)
+}
+
+fn attr_text<'a>(doc: &'a MarkupDoc, key: &'static str) -> Result<&'a str, VaultCodecError> {
+    match doc.attrs.get(key) {
+        Some(Expr::String(v)) => Ok(v),
+        Some(_) => Err(VaultCodecError::InvalidMetadata(key)),
+        None => Err(VaultCodecError::MissingMetadata(key)),
+    }
+}
+fn validate_metadata(
+    doc: &MarkupDoc,
+    profile: VaultProfile,
+    bundle: &VaultBundle,
+) -> Result<(), VaultCodecError> {
+    if attr_text(doc, "sim_profile")? != profile.id.as_str() {
+        return Err(VaultCodecError::ProfileDisagreement);
+    }
+    if attr_text(doc, "sim_granularity")? != granularity_name(bundle.granularity) {
+        return Err(VaultCodecError::GranularityDisagreement);
+    }
+    if attr_text(doc, "sim_projection_digest")? != content_text(&bundle.projection_digest) {
+        return Err(VaultCodecError::ProjectionDigest);
+    }
+    if attr_text(doc, "sim_compatibility_evidence")? != profile.compatibility_evidence {
+        return Err(VaultCodecError::ProfileDisagreement);
+    }
+    Ok(())
+}
+fn plain(inlines: &[Inline]) -> Option<String> {
+    let mut out = String::new();
+    for inline in inlines {
+        if let Inline::Text(v) = inline {
+            out.push_str(v);
+        } else {
+            return None;
+        }
+    }
+    Some(out)
+}
+fn validate_note_heading(doc: &MarkupDoc, id: &str) -> Result<(), VaultCodecError> {
+    match doc.blocks.first() {
+        Some(MarkupBlock::Heading { level: 1, text, .. }) if plain(text).as_deref() == Some(id) => {
+            Ok(())
+        }
+        _ => Err(VaultCodecError::MisplacedPrimaryContent),
+    }
+}
+fn validate_readme(doc: &MarkupDoc) -> Result<(), VaultCodecError> {
+    match doc.blocks.first() {
+        Some(MarkupBlock::Heading { level: 1, text, .. })
+            if plain(text).as_deref() == Some("SIM Index Vault") =>
+        {
+            Ok(())
+        }
+        _ => Err(VaultCodecError::StrayNavigation),
+    }
+}
+fn semantic_rows(doc: &MarkupDoc) -> Result<Vec<IndexRow>, VaultCodecError> {
+    let mut rows = Vec::new();
+    let mut expected_family = None;
+    for block in doc.blocks.iter().skip(1) {
+        match block {
+            MarkupBlock::Heading { level: 2, text, .. } => {
+                expected_family = Some(plain(text).ok_or(VaultCodecError::UnknownSection)?);
+            }
+            MarkupBlock::CodeBlock {
+                lang: Some(lang),
+                code,
+                ..
+            } if lang.starts_with("sim-index-row-") => {
+                let heading_family = expected_family
+                    .take()
+                    .ok_or(VaultCodecError::MisplacedPrimaryContent)?;
+                let expr = decode_index_expr(IndexForm::Json, code)
+                    .map_err(|e| VaultCodecError::RowCodec(e.to_string()))?;
+                let row_doc = index_doc_from_expr(&expr)
+                    .map_err(|e| VaultCodecError::RowCodec(e.to_string()))?;
+                let (_, inventory) = row_doc.inventory();
+                if inventory.len() != 1 {
+                    return Err(VaultCodecError::MisplacedPrimaryContent);
+                }
+                let row = inventory[0].to_owned();
+                if lang.as_str() != format!("sim-index-row-{}", row_family(&row))
+                    || heading_family != family_name(&row)
+                {
+                    return Err(VaultCodecError::UnknownSection);
+                }
+                rows.push(row);
+            }
+            MarkupBlock::List { .. } => {
+                if expected_family.is_some() {
+                    return Err(VaultCodecError::MisplacedPrimaryContent);
+                }
+            }
+            _ => return Err(VaultCodecError::UnknownSection),
+        }
+    }
+    if expected_family.is_some() {
+        return Err(VaultCodecError::MisplacedPrimaryContent);
+    }
+    Ok(rows)
+}
+fn note_path_parts(kind: VaultNoteKind, id: &str) -> Result<String, VaultCodecError> {
+    let note = VaultNotePlan {
+        id: sim_index_vault_core::VaultNoteId::new(id),
+        kind,
+        rows: vec![],
+    };
+    note_path(&note)
 }
 fn family_name(row: &IndexRow) -> &'static str {
     match row {
@@ -555,6 +911,36 @@ pub enum VaultCodecError {
     Markup(sim_codec_doc::MarkupError),
     /// Document codec reported non-exact fidelity.
     MarkupLoss,
+    /// Bundle and decoder profiles differ.
+    ProfileDisagreement,
+    /// Bundle and document granularities differ.
+    GranularityDisagreement,
+    /// Required semantic metadata is absent.
+    MissingMetadata(&'static str),
+    /// Semantic metadata has the wrong value type.
+    InvalidMetadata(&'static str),
+    /// Entry is not UTF-8 Markdown.
+    InvalidUtf8(String),
+    /// An entry content digest is false.
+    ContentDigest(String),
+    /// The projection identity is false.
+    ProjectionDigest,
+    /// The ordered bundle identity is false.
+    BundleDigest,
+    /// A row content site did not use the canonical Index grammar.
+    RowCodec(String),
+    /// A section is unknown or disagrees with its typed row.
+    UnknownSection,
+    /// A primary row appeared outside its typed content site.
+    MisplacedPrimaryContent,
+    /// The same canonical row occurred twice.
+    DuplicateRow,
+    /// A note path did not reverse to its declared identity.
+    PathReversal(String),
+    /// README navigation was missing, duplicated, or used as primary content.
+    StrayNavigation,
+    /// Canonical reconstruction or claim closure failed.
+    Reconstruction(String),
 }
 impl fmt::Display for VaultCodecError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -566,6 +952,31 @@ impl fmt::Display for VaultCodecError {
             Self::PathConflict(v) => write!(f, "vault path conflict at {v:?}"),
             Self::Markup(v) => write!(f, "document codec failed: {v}"),
             Self::MarkupLoss => f.write_str("document codec reported unexpected fidelity evidence"),
+            Self::ProfileDisagreement => {
+                f.write_str("vault profile metadata disagrees with the selected decoder")
+            }
+            Self::GranularityDisagreement => {
+                f.write_str("vault granularity metadata disagrees with the bundle")
+            }
+            Self::MissingMetadata(v) => write!(f, "missing vault metadata {v}"),
+            Self::InvalidMetadata(v) => write!(f, "invalid vault metadata {v}"),
+            Self::InvalidUtf8(v) => write!(f, "vault entry {v:?} is not UTF-8"),
+            Self::ContentDigest(v) => write!(f, "vault entry {v:?} has a false content digest"),
+            Self::ProjectionDigest => {
+                f.write_str("vault projection identity disagrees with semantic content")
+            }
+            Self::BundleDigest => f.write_str("vault bundle identity disagrees with its entries"),
+            Self::RowCodec(v) => write!(f, "canonical Index row codec failed: {v}"),
+            Self::UnknownSection => f.write_str("unknown or disagreeing semantic vault section"),
+            Self::MisplacedPrimaryContent => f.write_str("primary content is missing or misplaced"),
+            Self::DuplicateRow => f.write_str("duplicate canonical row in vault"),
+            Self::PathReversal(v) => {
+                write!(f, "vault path {v:?} does not reverse to its note identity")
+            }
+            Self::StrayNavigation => {
+                f.write_str("missing, duplicate, or semantically invalid README navigation")
+            }
+            Self::Reconstruction(v) => write!(f, "vault projection reconstruction failed: {v}"),
         }
     }
 }

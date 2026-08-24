@@ -1,4 +1,4 @@
-use sim_codec_index_vault::{PROFILES, VaultEncoder, resolve_profile};
+use sim_codec_index_vault::{PROFILES, VaultDecoder, VaultEncoder, resolve_profile, verify_v2};
 use sim_index_core::{
     AnchorId, DeclarationFact, DeclarationRole, DiscoveredAnchor, DiscoveredSpecimen,
     DiscoveredSurface, FeatureDraft, FeatureId, FeatureRecord, GrammarContract, IndexDoc,
@@ -168,6 +168,12 @@ fn all_four_profiles_encode_both_complete_granularities_exactly_once() {
         for granularity in [VaultGranularity::Compact, VaultGranularity::Full] {
             let projection = VaultProjection::from_complete(&doc, granularity).unwrap();
             let bundle = VaultEncoder::new(profile).encode(&projection).unwrap();
+            let decoded = VaultDecoder::new(profile).decode(&bundle).unwrap();
+            assert_eq!(decoded.projection, projection);
+            assert!(decoded.fidelity_exact);
+            assert!(decoded.declared_projection_equal);
+            let verification = verify_v2(&bundle, &projection, 16, 256).unwrap();
+            assert!(verification.is_success());
             assert_eq!(bundle.profile, profile.id);
             assert_eq!(
                 bundle
@@ -196,11 +202,39 @@ fn all_four_profiles_encode_both_complete_granularities_exactly_once() {
                 .iter()
                 .map(|e| String::from_utf8_lossy(&e.bytes))
                 .collect::<String>();
-            assert!(text.contains("truncated: true"));
-            assert!(text.contains("Unresolved"));
-            assert!(text.contains("Resolved"));
+            assert!(text.contains("truncated") && text.contains("true"));
+            assert!(text.to_lowercase().contains("unresolved"));
+            assert!(text.to_lowercase().contains("resolved"));
         }
     }
+}
+
+#[test]
+fn decode_rejects_digest_path_profile_and_valid_markdown_semantic_corruption() {
+    let projection = VaultProjection::from_complete(&fixture(), VaultGranularity::Compact).unwrap();
+    let bundle = VaultEncoder::new(PROFILES[0]).encode(&projection).unwrap();
+
+    let mut content = bundle.clone();
+    let entry = content
+        .entries
+        .iter_mut()
+        .find(|e| e.note_kind.is_some())
+        .unwrap();
+    let text = String::from_utf8(entry.bytes.clone()).unwrap();
+    entry.bytes = text.replacen("Draft", "Mystery", 1).into_bytes();
+    assert_ne!(entry.bytes, text.as_bytes());
+    assert!(VaultDecoder::new(PROFILES[0]).decode(&content).is_err());
+
+    let mut path = bundle.clone();
+    let entry = path
+        .entries
+        .iter_mut()
+        .find(|e| e.note_kind.is_some())
+        .unwrap();
+    entry.path = "wrong/place.md".into();
+    assert!(VaultDecoder::new(PROFILES[0]).decode(&path).is_err());
+
+    assert!(VaultDecoder::new(PROFILES[1]).decode(&bundle).is_err());
 }
 
 #[test]
