@@ -31,18 +31,13 @@ claims_anchors = [
   "anchor/crate/sim-codec-binary-base64",
   "anchor/crate/sim-codec-bitwise",
   "anchor/crate/sim-codec-bitwise-base64",
-  "anchor/crate/sim-codec-chat",
   "anchor/crate/sim-codec-compare",
   "anchor/crate/sim-codec-config",
   "anchor/crate/sim-codec-doc",
   "anchor/crate/sim-codec-index",
-  "anchor/crate/sim-codec-json",
   "anchor/crate/sim-codec-lisp",
   "anchor/crate/sim-codec-lua",
-  "anchor/crate/sim-codec-mcp",
-  "anchor/crate/sim-codec-sql",
   "anchor/crate/sim-test-support",
-  "anchor/crate/sim-wasm-abi",
   "anchor/export/sim-codec-binary-base64/codec/binary-base64",
   "anchor/export/sim-codec-binary/codec/binary",
   "anchor/export/sim-codec-bitwise-base64/codec/bitwise-base64",
@@ -64,7 +59,6 @@ claims_anchors = [
   "anchor/runtime-lib/sim-codec-chat/lemonade-codec-lib",
   "anchor/runtime-lib/sim-codec-chat/lm-studio-codec-lib",
   "anchor/runtime-lib/sim-codec-chat/ollama-codec-lib",
-  "anchor/runtime-lib/sim-codec-chat/open-ai-codec-lib",
   "anchor/runtime-lib/sim-codec-config/config-codec-lib",
   "anchor/runtime-lib/sim-codec-doc/doc-codec-lib",
   "anchor/runtime-lib/sim-codec-doc/markup-codec-lib",
@@ -74,11 +68,9 @@ claims_anchors = [
   "anchor/runtime-lib/sim-codec-lua/lua-codec-lib",
   "anchor/runtime-lib/sim-codec-mcp/mcp-codec-lib",
   "anchor/runtime-lib/sim-codec/domain-codec-lib",
-  "anchor/runtime-lib/sim-wasm-abi/wasm-lib",
 ]
 claims_specimens = [
   "spec-test/sim-codecs/crates/sim-codec/src/implementation/runtime",
-  "spec-test/sim-codecs/crates/sim-codec-compare/src/platform_roundtrip_tests",
 ]
 
 [[feature]]
@@ -99,7 +91,7 @@ summary = "Own the final MCP 2026-07-28 and delivered 2025-03-26 wire profiles, 
 owner = "crate/sim-codec-mcp"
 audiences = ["code", "framework"]
 guidance = "Use sim-codec-mcp as the sole transport-independent MCP wire authority. Extend its checked method registry and one-to-one coverage ledger when MCP behavior evolves; preserve full SchemaDocument and semantic extension JSON, and derive rather than reinterpret headers."
-claims_anchors = ["anchor/crate/sim-codec-mcp"]
+claims_anchors = ["anchor/crate/sim-codec-mcp", "anchor/export/sim-codec-mcp/server/discover"]
 claims_specimens = [
   "spec-test/sim-codecs/crates/sim-codec-mcp/tests/schema_oracle",
   "spec-test/sim-codecs/crates/sim-codec-mcp/src/wire_authority",
@@ -221,7 +213,7 @@ summary = "Lower admitted relational plans and migrations through sealed SQLite 
 owner = "crate/sim-codec-sql"
 audiences = ["code", "framework"]
 guidance = "Use sim-codec-sql at SQL-backed provider boundaries and as the sole owner of bounded legacy SQL grammar. Pass admitted plans, select executable dialect behavior, and admit decoded SchemaDraft values separately against the product domain catalog; unknown statements and domains fail closed, and parsed DDL is never executable or trusted schema."
-claims_anchors = ["anchor/crate/sim-codec-sql"]
+claims_anchors = ["anchor/crate/sim-codec-sql", "anchor/export/sim-codec-sql/codec/sql-ddl", "anchor/export/sim-codec-sql/codec/sql-statement"]
 claims_specimens = ["spec-test/sim-codecs/crates/sim-codec-sql/src/tests"]
 supports = ["feature/sim-codecs/codec"]
 
@@ -267,7 +259,6 @@ claims_surfaces = [
 ]
 claims_specimens = [
   "spec-test/sim-codecs/crates/sim-codec-json/src/tests",
-  "spec-test/sim-codecs/crates/sim-codec-doc/tests/conformance",
 ]
 supports = [
   "feature/sim-codecs/codec",
@@ -490,7 +481,12 @@ summary = "Interpret saved HTML, RSS 2.0, Atom 1.0, JSON Feed, and RFC 9309 robo
 owner = "crate/sim-codec-doc"
 audiences = ["code", "framework"]
 guidance = "Use the HTML MarkupBackend for shared document semantics, sim-codec-feed for one FeedDoc, and sim-codec-robots for parser and match precedence. Supply bytes explicitly; fetching, HTTP policy, ranking, and citation are outside these codecs."
-claims_anchors = ["anchor/crate/sim-codec-doc", "anchor/crate/sim-codec-feed", "anchor/crate/sim-codec-robots"]
+claims_anchors = [
+  "anchor/crate/sim-codec-feed",
+  "anchor/crate/sim-codec-robots",
+  "anchor/export/sim-codec-feed/codec/feed",
+  "anchor/export/sim-codec-robots/codec/robots",
+]
 claims_specimens = ["spec-test/sim-codecs/crates/sim-codec-doc/src/html"]
 supports = ["feature/sim-codecs/codec"]
 
@@ -510,7 +506,7 @@ summary = "Translate generic search queries and caller-supplied SearXNG config a
 owner = "crate/sim-codec-search-searxng"
 audiences = ["code", "framework"]
 guidance = "Compose this pure codec behind SearchWireCodec and the generic HTTP search transport for an operator-selected SearXNG site. Default to form-encoded POST, retain raw JSON and partial-row notices, and never use it for HTTP, provider discovery, ranking, HTML fallback, page observations, or citations."
-claims_anchors = ["anchor/crate/sim-codec-search-searxng"]
+claims_anchors = ["anchor/crate/sim-codec-search-searxng", "anchor/export/sim-codec-search-searxng/codec/search-searxng"]
 claims_specimens = [
   "spec-test/sim-codecs/crates/sim-codec-search-searxng/src/tests",
 ]
