@@ -80,6 +80,12 @@
       "summary": "Document decoding and provenance-preserving chunk descriptors."
     },
     {
+      "id": "cookbook/codec/feed",
+      "kind": "cookbook-recipe",
+      "owner": "sim-codec-feed",
+      "summary": "Decode and encode bounded feed records."
+    },
+    {
       "id": "cookbook/codec/javascript",
       "kind": "cookbook-recipe",
       "owner": "sim-codec-javascript",
@@ -122,34 +128,28 @@
       "summary": "Bounded lossless Python source parsing."
     },
     {
+      "id": "cookbook/codec/robots",
+      "kind": "cookbook-recipe",
+      "owner": "sim-codec-robots",
+      "summary": "Parse and match bounded robots.txt policy without network access."
+    },
+    {
       "id": "cookbook/codec/search-searxng",
       "kind": "cookbook-recipe",
       "owner": "sim-codec-search-searxng",
       "summary": "Pure request and response translation for an operator-selected SearXNG site."
     },
     {
+      "id": "cookbook/codec/sql",
+      "kind": "cookbook-recipe",
+      "owner": "sim-codec-sql",
+      "summary": "Prepare checked SQL forms for relation providers."
+    },
+    {
       "id": "cookbook/codec/typescript",
       "kind": "cookbook-recipe",
       "owner": "sim-codec-typescript",
       "summary": "Bounded, lossless TypeScript and TSX source parsing."
-    },
-    {
-      "id": "cookbook/sim-codec-feed",
-      "kind": "cookbook-recipe",
-      "owner": "sim-codec-feed",
-      "summary": ""
-    },
-    {
-      "id": "cookbook/sim-codec-robots",
-      "kind": "cookbook-recipe",
-      "owner": "sim-codec-robots",
-      "summary": ""
-    },
-    {
-      "id": "cookbook/sim-codec-sql",
-      "kind": "cookbook-recipe",
-      "owner": "sim-codec-sql",
-      "summary": ""
     },
     {
       "id": "registry/catalog",

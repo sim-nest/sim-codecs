@@ -1,1 +1,5 @@
+book = "codec/robots"
 title = "Robots codec recipes"
+summary = "Parse and match bounded robots.txt policy without network access."
+order = 75
+chapters = ["01-basics"]

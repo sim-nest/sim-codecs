@@ -1,2 +1,5 @@
+book = "codec/sql"
 title = "SQL codec"
+summary = "Prepare checked SQL forms for relation providers."
+order = 10
 chapters = ["01-basics"]

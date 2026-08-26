@@ -60,10 +60,10 @@ impl MarkupBackend for HtmlBackend {
         doc: &MarkupDoc,
         _opts: &MarkupEncodeOptions,
     ) -> Result<(String, MarkupFidelity), MarkupError> {
-        if let Some(source) = &doc.source {
-            if source.backend.as_str() == "html" {
-                return Ok((source.text.clone(), MarkupFidelity::exact(self.id())));
-            }
+        if let Some(source) = &doc.source
+            && source.backend.as_str() == "html"
+        {
+            return Ok((source.text.clone(), MarkupFidelity::exact(self.id())));
         }
         Err(MarkupError::Encode(
             "HTML is an extraction backend; encoding requires preserved HTML source".into(),
@@ -290,24 +290,24 @@ impl Parser<'_> {
             }
             return Ok(());
         }
-        if name == "meta" {
-            if let Some(v) = attr(body, "name").zip(attr(body, "content")) {
-                self.attrs.insert(
-                    format!("meta:{}", v.0.to_ascii_lowercase()),
-                    Expr::String(v.1),
-                );
-            }
-        }
-        if name == "link" && attr(body, "rel").is_some_and(|v| v.eq_ignore_ascii_case("canonical"))
+        if name == "meta"
+            && let Some(v) = attr(body, "name").zip(attr(body, "content"))
         {
-            if let Some(v) = attr(body, "href") {
-                self.attrs.insert("canonical-link".into(), Expr::String(v));
-            }
+            self.attrs.insert(
+                format!("meta:{}", v.0.to_ascii_lowercase()),
+                Expr::String(v.1),
+            );
         }
-        if name == "html" {
-            if let Some(v) = attr(body, "lang") {
-                self.attrs.insert("language".into(), Expr::String(v));
-            }
+        if name == "link"
+            && attr(body, "rel").is_some_and(|v| v.eq_ignore_ascii_case("canonical"))
+            && let Some(v) = attr(body, "href")
+        {
+            self.attrs.insert("canonical-link".into(), Expr::String(v));
+        }
+        if name == "html"
+            && let Some(v) = attr(body, "lang")
+        {
+            self.attrs.insert("language".into(), Expr::String(v));
         }
         let active = matches!(
             name.as_str(),

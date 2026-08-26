@@ -210,6 +210,156 @@ fn sqlite_values_and_unary_relations_keep_executable_binding_scope() {
 }
 
 #[test]
+fn sqlite_project_over_join_preserves_both_input_bindings() {
+    let (domains, schema) = fixture();
+    let left: BindingName = name("left_order");
+    let right: BindingName = name("right_order");
+    let query = admit_query(
+        Rel::Project {
+            input: Box::new(Rel::Join {
+                left: Box::new(Rel::Scan {
+                    source: name("main"),
+                    table: name("order"),
+                    bind: left.clone(),
+                }),
+                right: Box::new(Rel::Scan {
+                    source: name("archive"),
+                    table: name("order"),
+                    bind: right.clone(),
+                }),
+                kind: JoinKind::Inner,
+                on: Scalar::Call(
+                    ScalarOp::Eq,
+                    vec![
+                        Scalar::Field(FieldRef {
+                            binding: left.clone(),
+                            field: name("id"),
+                        }),
+                        Scalar::Field(FieldRef {
+                            binding: right.clone(),
+                            field: name("id"),
+                        }),
+                    ],
+                ),
+            }),
+            bind: name("joined"),
+            fields: vec![
+                NamedScalar {
+                    name: name("id"),
+                    scalar: Scalar::Field(FieldRef {
+                        binding: left,
+                        field: name("id"),
+                    }),
+                },
+                NamedScalar {
+                    name: name("select"),
+                    scalar: Scalar::Field(FieldRef {
+                        binding: right,
+                        field: name("select"),
+                    }),
+                },
+            ],
+        },
+        &schema,
+        &domains,
+        RowType::new([]).unwrap(),
+        AdmissionLimits::default(),
+    )
+    .unwrap();
+
+    let prepared = prepare_query(&query, &SqliteDialect).unwrap();
+    assert!(
+        prepared.text().contains(
+            "AS \"left_order\" INNER JOIN (SELECT * FROM \"archive\".\"order\" AS \"right_order\") AS \"right_order\" ON (\"left_order\".\"id\" = \"right_order\".\"id\")"
+        ),
+        "{}",
+        prepared.text()
+    );
+    assert!(prepared.text().starts_with(
+        "SELECT \"left_order\".\"id\" AS \"id\", \"right_order\".\"select\" AS \"select\" FROM "
+    ));
+}
+
+#[test]
+fn sqlite_set_wraps_ordered_groups_and_filters_group_output() {
+    let (domains, schema) = fixture();
+    let grouped = |source_name: &str, row_name: &str, group_name: &str| {
+        let row: BindingName = name(row_name);
+        let group: BindingName = name(group_name);
+        Rel::Order {
+            input: Box::new(Rel::Group {
+                input: Box::new(Rel::Scan {
+                    source: name(source_name),
+                    table: name("order"),
+                    bind: row.clone(),
+                }),
+                bind: group.clone(),
+                keys: vec![NamedScalar {
+                    name: name("id"),
+                    scalar: Scalar::Field(FieldRef {
+                        binding: row,
+                        field: name("id"),
+                    }),
+                }],
+                aggregates: vec![NamedAggregate {
+                    name: name("total"),
+                    aggregate: Aggregate::CountAll,
+                }],
+                having: Some(Scalar::Call(
+                    ScalarOp::Ge,
+                    vec![
+                        Scalar::Field(FieldRef {
+                            binding: group.clone(),
+                            field: name("total"),
+                        }),
+                        Scalar::Literal(Cell::new(BaseDomain::I64.id(), Some(i64_datum(1)))),
+                    ],
+                )),
+            }),
+            keys: vec![OrderKey {
+                scalar: Scalar::Field(FieldRef {
+                    binding: group,
+                    field: name("id"),
+                }),
+                direction: OrderDirection::Asc,
+            }],
+        }
+    };
+    let query = admit_query(
+        Rel::Set {
+            op: SetOp::UnionAll,
+            inputs: vec![
+                grouped("main", "row_a", "group_a"),
+                grouped("archive", "row_b", "group_b"),
+            ],
+        },
+        &schema,
+        &domains,
+        RowType::new([]).unwrap(),
+        AdmissionLimits::default(),
+    )
+    .unwrap();
+
+    let prepared = prepare_query(&query, &SqliteDialect).unwrap();
+    assert!(
+        prepared
+            .text()
+            .starts_with("SELECT * FROM (SELECT * FROM (")
+    );
+    assert!(
+        prepared.text().contains(
+            ") AS \"group_a\" WHERE (\"group_a\".\"total\" >= ?1)) AS \"group_a\" ORDER BY"
+        )
+    );
+    assert!(
+        prepared
+            .text()
+            .contains(") AS \"set_input_0\" UNION ALL SELECT * FROM (")
+    );
+    assert!(!prepared.text().contains(" HAVING "));
+}
+
+#[test]
 fn sqlite_insert_select_disambiguates_conflict_from_join() {
     let (domains, schema) = fixture();
     let row_type = RowType::new([

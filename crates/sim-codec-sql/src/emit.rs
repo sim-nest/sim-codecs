@@ -104,6 +104,36 @@ impl<'a> Emitter<'a> {
                 "relation input exposes more than one binding",
             ))
     }
+    fn render_input(&mut self, input: &Rel) -> Result<String, SqlError> {
+        if let Rel::Join {
+            left,
+            right,
+            kind,
+            on,
+        } = input
+        {
+            let left_sql = self.render_input(left)?;
+            let right_sql = self.render_input(right)?;
+            return Ok(format!(
+                "{} {} JOIN {}{}",
+                left_sql,
+                match kind {
+                    JoinKind::Inner => "INNER",
+                    JoinKind::Left => "LEFT",
+                    JoinKind::Cross => "CROSS",
+                },
+                right_sql,
+                if *kind == JoinKind::Cross {
+                    String::new()
+                } else {
+                    format!(" ON {}", self.scalar(on)?)
+                }
+            ));
+        }
+        let input_sql = self.rel(input)?;
+        let alias = self.input_alias(input)?;
+        Ok(format!("({input_sql}) AS {alias}"))
+    }
     fn rel(&mut self, rel: &Rel) -> Result<String, SqlError> {
         Ok(match rel {
             Rel::Scan {
@@ -172,10 +202,9 @@ impl<'a> Emitter<'a> {
                 bind: _,
                 fields,
             } => {
-                let input_sql = self.rel(input)?;
-                let alias = self.input_alias(input)?;
+                let from = self.render_input(input)?;
                 format!(
-                    "SELECT {} FROM ({}) AS {}",
+                    "SELECT {} FROM {}",
                     fields
                         .iter()
                         .map(|f| Ok(format!(
@@ -185,51 +214,17 @@ impl<'a> Emitter<'a> {
                         )))
                         .collect::<Result<Vec<_>, SqlError>>()?
                         .join(", "),
-                    input_sql,
-                    alias
+                    from
                 )
             }
             Rel::Filter { input, predicate } => {
-                let input_sql = self.rel(input)?;
-                let alias = self.input_alias(input)?;
-                format!(
-                    "SELECT * FROM ({}) AS {} WHERE {}",
-                    input_sql,
-                    alias,
-                    self.scalar(predicate)?
-                )
+                let from = self.render_input(input)?;
+                format!("SELECT * FROM {} WHERE {}", from, self.scalar(predicate)?)
             }
-            Rel::Join {
-                left,
-                right,
-                kind,
-                on,
-            } => {
-                let left_sql = self.rel(left)?;
-                let left_alias = self.input_alias(left)?;
-                let right_sql = self.rel(right)?;
-                let right_alias = self.input_alias(right)?;
-                format!(
-                    "SELECT * FROM ({}) AS {} {} JOIN ({}) AS {}{}",
-                    left_sql,
-                    left_alias,
-                    match kind {
-                        JoinKind::Inner => "INNER",
-                        JoinKind::Left => "LEFT",
-                        JoinKind::Cross => "CROSS",
-                    },
-                    right_sql,
-                    right_alias,
-                    if *kind == JoinKind::Cross {
-                        String::new()
-                    } else {
-                        format!(" ON {}", self.scalar(on)?)
-                    }
-                )
-            }
+            Rel::Join { .. } => format!("SELECT * FROM {}", self.render_input(rel)?),
             Rel::Group {
                 input,
-                bind: _,
+                bind,
                 keys,
                 aggregates,
                 having,
@@ -255,28 +250,36 @@ impl<'a> Emitter<'a> {
                         })
                         .collect::<Result<Vec<_>, SqlError>>()?,
                 );
-                let input_sql = self.rel(input)?;
-                let alias = self.input_alias(input)?;
-                format!(
-                    "SELECT {} FROM ({}) AS {}{}{}",
+                let from = self.render_input(input)?;
+                let grouped = format!(
+                    "SELECT {} FROM {}{}",
                     fields.join(", "),
-                    input_sql,
-                    alias,
+                    from,
                     if key_sql.is_empty() {
                         String::new()
                     } else {
                         format!(" GROUP BY {}", key_sql.join(", "))
-                    },
-                    having
-                        .as_ref()
-                        .map(|v| self.scalar(v).map(|v| format!(" HAVING {v}")))
-                        .transpose()?
-                        .unwrap_or_default()
-                )
+                    }
+                );
+                if let Some(predicate) = having {
+                    format!(
+                        "SELECT * FROM ({}) AS {} WHERE {}",
+                        grouped,
+                        self.ident(bind.symbol())?,
+                        self.scalar(predicate)?
+                    )
+                } else {
+                    grouped
+                }
             }
             Rel::Set { op, inputs } => inputs
                 .iter()
-                .map(|v| self.rel(v).map(|v| format!("({v})")))
+                .enumerate()
+                .map(|(index, value)| {
+                    let sql = self.rel(value)?;
+                    let alias = sim_kernel::Symbol::new(format!("set_input_{index}"));
+                    Ok(format!("SELECT * FROM ({sql}) AS {}", self.ident(&alias)?))
+                })
                 .collect::<Result<Vec<_>, _>>()?
                 .join(match op {
                     SetOp::Union => " UNION ",
@@ -285,17 +288,13 @@ impl<'a> Emitter<'a> {
                     SetOp::Except => " EXCEPT ",
                 }),
             Rel::Distinct(input) => {
-                let input_sql = self.rel(input)?;
-                let alias = self.input_alias(input)?;
-                format!("SELECT DISTINCT * FROM ({input_sql}) AS {alias}")
+                format!("SELECT DISTINCT * FROM {}", self.render_input(input)?)
             }
             Rel::Order { input, keys } => {
-                let input_sql = self.rel(input)?;
-                let alias = self.input_alias(input)?;
+                let from = self.render_input(input)?;
                 format!(
-                    "SELECT * FROM ({}) AS {} ORDER BY {}",
-                    input_sql,
-                    alias,
+                    "SELECT * FROM {} ORDER BY {}",
+                    from,
                     keys.iter()
                         .map(|v| Ok(format!(
                             "{} {}",
@@ -314,12 +313,10 @@ impl<'a> Emitter<'a> {
                 count,
                 offset,
             } => {
-                let input_sql = self.rel(input)?;
-                let alias = self.input_alias(input)?;
+                let from = self.render_input(input)?;
                 format!(
-                    "SELECT * FROM ({}) AS {} LIMIT {} OFFSET {}",
-                    input_sql,
-                    alias,
+                    "SELECT * FROM {} LIMIT {} OFFSET {}",
+                    from,
                     count.map_or_else(|| "ALL".into(), |v| v.to_string()),
                     offset
                 )

@@ -13,12 +13,12 @@ homepage = "https://github.com/sim-nest/sim-codecs"
 sim-codec = { version = "0.1.8", path = "../sim-codec" }
 sim-codec-json = { version = "0.2.2", path = "../sim-codec-json" }
 sim-kernel = { version = "0.2.1" }
-sim-lib-search-core = { version = "0.1.0", path = "../../../sim-foundation/crates/sim-lib-search-core" }
-sim-lib-web-core = { version = "0.1.0", path = "../../../sim-foundation/crates/sim-lib-web-core" }
-sim-cookbook = { version = "0.2.1", path = "../../../sim-foundation/crates/sim-cookbook" }
+sim-lib-search-core = { version = "0.1.0" }
+sim-lib-web-core = { version = "0.1.0" }
+sim-cookbook = { version = "0.2.1" }
 
 [build-dependencies]
-sim-cookbook-build = { version = "0.1.0", path = "../../../sim-foundation/crates/sim-cookbook-build" }
+sim-cookbook-build = { version = "0.1.0" }
 
 [lints]
 workspace = true

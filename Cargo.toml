@@ -41,6 +41,3 @@ homepage = "https://github.com/sim-nest/sim-codecs"
 
 [workspace.lints.rust]
 unsafe_code = "forbid"
-
-[patch.crates-io]
-sim-cookbook-build = { path = "../sim-foundation/crates/sim-cookbook-build" }

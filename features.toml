@@ -133,6 +133,25 @@ claims_specimens = [
 ]
 supports = ["feature/sim-codecs/codec"]
 
+[[route]]
+id = "route/carry-a-wasm-library"
+task = "Carry a wasm library across an explicit host boundary"
+audiences = ["code", "framework"]
+steps = [
+  { feature = "feature/sim-codecs/wasm-abi-contract", why = "The ABI row owns inert manifests, byte frames, imports, and exports while the selected platform loader retains host authority." },
+  { specimen = "spec-test/sim-codecs/crates/sim-wasm-abi/src/tests/roundtrip", why = "The checked round-trip specimen proves ABI records remain pure data." },
+  { specimen = "spec-test/sim-codecs/crates/sim-codec-compare/src/platform_roundtrip_tests", why = "The cross-platform specimen proves the same contract survives platform codec projection." },
+]
+
+[[route]]
+id = "route/encode-openai-provider-wire"
+task = "Encode canonical model traffic for an OpenAI provider wire"
+audiences = ["code", "framework"]
+steps = [
+  { feature = "feature/sim-codecs/openai-provider-wires", why = "The wire row selects Chat Completions or Responses while preserving one canonical bounded model contract." },
+  { specimen = "spec-test/sim-codecs/crates/sim-codec-chat/src/tests/openai_responses", why = "The checked specimen covers Responses requests, responses, SSE events, and provider-private reasoning payloads." },
+]
+
 [[feature]]
 id = "feature/sim-codecs/classfile-inspection"
 title = "JVM-free classfile inspection"

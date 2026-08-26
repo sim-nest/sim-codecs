@@ -157,7 +157,7 @@ fn assert_semantic_roundtrip(id: &str, backend: &dyn MarkupBackend, source: &str
 fn assert_fixture_coverage() {
     let implemented: BTreeSet<String> = backend_catalog()
         .into_iter()
-        .filter(|info| info.status == BackendStatus::Implemented)
+        .filter(|info| info.status == BackendStatus::Implemented && info.can_read && info.can_write)
         .map(|info| info.id.to_string())
         .collect();
     let fixture_ids: BTreeSet<String> = fixtures()

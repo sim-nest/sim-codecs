@@ -80,6 +80,12 @@
       "summary": "Document decoding and provenance-preserving chunk descriptors."
     },
     {
+      "id": "cookbook/codec/feed",
+      "kind": "cookbook-recipe",
+      "owner": "sim-codec-feed",
+      "summary": "Decode and encode bounded feed records."
+    },
+    {
       "id": "cookbook/codec/javascript",
       "kind": "cookbook-recipe",
       "owner": "sim-codec-javascript",
@@ -122,34 +128,28 @@
       "summary": "Bounded lossless Python source parsing."
     },
     {
+      "id": "cookbook/codec/robots",
+      "kind": "cookbook-recipe",
+      "owner": "sim-codec-robots",
+      "summary": "Parse and match bounded robots.txt policy without network access."
+    },
+    {
       "id": "cookbook/codec/search-searxng",
       "kind": "cookbook-recipe",
       "owner": "sim-codec-search-searxng",
       "summary": "Pure request and response translation for an operator-selected SearXNG site."
     },
     {
+      "id": "cookbook/codec/sql",
+      "kind": "cookbook-recipe",
+      "owner": "sim-codec-sql",
+      "summary": "Prepare checked SQL forms for relation providers."
+    },
+    {
       "id": "cookbook/codec/typescript",
       "kind": "cookbook-recipe",
       "owner": "sim-codec-typescript",
       "summary": "Bounded, lossless TypeScript and TSX source parsing."
-    },
-    {
-      "id": "cookbook/sim-codec-feed",
-      "kind": "cookbook-recipe",
-      "owner": "sim-codec-feed",
-      "summary": ""
-    },
-    {
-      "id": "cookbook/sim-codec-robots",
-      "kind": "cookbook-recipe",
-      "owner": "sim-codec-robots",
-      "summary": ""
-    },
-    {
-      "id": "cookbook/sim-codec-sql",
-      "kind": "cookbook-recipe",
-      "owner": "sim-codec-sql",
-      "summary": ""
     },
     {
       "id": "registry/catalog",
@@ -1968,10 +1968,10 @@
     "generated_by": "cargo run -p xtask -- simdoc",
     "generation_timestamp": "2026-07-16T02:55:26+02:00",
     "generator": "xtask repo-contract v1",
-    "git_commit": "a84c4abcfeffe37be5f0113d3587910e69addeb0",
+    "git_commit": "b131e6c929fce333791d56afb763586e225ae97a",
     "repo": "sim-codecs",
     "schema": "sim.provenance.v1",
-    "source_commit": "a84c4abcfeffe37be5f0113d3587910e69addeb0",
+    "source_commit": "b131e6c929fce333791d56afb763586e225ae97a",
     "source_remote": "https://github.com/sim-nest/sim-codecs",
     "validation_commands": [
       "cargo fmt --all --check",
@@ -1984,9 +1984,9 @@
       "cargo run -p xtask -- validation-matrix --check --repo .",
       "cargo run -p xtask -- crate-catalog --check --repo ."
     ],
-    "workspace_hash": "7ad831b0e0d087d1",
+    "workspace_hash": "dcee3e0d55700b3e",
     "workspace_hash_algorithm": "fnv1a64",
-    "workspace_hash_input_count": 418,
+    "workspace_hash_input_count": 427,
     "workspace_hash_inputs": [
       "Cargo.toml",
       "crates/sim-codec/Cargo.toml",
@@ -2223,6 +2223,7 @@
       "crates/sim-codec-doc/src/latex_tests.rs",
       "crates/sim-codec-doc/src/latex_writer.rs",
       "crates/sim-codec-doc/src/lib.rs",
+      "crates/sim-codec-doc/src/markdown/parser.rs",
       "crates/sim-codec-doc/src/markdown.rs",
       "crates/sim-codec-doc/src/markdown_writer.rs",
       "crates/sim-codec-doc/src/markup/decode.rs",
@@ -2240,8 +2241,10 @@
       "crates/sim-codec-feed/recipes/01-basics/decode-saved-feed/recipe.toml",
       "crates/sim-codec-feed/recipes/book.toml",
       "crates/sim-codec-feed/src/lib.rs",
+      "crates/sim-codec-feed/src/xml.rs",
       "crates/sim-codec-index/Cargo.toml",
       "crates/sim-codec-index/src/error.rs",
+      "crates/sim-codec-index/src/expr/encode.rs",
       "crates/sim-codec-index/src/expr.rs",
       "crates/sim-codec-index/src/form.rs",
       "crates/sim-codec-index/src/grammar.rs",
@@ -2249,7 +2252,11 @@
       "crates/sim-codec-index/src/runtime.rs",
       "crates/sim-codec-index/src/tests.rs",
       "crates/sim-codec-index-vault/Cargo.toml",
+      "crates/sim-codec-index-vault/src/codec.rs",
+      "crates/sim-codec-index-vault/src/error.rs",
+      "crates/sim-codec-index-vault/src/helpers.rs",
       "crates/sim-codec-index-vault/src/lib.rs",
+      "crates/sim-codec-index-vault/src/profiles.rs",
       "crates/sim-codec-index-vault/tests/conformance.rs",
       "crates/sim-codec-javascript/Cargo.toml",
       "crates/sim-codec-javascript/recipes/01-basics/lossless-source/recipe.toml",
@@ -2335,6 +2342,7 @@
       "crates/sim-codec-mcp/src/lib.rs",
       "crates/sim-codec-mcp/src/schema_oracle.rs",
       "crates/sim-codec-mcp/src/tests.rs",
+      "crates/sim-codec-mcp/src/wire_authority/helpers.rs",
       "crates/sim-codec-mcp/src/wire_authority.rs",
       "crates/sim-codec-mcp/src/wire_keys.rs",
       "crates/sim-codec-mcp/tests/schema_oracle.rs",
@@ -2364,6 +2372,7 @@
       "crates/sim-codec-robots/recipes/01-basics/match-path/recipe.toml",
       "crates/sim-codec-robots/recipes/book.toml",
       "crates/sim-codec-robots/src/lib.rs",
+      "crates/sim-codec-robots/src/matching.rs",
       "crates/sim-codec-search-searxng/Cargo.toml",
       "crates/sim-codec-search-searxng/build.rs",
       "crates/sim-codec-search-searxng/recipes/01-basics/request-response/recipe.toml",
@@ -2683,15 +2692,15 @@
       "title": "Document Codec"
     },
     {
-      "book": "sim-codec-feed",
+      "book": "codec/feed",
       "book_toml": "crates/sim-codec-feed/recipes/book.toml",
-      "card_id": "cookbook/sim-codec-feed",
+      "card_id": "cookbook/codec/feed",
       "group": "workspace",
       "package": "sim-codec-feed",
       "recipe_count": 1,
       "recipes": [
         {
-          "card_id": "sim-codec-feed/01-basics/decode-saved-feed",
+          "card_id": "codec/feed/01-basics/decode-saved-feed",
           "codec": "lisp",
           "id": "decode-saved-feed",
           "package": "sim-codec-feed",
@@ -2699,7 +2708,7 @@
           "title": "Decode a saved feed"
         }
       ],
-      "summary": "",
+      "summary": "Decode and encode bounded feed records.",
       "title": "Feed codec recipes"
     },
     {
@@ -2842,15 +2851,15 @@
       "title": "Python 3.14 Source Frontend"
     },
     {
-      "book": "sim-codec-robots",
+      "book": "codec/robots",
       "book_toml": "crates/sim-codec-robots/recipes/book.toml",
-      "card_id": "cookbook/sim-codec-robots",
+      "card_id": "cookbook/codec/robots",
       "group": "workspace",
       "package": "sim-codec-robots",
       "recipe_count": 1,
       "recipes": [
         {
-          "card_id": "sim-codec-robots/01-basics/match-path",
+          "card_id": "codec/robots/01-basics/match-path",
           "codec": "lisp",
           "id": "match-path",
           "package": "sim-codec-robots",
@@ -2858,7 +2867,7 @@
           "title": "Match a saved robots file"
         }
       ],
-      "summary": "",
+      "summary": "Parse and match bounded robots.txt policy without network access.",
       "title": "Robots codec recipes"
     },
     {
@@ -2882,15 +2891,15 @@
       "title": "SearXNG wire codec recipes"
     },
     {
-      "book": "sim-codec-sql",
+      "book": "codec/sql",
       "book_toml": "crates/sim-codec-sql/recipes/book.toml",
-      "card_id": "cookbook/sim-codec-sql",
+      "card_id": "cookbook/codec/sql",
       "group": "workspace",
       "package": "sim-codec-sql",
       "recipe_count": 1,
       "recipes": [
         {
-          "card_id": "sim-codec-sql/01-basics/inspect-ddl",
+          "card_id": "codec/sql/01-basics/inspect-ddl",
           "codec": "",
           "id": "inspect-ddl",
           "package": "sim-codec-sql",
@@ -2898,7 +2907,7 @@
           "title": "Inspect bounded DDL"
         }
       ],
-      "summary": "",
+      "summary": "Prepare checked SQL forms for relation providers.",
       "title": "SQL codec"
     },
     {

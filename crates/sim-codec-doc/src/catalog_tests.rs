@@ -16,23 +16,33 @@ fn cx() -> sim_kernel::Cx {
 #[test]
 fn implemented_backends_are_registered() {
     let registry = default_backend_registry();
-    let mut implemented = 0;
+    let mut implemented = Vec::new();
 
     for info in backend_catalog()
         .into_iter()
         .filter(|info| info.status == BackendStatus::Implemented)
     {
-        implemented += 1;
-        assert!(info.can_read, "{} should read", info.id);
-        assert!(info.can_write, "{} should write", info.id);
         assert!(
             registry.backend(&info.id).is_ok(),
             "{} should be registered",
             info.id
         );
+        implemented.push((info.id, info.can_read, info.can_write));
     }
 
-    assert_eq!(implemented, 4);
+    assert_eq!(
+        implemented,
+        [
+            ("asciidoc", true, true),
+            ("html", true, false),
+            ("latex", true, true),
+            ("markdown", true, true),
+            ("typst", true, true),
+        ]
+        .into_iter()
+        .map(|(id, can_read, can_write)| (BackendId::new(id), can_read, can_write))
+        .collect::<Vec<_>>()
+    );
     for id in registry.ids() {
         assert!(
             backend_catalog()
