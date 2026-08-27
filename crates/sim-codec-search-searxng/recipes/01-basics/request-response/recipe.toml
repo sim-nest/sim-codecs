@@ -4,5 +4,5 @@ codec = "lisp"
 setup = "setup.siml"
 purpose = "purpose.md"
 order = 10
-tags = ["codec", "search", "searxng", "pure"]
+tags = ["codec", "search", "searxng", "pure", "sandbox-descriptor"]
 requires = ["search-core", "codec/json", "codec/lisp"]

@@ -1,1 +1,7 @@
-(quote "robots bytes and product token are supplied by the caller")
+(expr:map
+  [kind "saved-robots-match"]
+  [product-token "SimBot"]
+  [path "/private/report"]
+  [robots "User-agent: *\nDisallow: /private\n"]
+  [network "none"]
+  [proof "crate parser and matcher tests"])

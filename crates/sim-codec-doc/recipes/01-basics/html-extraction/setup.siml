@@ -1,1 +1,6 @@
-(quote "HTML bytes are supplied by the caller")
+(expr:map
+  [kind "saved-html-extraction"]
+  [input "<article><h1>Guide</h1><script>drop()</script></article>"]
+  [output "inert MarkupDoc without active elements"]
+  [network "none"]
+  [proof "crate HTML backend tests"])
