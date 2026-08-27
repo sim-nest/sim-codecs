@@ -18,7 +18,7 @@ serde_json = "1"
 sim-codec = { version = "0.1.8", path = "../sim-codec" }
 sim-codec-json = { version = "0.2.2", path = "../sim-codec-json" }
 sim-codec-lisp = { version = "0.2.1", path = "../sim-codec-lisp" }
-sim-index-core = { version = "0.2.0", git = "https://github.com/sim-nest/sim-foundation", rev = "f2fb2f270e4131dc748f6dd6e8b793d3e26f4b26" }
+sim-index-core = { version = "0.2.0", git = "https://github.com/sim-nest/sim-foundation", rev = "99ac3f21ac9fe2d256c054278cd5b6091dd9bc97" }
 sim-kernel = { version = "0.2.1" }
 sim-value = "0.2.0"
 
