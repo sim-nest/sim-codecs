@@ -1,6 +1,6 @@
 [package]
 name = "sim-codec-lua"
-version = "0.1.3"
+version = "0.1.4"
 edition = "2024"
 license = "MPL-2.0"
 description = "Lua chunk codec with expression, located, and tree round-trip lanes."
@@ -10,10 +10,10 @@ repository = "https://github.com/sim-nest/sim-codecs"
 homepage = "https://github.com/sim-nest/sim-codecs"
 
 [dependencies]
-sim-codec = { version = "0.1.8", path = "../sim-codec" }
-sim-codec-pratt = { version = "0.1.3", path = "../sim-codec-pratt" }
-sim-cookbook = { version = "0.2.0" }
-sim-kernel = { version = "0.2.0" }
+sim-codec = { version = "0.2.0", path = "../sim-codec" }
+sim-codec-pratt = { version = "0.2.0", path = "../sim-codec-pratt" }
+sim-cookbook = { version = "0.3.0" }
+sim-kernel = { version = "0.3.0" }
 
 [build-dependencies]
 sim-cookbook-build = { version = "0.1.0" }

@@ -1,6 +1,6 @@
 [package]
 name = "sim-test-support"
-version = "0.1.2"
+version = "0.1.3"
 edition = "2024"
 license = "MPL-2.0"
 description = "Shared test harness for SIM crates."
@@ -10,11 +10,11 @@ repository = "https://github.com/sim-nest/sim-codecs"
 homepage = "https://github.com/sim-nest/sim-codecs"
 
 [dependencies]
-sim-citizen = { version = "0.2.0" }
-sim-citizen-derive = { version = "0.2.0" }
-sim-codec = { version = "0.1.8", path = "../sim-codec" }
-sim-kernel = { version = "0.2.0" }
-sim-value = { version = "0.2.0" }
+sim-citizen = { version = "0.3.0" }
+sim-citizen-derive = { version = "0.3.0" }
+sim-codec = { version = "0.2.0", path = "../sim-codec" }
+sim-kernel = { version = "0.3.0" }
+sim-value = { version = "0.3.0" }
 
 [lints]
 workspace = true
