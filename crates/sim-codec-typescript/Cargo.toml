@@ -1,6 +1,6 @@
 [package]
 name = "sim-codec-typescript"
-version = "0.1.0"
+version = "0.1.1"
 edition.workspace = true
 license.workspace = true
 readme = "README.md"
@@ -11,7 +11,7 @@ description = "Bounded, lossless TypeScript 7 and TSX syntax frontend for SIM"
 
 [dependencies]
 sim-codec = { version = "0.2.0", path = "../sim-codec" }
-sim-codec-javascript = { version = "0.1.0", path = "../sim-codec-javascript" }
+sim-codec-javascript = { version = "0.1.1", path = "../sim-codec-javascript" }
 sim-kernel = { version = "0.3.0" }
 
 [dev-dependencies]
