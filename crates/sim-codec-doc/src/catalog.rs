@@ -5,7 +5,8 @@ use crate::BackendId;
 /// Implementation state for a cataloged markup backend.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum BackendStatus {
-    /// The backend is installed by the default registry and supports read/write.
+    /// The backend is installed by the default registry; directional support
+    /// is reported by [`BackendInfo::can_read`] and [`BackendInfo::can_write`].
     Implemented,
     /// The format is tracked by name, but no parser or writer is registered.
     Tracked,
@@ -39,6 +40,10 @@ pub fn backend_catalog() -> Vec<BackendInfo> {
             "latex",
             "Safe LaTeX article-subset backend over tree-sitter.",
         ),
+        implemented_read_only(
+            "html",
+            "Tolerant inert HTML semantic projection; encoding is limited to preserved source.",
+        ),
         implemented(
             "markdown",
             "CommonMark/GFM-compatible Markdown read/write backend.",
@@ -67,6 +72,16 @@ fn implemented(id: &'static str, notes: &'static str) -> BackendInfo {
         status: BackendStatus::Implemented,
         can_read: true,
         can_write: true,
+        notes,
+    }
+}
+
+fn implemented_read_only(id: &'static str, notes: &'static str) -> BackendInfo {
+    BackendInfo {
+        id: BackendId::new(id),
+        status: BackendStatus::Implemented,
+        can_read: true,
+        can_write: false,
         notes,
     }
 }

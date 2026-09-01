@@ -1,0 +1,9 @@
+{
+  "instance_name": "Fixture Search",
+  "engines": [{"name":"alpha"},{"name":"beta"}],
+  "categories": ["general", "news"],
+  "locales": {"en":"English","sv":"Svenska"},
+  "plugins": [{"name":"Hash plugin"}],
+  "safe_search": 1,
+  "formats": ["html", "json"]
+}

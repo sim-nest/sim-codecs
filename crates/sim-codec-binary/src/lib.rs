@@ -53,7 +53,7 @@
 //! use sim_codec_binary::BinaryCodecLib;
 //! use sim_kernel::{Cx, DefaultFactory, EagerPolicy, Expr, ReadPolicy, Symbol};
 //!
-//! let mut cx = Cx::new(Arc::new(EagerPolicy), Arc::new(DefaultFactory));
+//! let mut cx = Cx::new(Arc::new(EagerPolicy), Arc::new(DefaultFactory), sim_kernel::HandleSeed::new(1));
 //! sim_test_support::register_core_classes(&mut cx);
 //!
 //! let lib = BinaryCodecLib::new(cx.registry_mut().fresh_codec_id());

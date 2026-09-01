@@ -1,0 +1,6 @@
+(expr:map
+  [kind "saved-searxng-exchange"]
+  [request (expr:map [query "sim runtime"] [method "POST"] [format "json"])]
+  [response (expr:map [status 200] [body "caller-supplied JSON bytes"])]
+  [network "none"]
+  [proof "crate codec tests"])

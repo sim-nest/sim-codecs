@@ -25,7 +25,7 @@
 //! use sim_codec_json::JsonCodecLib;
 //! use sim_kernel::{Cx, DefaultFactory, EagerPolicy, Expr, ReadPolicy, Symbol};
 //!
-//! let mut cx = Cx::new(Arc::new(EagerPolicy), Arc::new(DefaultFactory));
+//! let mut cx = Cx::new(Arc::new(EagerPolicy), Arc::new(DefaultFactory), sim_kernel::HandleSeed::new(1));
 //! sim_test_support::register_core_classes(&mut cx);
 //!
 //! let lib = JsonCodecLib::new(cx.registry_mut().fresh_codec_id());
@@ -77,6 +77,7 @@ mod helpers;
 mod json_tree;
 mod projection;
 mod schema;
+mod schema_document;
 #[cfg(test)]
 mod tests;
 mod tree_json;
@@ -96,4 +97,8 @@ pub use projection::{
     project_json_to_expr_budgeted,
 };
 pub use schema::{ShapeSchema, shape_to_json_schema};
+pub use schema_document::{
+    DRAFT_2020_12, ResourceIdentity, RetrievedResource, SchemaDocument, SchemaError, SchemaLimits,
+    SchemaRetriever,
+};
 pub use tree_json::{json_to_located_expr, json_to_tree, located_expr_to_json, tree_to_json};

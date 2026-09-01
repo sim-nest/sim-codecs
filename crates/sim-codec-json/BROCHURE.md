@@ -1,5 +1,12 @@
 # sim-codec-json
 
+Exchange real JSON Schema Draft 2020-12 documents without reducing them to an
+LLM-tool subset. The codec retains semantic annotations and extensions, gives
+documents stable identities and digests, applies explicit validation budgets,
+fails closed on ambient resource access, and reports stable instance/schema
+pointers. Its conservative Shape adapter accelerates locally representable
+contracts without weakening schemas it cannot express.
+
 In one line: It reads and writes any value as JSON, so SIM data flows through the world's most common interchange format.
 
 ## What it gives you

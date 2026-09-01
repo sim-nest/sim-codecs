@@ -16,7 +16,9 @@
 | `sim-codec-compare` | `workspace` | Developer harness: sim-codec-bitwise vs sim-codec-binary, measured. |
 | `sim-codec-config` | `workspace` | Configuration codec for the SIM runtime. |
 | `sim-codec-doc` | `workspace` | Markup document domain codec for SIM. |
+| `sim-codec-feed` | `workspace` | Bounded, transport-free RSS 2.0, Atom 1.0, and JSON Feed projection. |
 | `sim-codec-index` | `workspace` | SIM Index codec over the shared IndexDoc graph. |
+| `sim-codec-index-vault` | `workspace` | Pure v2 bundle encoding for complete SIM Index vault projections. |
 | `sim-codec-javascript` | `workspace` | Bounded, lossless ECMAScript 2026 Script and Module frontend. |
 | `sim-codec-json` | `workspace` | General-purpose JSON codec for the SIM runtime. |
 | `sim-codec-lisp` | `workspace` | SIM workspace package for sim codec lisp. |
@@ -24,6 +26,9 @@
 | `sim-codec-mcp` | `workspace` | MCP JSON-RPC envelope codec for SIM. |
 | `sim-codec-pratt` | `workspace` | Shared Pratt parser substrate for SIM codecs. |
 | `sim-codec-python` | `workspace` | Bounded, lossless Python 3.14 syntax and general-purpose codec. |
+| `sim-codec-robots` | `workspace` | RFC 9309 robots.txt records and deterministic path matching, without HTTP policy. |
+| `sim-codec-search-searxng` | `workspace` | Pure bounded SearXNG /config and JSON /search wire translation. |
+| `sim-codec-sql` | `workspace` | Bounded SQL projection for admitted relational plans and migrations. |
 | `sim-codec-typescript` | `workspace` | Bounded, lossless TypeScript 7 and TSX syntax layered on JavaScript. |
 | `sim-test-support` | `workspace` | Shared test harness for SIM crates. |
 | `sim-wasm-abi` | `workspace` | Wasm ABI transport for SIM. |

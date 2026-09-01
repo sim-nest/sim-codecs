@@ -21,7 +21,7 @@
 //! use sim_codec_binary_base64::BinaryBase64CodecLib;
 //! use sim_kernel::{Cx, DefaultFactory, EagerPolicy, Expr, ReadPolicy, Symbol};
 //!
-//! let mut cx = Cx::new(Arc::new(EagerPolicy), Arc::new(DefaultFactory));
+//! let mut cx = Cx::new(Arc::new(EagerPolicy), Arc::new(DefaultFactory), sim_kernel::HandleSeed::new(1));
 //! sim_test_support::register_core_classes(&mut cx);
 //!
 //! let lib = BinaryBase64CodecLib::new(cx.registry_mut().fresh_codec_id());
@@ -47,7 +47,7 @@
 //! use sim_codec_binary_base64::BinaryBase64CodecLib;
 //! use sim_kernel::{Cx, DefaultFactory, EagerPolicy, ReadPolicy, Symbol};
 //!
-//! let mut cx = Cx::new(Arc::new(EagerPolicy), Arc::new(DefaultFactory));
+//! let mut cx = Cx::new(Arc::new(EagerPolicy), Arc::new(DefaultFactory), sim_kernel::HandleSeed::new(1));
 //! sim_test_support::register_core_classes(&mut cx);
 //! let lib = BinaryBase64CodecLib::new(cx.registry_mut().fresh_codec_id());
 //! cx.load_lib(&lib)?;

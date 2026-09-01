@@ -16,7 +16,9 @@
 | `sim-codec-compare` | `workspace` | 0 | 0 |
 | `sim-codec-config` | `workspace` | 0 | 0 |
 | `sim-codec-doc` | `workspace` | 0 | 0 |
+| `sim-codec-feed` | `workspace` | 0 | 0 |
 | `sim-codec-index` | `workspace` | 0 | 0 |
+| `sim-codec-index-vault` | `workspace` | 0 | 0 |
 | `sim-codec-javascript` | `workspace` | 0 | 0 |
 | `sim-codec-json` | `workspace` | 0 | 0 |
 | `sim-codec-lisp` | `workspace` | 1 | 1 |
@@ -24,6 +26,9 @@
 | `sim-codec-mcp` | `workspace` | 0 | 0 |
 | `sim-codec-pratt` | `workspace` | 0 | 0 |
 | `sim-codec-python` | `workspace` | 0 | 0 |
+| `sim-codec-robots` | `workspace` | 0 | 0 |
+| `sim-codec-search-searxng` | `workspace` | 0 | 0 |
+| `sim-codec-sql` | `workspace` | 0 | 0 |
 | `sim-codec-typescript` | `workspace` | 0 | 0 |
 | `sim-test-support` | `workspace` | 0 | 0 |
 | `sim-wasm-abi` | `workspace` | 3 | 0 |

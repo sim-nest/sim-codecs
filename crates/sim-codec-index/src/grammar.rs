@@ -29,6 +29,7 @@ impl IndexExprShape {
                 Field::string("visibility"),
                 Field::list("subjects", subject),
                 Field::list("anchors", anchor),
+                Field::optional_list("source-units", source_unit),
                 Field::optional_list("declarations", declaration),
                 Field::optional_list("protocol-relations", protocol_relation),
                 Field::list("surfaces", surface),
@@ -41,6 +42,22 @@ impl IndexExprShape {
             "index",
         )
     }
+}
+
+fn source_unit(expr: &Expr) -> Result<(), CodecError> {
+    fields(
+        map(expr, "source unit")?,
+        &[
+            Field::string("subject"),
+            Field::string("path"),
+            Field::string("reachability"),
+            Field::string("completeness"),
+            Field::string("reason"),
+            Field::object("retained-bound", syntax_bound),
+            Field::number("declaration-count"),
+        ],
+        "source unit",
+    )
 }
 
 type CheckFn = fn(&Expr) -> Result<(), CodecError>;

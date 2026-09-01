@@ -18,16 +18,24 @@ This generated lane consumes `docs/generated/sim-index-fragment.sx`. Global inde
 | Feature | Subject | Specimens | Summary |
 | --- | --- | ---: | --- |
 | `feature/sim-codecs/codec` | `crate/sim-codec` | 1 | Define codec positions, limits, syntax surfaces, wire surfaces, and loadable codec runtime libraries. |
-| `feature/sim-codecs/classfile-inspection` | `crate/sim-codec-classfile` | 2 | Decode and re-encode retained JVM classfiles while browsing bounded constants, attributes, and byte-located instructions without starting a JVM. |
+| `feature/sim-codecs/json-schema-2020-12` | `crate/sim-codec-json` | 1 | Retain, identify, compile, validate, diagnose, and conservatively adapt complete Draft 2020-12 schema documents without ambient resource access. |
+| `feature/sim-codecs/mcp-schema-oracle` | `crate/sim-codec-mcp` | 2 | Own the final MCP 2026-07-28 and delivered 2025-03-26 wire profiles, typed metadata and messages, extension negotiation, full JSON Schema values, header projection, cache policy, and exhaustive schema coverage. |
+| `feature/sim-codecs/wasm-abi-contract` | `crate/sim-wasm-abi` | 2 | Describe wasm manifests, byte frames, imports, and exports without observing the host that carries them. |
+| `feature/sim-codecs/openai-provider-wires` | `crate/sim-codec-chat` | 1 | Project one bounded canonical model contract through the explicit OpenAI Chat Completions and Responses request, response, and SSE wire families. |
+| `feature/sim-codecs/classfile-inspection` | `crate/sim-codec-classfile` | 1 | Decode and re-encode retained JVM classfiles while browsing bounded constants, attributes, and byte-located instructions without starting a JVM. |
 | `feature/sim-codecs/expression-syntax-grammars` | `crate/sim-codec-lisp` | 1 | Read and write Lisp, JSON, Algol, JavaScript, Lua, Python, Compare, and Bridge rendered expression grammars. |
 | `feature/sim-codecs/python-source-frontend` | `crate/sim-codec-python` | 1 | Tokenize and parse frozen Python 3.14.6 syntax, lower every admitted source form to stable python/* expressions, and round-trip general SIM expressions through bounded plain, located, and tree lanes. |
+| `feature/sim-codecs/sql-projection` | `crate/sim-codec-sql` | 1 | Lower admitted relational plans and migrations through sealed SQLite and PostgreSQL dialect behavior, and decode the bounded SQLite and HSQLDB table, column, key, identity-restart, and cache-index DDL subset into diagnostic untrusted drafts. |
 | `feature/sim-codecs/javascript-source-frontend` | `crate/sim-codec-javascript` | 1 | Tokenize and structurally parse frozen ECMAScript 2026 Script and Module goals, lower every accepted form to stable javascript/* expressions, and round-trip through plain, located, and tree codec lanes. |
 | `feature/sim-codecs/domain-syntax-grammars` | `crate/sim-codec` | 1 | Read and write binary, bitwise, chat, config, document, index, and MCP grammar surfaces. |
+| `feature/sim-codecs/index-vault-codec` | `crate/sim-codec-index-vault` | 1 | Encode and semantically verify deterministic v2 portable, Obsidian, SeqLog, and Logseq file-graph bundles, while reading bounded historical v1 bundles for migration. |
 | `feature/sim-codecs/wire-protocol-grammars` | `crate/sim-codec` | 1 | Read and write binary, bitwise, chat, config, document, index, and MCP wire protocols. |
 | `feature/sim-codecs/pratt` | `crate/sim-codec-pratt` | 1 | Parse operator-oriented expression languages through the Pratt codec surface. |
 | `feature/sim-codecs/bridge-packet-codec` | `crate/sim-codec-bridge` | 1 | Encode and decode Bridge packet workflow data through the Bridge wire grammar. |
 | `feature/sim-codecs/contract-emitter` | `crate/xtask` | 0 | Emit generated repository contract and index fragments for codec crates. |
 | `feature/sim-codecs/typescript-syntax` | `crate/sim-codec-typescript` | 1 | TypeScript notation; does not type-check. Represent bounded, lossless TypeScript 7.0.2 and TSX notation and directly erase the compiler-independent subset to JavaScript forms. |
+| `feature/sim-codecs/saved-web-documents` | `crate/sim-codec-doc` | 1 | Interpret saved HTML, RSS 2.0, Atom 1.0, JSON Feed, and RFC 9309 robots bytes as bounded inert records. |
+| `feature/sim-codecs/searxng-search-wire` | `crate/sim-codec-search-searxng` | 1 | Translate generic search queries and caller-supplied SearXNG config and JSON search responses with bounded open fields, provider claims, and honest partial failures. |
 
 ## Surfaces
 
@@ -49,7 +57,9 @@ This generated lane consumes `docs/generated/sim-index-fragment.sx`. Global inde
 | `syntax/compare` | `syntax` | `language/compare` |
 | `syntax/config` | `syntax` | `language/config` |
 | `syntax/doc` | `syntax` | `language/doc` |
+| `syntax/feed` | `syntax` | `language/feed` |
 | `syntax/index` | `syntax` | `language/index` |
+| `syntax/index-vault` | `syntax` | `language/index-vault` |
 | `syntax/javascript` | `syntax` | `language/javascript` |
 | `syntax/json` | `syntax` | `language/json` |
 | `syntax/lisp` | `syntax` | `language/lisp` |
@@ -57,6 +67,9 @@ This generated lane consumes `docs/generated/sim-index-fragment.sx`. Global inde
 | `syntax/mcp` | `syntax` | `language/mcp` |
 | `syntax/pratt` | `syntax` | `language/pratt` |
 | `syntax/python` | `syntax` | `language/python` |
+| `syntax/robots` | `syntax` | `language/robots` |
+| `syntax/search-searxng` | `syntax` | `language/search-searxng` |
+| `syntax/sql` | `syntax` | `language/sql` |
 | `syntax/typescript` | `syntax` | `language/typescript` |
 | `wire/binary` | `wire` | `language/binary` |
 | `wire/binary-base64` | `wire` | `language/binary-base64` |
@@ -131,10 +144,18 @@ This generated lane consumes `docs/generated/sim-index-fragment.sx`. Global inde
 - `crates/sim-codec-doc/recipes/01-basics/document-chunks/purpose.md`
 - `crates/sim-codec-doc/recipes/01-basics/document-chunks/recipe.toml`
 - `crates/sim-codec-doc/recipes/01-basics/document-chunks/setup.siml`
+- `crates/sim-codec-doc/recipes/01-basics/html-extraction/purpose.md`
+- `crates/sim-codec-doc/recipes/01-basics/html-extraction/recipe.toml`
+- `crates/sim-codec-doc/recipes/01-basics/html-extraction/setup.siml`
 - `crates/sim-codec-doc/recipes/01-basics/markdown-to-typst/purpose.md`
 - `crates/sim-codec-doc/recipes/01-basics/markdown-to-typst/recipe.toml`
 - `crates/sim-codec-doc/recipes/01-basics/markdown-to-typst/setup.siml`
 - `crates/sim-codec-doc/recipes/book.toml`
+- `crates/sim-codec-feed/recipes/01-basics/chapter.toml`
+- `crates/sim-codec-feed/recipes/01-basics/decode-saved-feed/purpose.md`
+- `crates/sim-codec-feed/recipes/01-basics/decode-saved-feed/recipe.toml`
+- `crates/sim-codec-feed/recipes/01-basics/decode-saved-feed/setup.siml`
+- `crates/sim-codec-feed/recipes/book.toml`
 - `crates/sim-codec-javascript/recipes/01-basics/chapter.toml`
 - `crates/sim-codec-javascript/recipes/01-basics/lossless-source/module.js`
 - `crates/sim-codec-javascript/recipes/01-basics/lossless-source/purpose.md`
@@ -171,6 +192,21 @@ This generated lane consumes `docs/generated/sim-index-fragment.sx`. Global inde
 - `crates/sim-codec-python/recipes/01-basics/lossless-source/recipe.toml`
 - `crates/sim-codec-python/recipes/01-basics/lossless-source/setup.py`
 - `crates/sim-codec-python/recipes/book.toml`
+- `crates/sim-codec-robots/recipes/01-basics/chapter.toml`
+- `crates/sim-codec-robots/recipes/01-basics/match-path/purpose.md`
+- `crates/sim-codec-robots/recipes/01-basics/match-path/recipe.toml`
+- `crates/sim-codec-robots/recipes/01-basics/match-path/setup.siml`
+- `crates/sim-codec-robots/recipes/book.toml`
+- `crates/sim-codec-search-searxng/recipes/01-basics/chapter.toml`
+- `crates/sim-codec-search-searxng/recipes/01-basics/request-response/purpose.md`
+- `crates/sim-codec-search-searxng/recipes/01-basics/request-response/recipe.toml`
+- `crates/sim-codec-search-searxng/recipes/01-basics/request-response/setup.siml`
+- `crates/sim-codec-search-searxng/recipes/book.toml`
+- `crates/sim-codec-sql/recipes/01-basics/chapter.toml`
+- `crates/sim-codec-sql/recipes/01-basics/inspect-ddl/purpose.md`
+- `crates/sim-codec-sql/recipes/01-basics/inspect-ddl/recipe.toml`
+- `crates/sim-codec-sql/recipes/01-basics/inspect-ddl/setup.siml`
+- `crates/sim-codec-sql/recipes/book.toml`
 - `crates/sim-codec-typescript/recipes/01-basics/chapter.toml`
 - `crates/sim-codec-typescript/recipes/01-basics/lossless-source/purpose.md`
 - `crates/sim-codec-typescript/recipes/01-basics/lossless-source/recipe.toml`
@@ -633,22 +669,1518 @@ impl sim_kernel::ObjectCompat for CodecRuntime {
 }
 ```
 
-### `feature/sim-codecs/classfile-inspection`
+### `feature/sim-codecs/json-schema-2020-12`
 
-Specimen `recipe/sim-codecs/crates/sim-codec-classfile/01-inspection/retained-classfile` is checked by `sh scripts/check-recipes.sh`.
+Specimen `spec-test/sim-codecs/crates/sim-codec-json/src/schema_document/tests` is checked by `cargo test`.
 
-Source `crates/sim-codec-classfile/recipes/01-inspection/retained-classfile/recipe.toml`:
+Source `crates/sim-codec-json/src/schema_document/tests.rs`:
 
-```toml
-id = "retained-classfile"
-title = "Inspect a retained classfile without a JVM"
-codec = "classfile"
-setup = "positive.class"
-purpose = "purpose.md"
-order = 10
-tags = ["codec", "classfile", "inspect", "jvm-free"]
-requires = ["codec/classfile"]
+```rust
+#[cfg(test)]
+mod tests {
+// conformance: schema documents parse, adapt, and validate canonical JSON forms.
+
+use super::*;
+    use serde_json::json;
+
+    fn doc(value: Value) -> SchemaDocument {
+        SchemaDocument::from_value(
+            value,
+            ResourceIdentity {
+                base_uri: "sim://fixture/schema".into(),
+                source: "fixture".into(),
+            },
+            SchemaLimits::default(),
+        )
+        .unwrap()
+    }
+
+    #[test]
+    fn recursive_composition_annotations_and_pointers_are_stable() {
+        let schema = json!({"$schema":DRAFT_2020_12,"$defs":{"node":{"type":"object","x-owner":"kept","required":["value"],"properties":{"value":{"type":"integer","minimum":0},"next":{"anyOf":[{"$ref":"#/$defs/node"},{"type":"null"}]}},"unevaluatedProperties":false}},"$ref":"#/$defs/node"});
+        let document = doc(schema.clone());
+        assert_eq!(document.value()["$defs"]["node"]["x-owner"], "kept");
+        assert!(
+            document
+                .validate(&json!({"value":1,"next":{"value":2,"next":null}}))
+                .is_ok()
+        );
+        let errors = document.validate(&json!({"value":-1})).unwrap_err();
+        assert_eq!(errors[0].instance_pointer, "/value");
+        assert_eq!(errors[0].keyword, "minimum");
+        assert_eq!(document.semantic_digest(), doc(schema).semantic_digest());
+    }
+
+    #[test]
+    fn hostile_ref_fails_closed_without_io_and_budgets_are_enforced() {
+        let errors = doc(json!({"$ref":"https://example.invalid/secret"}))
+            .validate(&json!(1))
+            .unwrap_err();
+        assert!(errors[0].message.contains("injected retriever"));
+        let limits = SchemaLimits {
+            evaluated_branches: 1,
+            ..SchemaLimits::default()
+        };
+        let d = SchemaDocument::from_value(
+            json!({"anyOf":[{"type":"string"},{"type":"number"}]}),
+            ResourceIdentity {
+                base_uri: "sim://budget".into(),
+                source: "budget".into(),
+            },
+            limits,
+        )
+        .unwrap();
+        assert_eq!(d.validate(&json!(1)).unwrap_err()[0].keyword, "budget");
+    }
+
+    struct FixtureRetriever {
+        resource: RetrievedResource,
+    }
+
+    impl SchemaRetriever for FixtureRetriever {
+        fn retrieve(&self, uri: &str) -> Result<RetrievedResource, SchemaError> {
+            assert_eq!(uri, "sim://schema/external");
+            Ok(self.resource.clone())
+        }
+    }
+
+    #[test]
+    fn injected_retriever_validates_digest_and_resource_schema() {
+        let external = doc(
+            json!({"type":"object","required":["id"],"properties":{"id":{"type":"string","pattern":"^[a-z]+-[0-9]+$"}}}),
+        );
+        let retriever = FixtureRetriever {
+            resource: RetrievedResource {
+                bytes: serde_json::to_vec(external.value()).unwrap(),
+                media_type: "application/schema+json".to_owned(),
+                base_uri: "sim://schema/external".to_owned(),
+                digest: external.semantic_digest().to_owned(),
+                redirects: Vec::new(),
+            },
+        };
+        let root = doc(json!({"$ref":"sim://schema/external"}));
+
+        assert!(
+            root.validate_with(&json!({"id":"case-1"}), Some(&retriever))
+                .is_ok()
+        );
+        let errors = root
+            .validate_with(&json!({"id":"CASE"}), Some(&retriever))
+            .unwrap_err();
+        assert_eq!(errors[0].keyword, "pattern");
+    }
+}
 ```
+
+### `feature/sim-codecs/mcp-schema-oracle`
+
+Specimen `spec-test/sim-codecs/crates/sim-codec-mcp/tests/schema_oracle` is checked by `cargo test`.
+
+Source `crates/sim-codec-mcp/tests/schema_oracle.rs`:
+
+```rust
+// conformance: the MCP schema oracle checks the delivered compatibility contract.
+
+#[path = "../build_support/schema_oracle.rs"]
+mod validator;
+
+use std::{
+    fs,
+    path::{Path, PathBuf},
+};
+
+struct TestDir(PathBuf);
+
+impl TestDir {
+    fn path(&self) -> &Path {
+        &self.0
+    }
+}
+
+impl Drop for TestDir {
+    fn drop(&mut self) {
+        fs::remove_dir_all(&self.0).unwrap();
+    }
+}
+
+fn copy_tree(from: &Path, to: &Path) {
+    fs::create_dir_all(to).unwrap();
+    for entry in fs::read_dir(from).unwrap() {
+        let entry = entry.unwrap();
+        let target = to.join(entry.file_name());
+        if entry.file_type().unwrap().is_dir() {
+            copy_tree(&entry.path(), &target);
+        } else {
+            fs::copy(entry.path(), target).unwrap();
+        }
+    }
+}
+
+fn fixture_copy() -> TestDir {
+    let temp = TestDir(std::env::temp_dir().join(format!(
+        "sim-codec-mcp-oracle-{}-{:?}",
+        std::process::id(),
+        std::thread::current().id()
+    )));
+    if temp.path().exists() {
+        fs::remove_dir_all(temp.path()).unwrap();
+    }
+    fs::create_dir(temp.path()).unwrap();
+    copy_tree(
+        Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("fixtures")
+            .as_path(),
+        &temp.path().join("fixtures"),
+    );
+    temp
+}
+
+#[test]
+fn pinned_oracle_is_closed_and_generates_offline() {
+    let temp = fixture_copy();
+    let output = temp.path().join("out");
+    fs::create_dir(&output).unwrap();
+    validator::validate_and_generate(temp.path(), &output).unwrap();
+    assert!(
+        fs::read_to_string(output.join("mcp_vocabulary.rs"))
+            .unwrap()
+            .contains("server/discover")
+    );
+}
+
+#[test]
+fn removing_a_ledger_row_names_the_exact_uncovered_source_path() {
+    let temp = fixture_copy();
+    let path = temp.path().join("fixtures/mcp/2026-07-28/coverage.json");
+    let mut ledger: serde_json::Value = serde_json::from_slice(&fs::read(&path).unwrap()).unwrap();
+    let removed = ledger["entries"].as_array_mut().unwrap().remove(0);
+    fs::write(&path, serde_json::to_vec(&ledger).unwrap()).unwrap();
+    let error = validator::validate_and_generate(temp.path(), temp.path()).unwrap_err();
+    assert_eq!(
+        error,
+        format!(
+            "uncovered source path: {}",
+            removed["sourcePath"].as_str().unwrap()
+        )
+    );
+}
+
+#[test]
+fn removing_a_schema_definition_names_the_orphaned_ledger_path() {
+    let temp = fixture_copy();
+    let path = temp.path().join("fixtures/mcp/2026-07-28/schema.json");
+    let mut schema: serde_json::Value = serde_json::from_slice(&fs::read(&path).unwrap()).unwrap();
+    let removed = schema["definitions"].as_array_mut().unwrap().remove(0);
+    fs::write(&path, serde_json::to_vec(&schema).unwrap()).unwrap();
+    let error = validator::validate_and_generate(temp.path(), temp.path()).unwrap_err();
+    assert!(
+        error.contains(removed["sourcePath"].as_str().unwrap()),
+        "{error}"
+    );
+}
+
+#[test]
+fn an_unclassified_open_map_is_impossible() {
+    let temp = fixture_copy();
+    let path = temp.path().join("fixtures/mcp/2026-07-28/schema.json");
+    let mut schema: serde_json::Value = serde_json::from_slice(&fs::read(&path).unwrap()).unwrap();
+    let open = schema["definitions"]
+        .as_array_mut()
+        .unwrap()
+        .iter_mut()
+        .find(|row| row["kind"] == "extension")
+        .unwrap();
+    open.as_object_mut().unwrap().remove("openExtensionReason");
+    fs::write(&path, serde_json::to_vec(&schema).unwrap()).unwrap();
+    let error = validator::validate_and_generate(temp.path(), temp.path()).unwrap_err();
+    assert!(error.starts_with("unclassified open map:"), "{error}");
+}
+
+#[test]
+fn only_exact_delivered_profiles_exist() {
+    assert_eq!(sim_codec_mcp::protocol_profiles()[0].revision, "2025-03-26");
+    assert_eq!(sim_codec_mcp::protocol_profiles()[1].revision, "2026-07-28");
+    assert_eq!(
+        sim_codec_mcp::modern_schema().definitions.len(),
+        sim_codec_mcp::coverage_ledger().entries.len()
+    );
+}
+```
+
+Specimen `spec-test/sim-codecs/crates/sim-codec-mcp/src/wire_authority` is checked by `cargo test`.
+
+Source `crates/sim-codec-mcp/src/wire_authority.rs`:
+
+```rust
+//! Complete dated, transport-independent MCP wire authority.
+
+mod helpers;
+
+use helpers::*;
+
+use std::collections::{BTreeMap, BTreeSet};
+
+use serde::{Deserialize, Serialize};
+use serde_json::Value;
+use sim_codec_json::SchemaDocument;
+
+const MODERN: &str = "2026-07-28";
+const LEGACY: &str = "2025-03-26";
+const MAX_EXTENSION_BYTES: usize = 64 * 1024;
+const MAX_EXTENSION_DEPTH: usize = 16;
+
+/// The two exact protocol profiles accepted by this codec.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum ProtocolProfileId {
+    /// Final stateless protocol.
+    Modern20260728,
+    /// Delivered compatibility protocol.
+    Legacy20250326,
+}
+
+impl ProtocolProfileId {
+    /// Parse an exact wire revision or return requested and supported revisions.
+    pub fn parse(requested: &str) -> Result<Self, ProtocolError> {
+        match requested {
+            MODERN => Ok(Self::Modern20260728),
+            LEGACY => Ok(Self::Legacy20250326),
+            _ => Err(ProtocolError::UnsupportedVersion {
+                requested: requested.to_owned(),
+                supported: [MODERN, LEGACY],
+            }),
+        }
+    }
+
+    /// Exact dated wire spelling.
+    pub const fn revision(self) -> &'static str {
+        match self {
+            Self::Modern20260728 => MODERN,
+            Self::Legacy20250326 => LEGACY,
+        }
+    }
+}
+
+/// Protocol negotiation failure with exact diagnostics.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub enum ProtocolError {
+    /// The requested revision is not implemented.
+    UnsupportedVersion {
+        /// Exact requested value.
+        requested: String,
+        /// Exact supported values, newest first.
+        supported: [&'static str; 2],
+    },
+}
+
+/// Bounded, semantic JSON settings owned by negotiated extensions.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct ExtensionSettings(BTreeMap<String, Value>);
+
+impl ExtensionSettings {
+    /// Admit namespaced settings under the codec's byte and depth budgets.
+    pub fn new(values: BTreeMap<String, Value>) -> Result<Self, WireError> {
+        for (key, value) in &values {
+            extension_owner(key).ok_or_else(|| WireError::ExtensionCollision(key.clone()))?;
+            if serde_json::to_vec(value).map_or(true, |bytes| bytes.len() > MAX_EXTENSION_BYTES)
+                || json_depth(value) > MAX_EXTENSION_DEPTH
+            {
+                return Err(WireError::ExtensionLimit(key.clone()));
+            }
+        }
+        Ok(Self(values))
+    }
+
+    /// Exact semantic JSON settings.
+    pub fn values(&self) -> &BTreeMap<String, Value> {
+        &self.0
+    }
+
+    /// Verify every behavior-bearing setting belongs to a negotiated owner.
+    pub fn validate_negotiated(&self, owners: &BTreeSet<String>) -> Result<(), WireError> {
+        for key in self.0.keys() {
+            let owner =
+                extension_owner(key).ok_or_else(|| WireError::ExtensionCollision(key.clone()))?;
+            if !owners.contains(owner) {
+                return Err(WireError::UnnegotiatedExtension(owner.to_owned()));
+            }
+        }
+        Ok(())
+    }
+}
+
+impl Serialize for ExtensionSettings {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        self.0.serialize(serializer)
+    }
+}
+
+impl<'de> Deserialize<'de> for ExtensionSettings {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let values = BTreeMap::<String, Value>::deserialize(deserializer)?;
+        Self::new(values).map_err(serde::de::Error::custom)
+    }
+}
+
+/// W3C trace fields carried in MCP metadata.
+#[derive(Clone, Debug, Default, Eq, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TraceContext {
+    /// W3C trace-parent value.
+    pub traceparent: Option<String>,
+    /// W3C trace-state value.
+    pub tracestate: Option<String>,
+    /// W3C baggage value.
+    pub baggage: Option<String>,
+}
+
+impl TraceContext {
+    /// Reject malformed or dependent tracing fields.
+    pub fn validate(&self) -> Result<(), WireError> {
+        if self.tracestate.is_some() && self.traceparent.is_none() {
+            return Err(WireError::MalformedTrace("tracestate requires traceparent"));
+        }
+        if let Some(value) = &self.traceparent {
+            let parts: Vec<_> = value.split('-').collect();
+            if parts.len() != 4
+                || parts[0].len() != 2
+                || parts[1].len() != 32
+                || parts[2].len() != 16
+                || parts[3].len() != 2
+                || !parts
+                    .iter()
+                    .all(|part| part.bytes().all(|b| b.is_ascii_hexdigit()))
+                || parts[1].bytes().all(|b| b == b'0')
+                || parts[2].bytes().all(|b| b == b'0')
+            {
+                return Err(WireError::MalformedTrace("invalid traceparent"));
+            }
+        }
+        Ok(())
+    }
+}
+
+/// Named and versioned MCP implementation metadata.
+#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
+pub struct ClientInfo {
+    /// Display name.
+    pub name: String,
+    /// Implementation version.
+    pub version: String,
+}
+
+/// Typed client metadata.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ClientMeta {
+    /// Advertised capabilities.
+    pub capabilities: Value,
+    /// Client identity.
+    pub info: Option<ClientInfo>,
+    /// Negotiated extension settings.
+    #[serde(flatten)]
+    pub extensions: ExtensionSettings,
+}
+
+/// Complete typed request `_meta`.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct RequestMeta {
+    /// Exact protocol version.
+    pub protocol_version: String,
+    /// Client capability document.
+    pub client_capabilities: Value,
+    /// Optional client identity.
+    pub client_info: Option<ClientInfo>,
+    /// Trace context.
+    #[serde(flatten)]
+    pub trace: TraceContext,
+    /// Negotiated extension settings.
+    #[serde(flatten)]
+    pub extensions: ExtensionSettings,
+}
+
+/// Server identity metadata. It is descriptive and never security authority.
+pub type ServerInfo = ClientInfo;
+
+/// Typed server metadata.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ServerMeta {
+    /// Server capabilities.
+    pub capabilities: Value,
+    /// Descriptive server identity.
+    pub server_info: Option<ServerInfo>,
+    /// Trace context.
+    #[serde(flatten)]
+    pub trace: TraceContext,
+    /// Negotiated extension settings.
+    #[serde(flatten)]
+    pub extensions: ExtensionSettings,
+}
+
+/// Result of `server/discover`.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DiscoverResult {
+    /// Supported versions, in preference order.
+    pub supported_versions: Vec<String>,
+    /// Server capabilities.
+    pub server_capabilities: Value,
+    /// Descriptive server identity.
+    pub server_info: ServerInfo,
+}
+
+/// Caller answers supplied after an input-required result.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct InputResponses {
+    /// Named semantic JSON answers.
+    pub input_responses: BTreeMap<String, Value>,
+    /// Exact state previously returned by the server.
+    pub request_state: Value,
+}
+
+/// `subscriptions/listen` request.
+#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SubscriptionListen {
+    /// Subscription identifier.
+    pub subscription_id: String,
+}
+
+/// Delivery acknowledgement.
+#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Acknowledgement {
+    /// Subscription identifier.
+    pub subscription_id: String,
+    /// Monotonic event sequence.
+    pub sequence: u64,
+}
+
+/// Subscription event.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct EventMessage {
+    /// Subscription identifier.
+    pub subscription_id: String,
+    /// Monotonic event sequence.
+    pub sequence: u64,
+    /// Semantic event body.
+    pub event: Value,
+}
+
+/// Cancellation message.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CancelMessage {
+    /// Request identifier being cancelled.
+    pub request_id: Value,
+    /// Optional human-readable reason.
+    pub reason: Option<String>,
+}
+
+/// Terminal subscription message.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TerminalMessage {
+    /// Subscription identifier.
+    pub subscription_id: String,
+    /// Last sequence in the stream.
+    pub sequence: u64,
+    /// Optional final error.
+    pub error: Option<FinalError>,
+}
+
+/// Methods whose wire requirements are centralized in [`method_registry`].
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum Method {
+    /// Discover versions and capabilities.
+    ServerDiscover,
+    /// List tools.
+    ToolsList,
+    /// Call a tool.
+    ToolsCall,
+    /// List prompts.
+    PromptsList,
+    /// Fetch a prompt.
+    PromptsGet,
+    /// List resources.
+    ResourcesList,
+    /// Read a resource.
+    ResourcesRead,
+    /// Begin a subscription.
+    SubscriptionsListen,
+    /// Retry an input-required result with input responses.
+    InputResponses,
+    /// Acknowledge a delivered event.
+    Acknowledgement,
+    /// Deliver a subscription event.
+    Event,
+    /// Cancel work.
+    Cancel,
+    /// Mark a stream terminal.
+    Terminal,
+}
+
+/// Generated server/client policy for one method.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct MethodRule {
+    /// Wire name.
+    pub name: &'static str,
+    /// Whether an HTTP method projection is required.
+    pub requires_method_header: bool,
+    /// Whether an MCP name projection is required.
+    pub requires_name_header: bool,
+    /// Whether complete results may be cached.
+    pub cache_eligible: bool,
+}
+
+/// Single method registry consumed by both endpoints.
+pub const fn method_registry(method: Method) -> MethodRule {
+    match method {
+        Method::ServerDiscover => MethodRule {
+            name: "server/discover",
+            requires_method_header: true,
+            requires_name_header: false,
+            cache_eligible: true,
+        },
+        Method::ToolsList => MethodRule {
+            name: "tools/list",
+            requires_method_header: true,
+            requires_name_header: false,
+            cache_eligible: true,
+        },
+        Method::ToolsCall => MethodRule {
+            name: "tools/call",
+            requires_method_header: true,
+            requires_name_header: true,
+            cache_eligible: false,
+        },
+        Method::PromptsList => MethodRule {
+            name: "prompts/list",
+            requires_method_header: true,
+            requires_name_header: false,
+            cache_eligible: true,
+        },
+        Method::PromptsGet => MethodRule {
+            name: "prompts/get",
+            requires_method_header: true,
+            requires_name_header: true,
+            cache_eligible: true,
+        },
+        Method::ResourcesList => MethodRule {
+            name: "resources/list",
+            requires_method_header: true,
+            requires_name_header: false,
+            cache_eligible: true,
+        },
+        Method::ResourcesRead => MethodRule {
+            name: "resources/read",
+            requires_method_header: true,
+            requires_name_header: true,
+            cache_eligible: true,
+        },
+        Method::SubscriptionsListen => MethodRule {
+            name: "subscriptions/listen",
+            requires_method_header: true,
+            requires_name_header: true,
+            cache_eligible: false,
+        },
+        Method::InputResponses => MethodRule {
+            name: "inputResponses",
+            requires_method_header: true,
+            requires_name_header: false,
+            cache_eligible: false,
+        },
+        Method::Acknowledgement => MethodRule {
+            name: "acknowledgement",
+            requires_method_header: true,
+            requires_name_header: false,
+            cache_eligible: false,
+        },
+        Method::Event => MethodRule {
+            name: "event",
+            requires_method_header: true,
+            requires_name_header: false,
+            cache_eligible: false,
+        },
+        Method::Cancel => MethodRule {
+            name: "cancel",
+            requires_method_header: true,
+            requires_name_header: false,
+            cache_eligible: false,
+        },
+        Method::Terminal => MethodRule {
+            name: "terminal",
+            requires_method_header: true,
+            requires_name_header: false,
+            cache_eligible: false,
+        },
+    }
+}
+
+/// Negotiated result discriminator.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub enum ResultType {
+    /// Finished result.
+    Complete,
+    /// Caller input is required.
+    InputRequired,
+    /// Namespaced, negotiated extension result.
+    Extension(String),
+}
+
+impl ResultType {
+    /// Interpret a profile-specific result token. Legacy omission normalizes to complete.
+    pub fn for_profile(
+        profile: ProtocolProfileId,
+        token: Option<&str>,
+        negotiated: &BTreeSet<String>,
+    ) -> Result<Self, WireError> {
+        match (profile, token) {
+            (ProtocolProfileId::Legacy20250326, None) => Ok(Self::Complete),
+            (ProtocolProfileId::Modern20260728, None) => {
+                Err(WireError::MissingProjection("resultType"))
+            }
+            (_, Some(token)) => Self::parse(token, negotiated),
+        }
+    }
+
+    /// Parse and validate a result token against negotiated extension owners.
+    pub fn parse(token: &str, negotiated: &BTreeSet<String>) -> Result<Self, WireError> {
+        match token {
+            "complete" => Ok(Self::Complete),
+            "input_required" => Ok(Self::InputRequired),
+            other => {
+                let owner = extension_owner(other)
+                    .ok_or_else(|| WireError::InvalidResultType(other.to_owned()))?;
+                if negotiated.contains(owner) {
+                    Ok(Self::Extension(other.to_owned()))
+                } else {
+                    Err(WireError::UnnegotiatedExtension(owner.to_owned()))
+                }
+            }
+        }
+    }
+}
+
+/// Input-required payload.
+#[derive(Clone, Debug, PartialEq)]
+pub struct InputRequired {
+    /// Named JSON Schema request documents.
+    pub input_requests: BTreeMap<String, SchemaDocument>,
+    /// Opaque round-trip state.
+    pub request_state: Value,
+}
+
+/// Payload associated with a result discriminator.
+#[derive(Clone, Debug, PartialEq)]
+pub enum ResultPayload {
+    /// Complete ordinary content.
+    Complete(Value),
+    /// Required input and state.
+    InputRequired(InputRequired),
+    /// Exact extension payload.
+    Extension(Value),
+}
+
+/// Cache policy supplied by a complete result.
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CacheHint {
+    /// Explicit eligibility.
+    pub cacheable: bool,
+    /// Maximum freshness in seconds.
+    pub max_age: Option<u64>,
+}
+
+/// Modern result, constructible only through validation that attaches server info.
+#[derive(Clone, Debug, PartialEq)]
+pub struct ModernResult {
+    /// Validated discriminator.
+    pub result_type: ResultType,
+    /// Matching payload.
+    pub payload: ResultPayload,
+    /// Uniform descriptive server identity.
+    pub server_info: ServerInfo,
+    /// Optional validated cache hint.
+    pub cache: Option<CacheHint>,
+}
+
+impl ModernResult {
+    /// Construct a modern result and enforce type/payload/cache consistency.
+    pub fn new(
+        method: Method,
+        result_type: ResultType,
+        payload: ResultPayload,
+        server_info: ServerInfo,
+        cache: Option<CacheHint>,
+    ) -> Result<Self, WireError> {
+        let matches = matches!(
+            (&result_type, &payload),
+            (ResultType::Complete, ResultPayload::Complete(_))
+                | (ResultType::InputRequired, ResultPayload::InputRequired(_))
+                | (ResultType::Extension(_), ResultPayload::Extension(_))
+        );
+        if !matches {
+            return Err(WireError::InvalidStatusBody);
+        }
+        if cache.is_some_and(|hint| hint.cacheable)
+            && (!method_registry(method).cache_eligible
+                || !matches!(result_type, ResultType::Complete))
+        {
+            return Err(WireError::InvalidStatusBody);
+        }
+        Ok(Self {
+            result_type,
+            payload,
+            server_info,
+            cache,
+        })
+    }
+}
+
+/// Full JSON Schema documents for tool input, output, and structured content.
+#[derive(Clone, Debug, PartialEq)]
+pub struct ToolSchemas {
+    /// Tool input contract.
+    pub input: SchemaDocument,
+    /// Optional tool output contract.
+    pub output: Option<SchemaDocument>,
+    /// Optional structured-content contract.
+    pub structured_content: Option<SchemaDocument>,
+}
+
+/// Final protocol error record.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct FinalError {
+    /// Stable numeric code.
+    pub code: i64,
+    /// Stable protocol name.
+    pub name: String,
+    /// Human-readable message.
+    pub message: String,
+    /// Exact structured details.
+    pub data: Value,
+}
+
+/// Pure HTTP header projection derived from a decoded body.
+#[derive(Clone, Debug, Default, Eq, PartialEq)]
+pub struct HeaderProjection {
+    /// Exact protocol revision.
+    pub protocol: Option<String>,
+    /// Projected method.
+    pub method: Option<String>,
+    /// Projected addressed name.
+    pub name: Option<String>,
+    /// Safe-value or `:base64:` sentinel headers.
+    pub x_mcp_headers: BTreeMap<String, String>,
+}
+
+impl HeaderProjection {
+    /// Derive the sole authoritative projection from validated body fields.
+    pub fn from_body(
+        profile: ProtocolProfileId,
+        method: Method,
+        name: Option<&str>,
+        meta: &RequestMeta,
+    ) -> Result<Self, WireError> {
+        meta.trace.validate()?;
+        if meta.protocol_version != profile.revision() {
+            return Err(WireError::InvalidStatusBody);
+        }
+        let rule = method_registry(method);
+        if rule.requires_name_header && name.is_none() {
+            return Err(WireError::MissingProjection("name"));
+        }
+        let mut custom = BTreeMap::new();
+        custom.insert(
+            "MCP-Client-Capabilities".to_owned(),
+            encode_header_json(&meta.client_capabilities),
+        );
+        if let Some(info) = &meta.client_info {
+            custom.insert(
+                "MCP-Client-Info".to_owned(),
+                encode_header_json(&serde_json::to_value(info).expect("serializable client info")),
+            );
+        }
+        Ok(Self {
+            protocol: Some(profile.revision().to_owned()),
+            method: rule.requires_method_header.then(|| rule.name.to_owned()),
+            name: name.map(str::to_owned),
+            x_mcp_headers: custom,
+        })
+    }
+
+    /// Check received headers are unique, complete, and identical to the body projection.
+    pub fn check(&self, headers: &[(String, String)]) -> Result<(), HeaderError> {
+        let mut seen = BTreeMap::new();
+        for (name, value) in headers {
+            let key = name.to_ascii_lowercase();
+            if seen.insert(key.clone(), value).is_some() {
+                return Err(HeaderError::Duplicate(name.clone()));
+            }
+            if key.starts_with("x-mcp-") || key.starts_with("mcp-") {
+                validate_header_value(value)?;
+            }
+        }
+        check_header(&seen, "mcp-protocol-version", self.protocol.as_deref())?;
+        check_header(&seen, "mcp-method", self.method.as_deref())?;
+        check_header(&seen, "mcp-name", self.name.as_deref())?;
+        for (name, value) in &self.x_mcp_headers {
+            check_header(&seen, &name.to_ascii_lowercase(), Some(value))?;
+        }
+        Ok(())
+    }
+}
+
+/// Wire-authority validation failure.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub enum WireError {
+    /// A setting collides with an MCP-owned or unnamespaced key.
+    ExtensionCollision(String),
+    /// A setting exceeded bounded JSON limits.
+    ExtensionLimit(String),
+    /// Extension behavior was not negotiated.
+    UnnegotiatedExtension(String),
+    /// Invalid result discriminator.
+    InvalidResultType(String),
+    /// Required projected field was absent.
+    MissingProjection(&'static str),
+    /// Status, discriminator, payload, or cache combination was invalid.
+    InvalidStatusBody,
+    /// Trace metadata was malformed.
+    MalformedTrace(&'static str),
+}
+
+impl std::fmt::Display for WireError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{self:?}")
+    }
+}
+
+/// Header/body projection disagreement.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub enum HeaderError {
+    /// A header appeared more than once, including case variants.
+    Duplicate(String),
+    /// A required header was absent.
+    Missing(String),
+    /// Header and body interpretations conflict.
+    Conflict(String),
+    /// Header value violates safe-value/base64 grammar.
+    UnsafeValue,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // conformance: dated MCP wire profiles keep one exact authority path.
+    #[test]
+    fn dated_profile_revisions_remain_exact() {
+        assert_eq!(ProtocolProfileId::Modern20260728.revision(), MODERN);
+        assert_eq!(ProtocolProfileId::Legacy20250326.revision(), LEGACY);
+    }
+}
+```
+
+### `feature/sim-codecs/wasm-abi-contract`
+
+Specimen `spec-test/sim-codecs/crates/sim-wasm-abi/src/tests/roundtrip` is checked by `cargo test`.
+
+Source `crates/sim-wasm-abi/src/tests/roundtrip.rs`:
+
+```rust
+// conformance: native and wasm ABI values round-trip without semantic loss.
+
+use super::support::{FakeHost, StubWasmLib, manifest, manifest_with_codec_export, wasm_test_cx};
+use crate::{
+    AbiValue, Frame, Handle, WasmExport, WasmHost, WasmLib, WasmManifest, WasmRuntime,
+    decode_exports_frame, decode_manifest_frame, decode_value_frame, encode_exports_frame,
+    encode_manifest_frame, encode_value_frame, load_wasm_lib_from_bytes,
+};
+use sim_kernel::{Args, Export, ExportState, Expr, Lib, LibTarget, Symbol};
+use std::sync::Arc;
+
+#[test]
+fn abi_values_roundtrip_through_binary_frames() {
+    let expr_value = AbiValue::Expr(sim_kernel::Expr::String("ok".to_owned()));
+    assert_eq!(
+        decode_value_frame(&encode_value_frame(&expr_value).unwrap()).unwrap(),
+        expr_value
+    );
+
+    let handle_value = AbiValue::Handle(Handle(42));
+    assert_eq!(
+        decode_value_frame(&encode_value_frame(&handle_value).unwrap()).unwrap(),
+        handle_value
+    );
+
+    let error_value = AbiValue::Error("boom".to_owned());
+    assert_eq!(
+        decode_value_frame(&encode_value_frame(&error_value).unwrap()).unwrap(),
+        error_value
+    );
+}
+
+#[test]
+fn manifest_roundtrips_through_binary_frame_boundary() {
+    let manifest = manifest();
+    let decoded = decode_manifest_frame(&encode_manifest_frame(&manifest).unwrap()).unwrap();
+    assert_eq!(decoded, manifest);
+}
+
+#[test]
+fn exports_roundtrip_through_binary_frame_boundary() {
+    let exports = manifest().exports;
+    let decoded = decode_exports_frame(&encode_exports_frame(&exports).unwrap()).unwrap();
+    assert_eq!(decoded, exports);
+}
+
+#[test]
+fn wasm_manifest_converts_to_and_from_lib_manifest() {
+    let wasm = manifest();
+    let lib = wasm.to_lib_manifest();
+    let converted = crate::WasmManifest::from_lib_manifest(&lib);
+    assert_eq!(converted.id, wasm.id);
+    assert_eq!(converted.version, wasm.version);
+    assert_eq!(converted.abi, wasm.abi);
+    assert_eq!(converted.target, wasm.target);
+    assert_eq!(converted.requires, wasm.requires);
+    assert_eq!(converted.capabilities, wasm.capabilities);
+    assert!(converted
+        .exports
+        .iter()
+        .any(|export| matches!(export, WasmExport::Class { symbol, .. } if symbol == &Symbol::new("Point"))));
+    assert!(converted
+        .exports
+        .iter()
+        .any(|export| matches!(export, WasmExport::Function { symbol } if symbol == &Symbol::new("point"))));
+}
+
+#[test]
+fn site_export_roundtrips_through_wasm_manifest_transport() {
+    let mut wasm = manifest();
+    let site = Symbol::qualified("model", "loaded-site");
+    wasm.exports.push(WasmExport::Site {
+        symbol: site.clone(),
+    });
+
+    let decoded = decode_manifest_frame(&encode_manifest_frame(&wasm).unwrap()).unwrap();
+    assert!(
+        decoded
+            .exports
+            .iter()
+            .any(|export| matches!(export, WasmExport::Site { symbol } if symbol == &site))
+    );
+
+    let lib = decoded.to_lib_manifest();
+    assert!(lib.exports.iter().any(
+        |export| matches!(export, Export::Site { symbol, runtime_id: None } if symbol == &site)
+    ));
+
+    let converted = crate::WasmManifest::from_lib_manifest(&lib);
+    assert!(
+        converted
+            .exports
+            .iter()
+            .any(|export| matches!(export, WasmExport::Site { symbol } if symbol == &site))
+    );
+}
+
+#[test]
+fn stub_wasm_lib_registers_functions_and_records_class_as_unsupported() {
+    let mut cx = wasm_test_cx();
+    let lib = StubWasmLib {
+        manifest: manifest(),
+    };
+    cx.load_lib(&lib).unwrap();
+    assert!(cx.resolve_function(&Symbol::new("point")).is_ok());
+    assert!(cx.resolve_function(&Symbol::new("distance")).is_ok());
+    let loaded = cx.registry().lib(&Symbol::new("geometry")).unwrap();
+    let export = loaded
+        .exports
+        .iter()
+        .find(|export| export.symbol == Symbol::new("Point"))
+        .unwrap();
+    assert!(matches!(
+        &export.state,
+        ExportState::Unsupported { reason }
+            if reason.contains("class runtime exports")
+    ));
+}
+
+#[test]
+fn wasm_codec_exports_are_reported_as_unsupported_until_implemented() {
+    let mut cx = wasm_test_cx();
+    let lib = StubWasmLib {
+        manifest: manifest_with_codec_export(),
+    };
+    cx.load_lib(&lib).unwrap();
+    let loaded = cx.registry().lib(&Symbol::new("geometry")).unwrap();
+    let export = loaded
+        .exports
+        .iter()
+        .find(|export| export.symbol == Symbol::qualified("codec", "guest"))
+        .unwrap();
+    assert!(matches!(
+        &export.state,
+        ExportState::Unsupported { reason }
+            if reason.contains("codec runtime exports")
+    ));
+}
+
+#[test]
+fn wasm_macro_exports_are_reported_as_unsupported_until_implemented() {
+    let mut manifest = manifest();
+    manifest.exports.push(WasmExport::Macro {
+        symbol: Symbol::qualified("macro", "guest"),
+    });
+    let mut cx = wasm_test_cx();
+    let lib = StubWasmLib { manifest };
+    cx.load_lib(&lib).unwrap();
+    let loaded = cx.registry().lib(&Symbol::new("geometry")).unwrap();
+    let export = loaded
+        .exports
+        .iter()
+        .find(|export| export.symbol == Symbol::qualified("macro", "guest"))
+        .unwrap();
+    assert!(matches!(
+        &export.state,
+        ExportState::Unsupported { reason }
+            if reason.contains("macro runtime exports")
+    ));
+}
+
+#[test]
+fn frame_ref_reports_frame_length() {
+    let frame = Frame::new(vec![1, 2, 3, 4]);
+    assert_eq!(frame.as_ref().unwrap().len, 4);
+}
+
+#[test]
+fn wasm_lib_instantiates_from_host_and_calls_guest_functions() {
+    let host = Arc::new(FakeHost {
+        manifest: manifest(),
+        expected_module_bytes: b"(fake wasm module)".to_vec(),
+    });
+    let lib = WasmLib::instantiate(host, Handle(7)).unwrap();
+    let mut cx = wasm_test_cx();
+    cx.load_lib(&lib).unwrap();
+
+    let result = cx
+        .call_function(
+            &Symbol::new("distance"),
+            sim_kernel::Args::new(vec![
+                cx.factory()
+                    .number_literal(Symbol::qualified("numbers", "f64"), "1".to_owned())
+                    .unwrap(),
+                cx.factory()
+                    .number_literal(Symbol::qualified("numbers", "f64"), "2".to_owned())
+                    .unwrap(),
+            ]),
+        )
+        .unwrap();
+    assert_eq!(
+        result.object().as_expr(&mut cx).unwrap(),
+        Expr::Number(sim_kernel::NumberLiteral {
+            domain: Symbol::qualified("numbers", "f64"),
+            canonical: "2".to_owned(),
+        })
+    );
+}
+
+#[test]
+fn wasm_site_export_registers_callable_site_value_and_forwards_realize() {
+    let site_symbol = Symbol::qualified("model", "wasm-site");
+    let mut manifest = manifest();
+    manifest.exports.push(WasmExport::Site {
+        symbol: site_symbol.clone(),
+    });
+    let host = Arc::new(SiteHost {
+        manifest,
+        expected_module_bytes: b"(fake wasm site module)".to_vec(),
+        site_symbol: site_symbol.clone(),
+    });
+    let lib = load_wasm_lib_from_bytes(host, b"(fake wasm site module)").unwrap();
+    let mut cx = wasm_test_cx();
+    cx.load_lib(&lib).unwrap();
+
+    let arg = cx.factory().string("site request".to_owned()).unwrap();
+    let site = cx.registry().site_by_symbol(&site_symbol).unwrap().clone();
+    assert_eq!(
+        site.object().as_expr(&mut cx).unwrap(),
+        Expr::Symbol(site_symbol)
+    );
+    let reply = site
+        .object()
+        .as_callable()
+        .unwrap()
+        .call(&mut cx, Args::new(vec![arg]))
+        .unwrap();
+    assert_eq!(
+        reply.object().as_expr(&mut cx).unwrap(),
+        Expr::String("wasm site answer".to_owned())
+    );
+}
+
+#[test]
+fn wasm_lib_loads_from_runtime_bytes_boundary() {
+    let runtime = Arc::new(FakeHost {
+        manifest: manifest(),
+        expected_module_bytes: b"(fake wasm module)".to_vec(),
+    });
+    let lib = load_wasm_lib_from_bytes(runtime, b"(fake wasm module)").unwrap();
+    assert_eq!(lib.manifest().id, Symbol::new("geometry"));
+    assert_eq!(lib.manifest().target, LibTarget::WasmComponent);
+}
+
+struct SiteHost {
+    manifest: WasmManifest,
+    expected_module_bytes: Vec<u8>,
+    site_symbol: Symbol,
+}
+
+impl WasmHost for SiteHost {
+    fn manifest_frame(&self, _module: Handle) -> sim_kernel::Result<Frame> {
+        encode_manifest_frame(&self.manifest)
+    }
+
+    fn exports_frame(&self, _module: Handle) -> sim_kernel::Result<Frame> {
+        encode_exports_frame(&self.manifest.exports)
+    }
+
+    fn call(&self, _module: Handle, function: &Symbol, args: Frame) -> sim_kernel::Result<Frame> {
+        assert_eq!(
+            function.to_string(),
+            format!("{}/realize", self.site_symbol)
+        );
+        let AbiValue::Expr(Expr::List(args)) = decode_value_frame(&args)? else {
+            return Err(sim_kernel::Error::TypeMismatch {
+                expected: "expr list args",
+                found: "non-list args",
+            });
+        };
+        assert!(matches!(
+            args.as_slice(),
+            [Expr::String(text)] if text == "site request"
+        ));
+        encode_value_frame(&AbiValue::Expr(Expr::String("wasm site answer".to_owned())))
+    }
+}
+
+impl WasmRuntime for SiteHost {
+    fn instantiate_bytes(&self, bytes: &[u8]) -> sim_kernel::Result<Handle> {
+        if bytes == self.expected_module_bytes.as_slice() {
+            Ok(Handle(19))
+        } else {
+            Err(sim_kernel::Error::HostError(
+                "unexpected wasm site module bytes".to_owned(),
+            ))
+        }
+    }
+}
+```
+
+Specimen `spec-test/sim-codecs/crates/sim-codec-compare/src/platform_roundtrip_tests` is checked by `cargo test`.
+
+Source `crates/sim-codec-compare/src/platform_roundtrip_tests.rs`:
+
+```rust
+//! Cross-codec proof that platform contracts remain values, not host access.
+// conformance: platform contracts round-trip across general-purpose codecs.
+
+use sim_codec_algol::AlgolCodecLib;
+use sim_codec_binary::BinaryCodecLib;
+use sim_codec_bitwise::BitwiseCodecLib;
+use sim_codec_json::JsonCodecLib;
+use sim_codec_lisp::LispCodecLib;
+
+use sim_codec::{Input, Output, decode_with_codec, encode_with_codec};
+use sim_kernel::{Cx, EncodeOptions, Expr, ReadPolicy, Symbol};
+
+fn roundtrip(cx: &mut Cx, codec: &str, expr: &Expr) -> Expr {
+    let symbol = Symbol::qualified("codec", codec);
+    let encoded = encode_with_codec(cx, &symbol, expr, EncodeOptions::default()).unwrap();
+    let input = match encoded {
+        Output::Text(text) => Input::Text(text),
+        Output::Bytes(bytes) => Input::Bytes(bytes),
+    };
+    decode_with_codec(cx, &symbol, input, ReadPolicy::default()).unwrap()
+}
+
+fn platform_record() -> Expr {
+    Expr::Map(vec![
+        (
+            Expr::Symbol(Symbol::qualified("platform", "contract")),
+            Expr::Symbol(Symbol::qualified("loader", "wasm-v1")),
+        ),
+        (
+            Expr::Symbol(Symbol::new("artifact")),
+            Expr::Bytes(vec![0, 97, 115, 109]),
+        ),
+        (
+            Expr::Symbol(Symbol::new("mount")),
+            Expr::Symbol(Symbol::qualified("mount", "model-modules")),
+        ),
+        (
+            Expr::Symbol(Symbol::new("audio")),
+            Expr::List(vec![
+                Expr::String("48000".to_owned()),
+                Expr::String("stereo".to_owned()),
+                Expr::Bool(true),
+            ]),
+        ),
+    ])
+}
+
+#[test]
+fn every_general_codec_roundtrips_platform_and_domain_values() {
+    let mut cx = sim_kernel::testing::eager_cx();
+    sim_test_support::register_core_classes(&mut cx);
+    let binary = BinaryCodecLib::new(cx.registry_mut().fresh_codec_id());
+    cx.load_lib(&binary).unwrap();
+    let bitwise = BitwiseCodecLib::new(cx.registry_mut().fresh_codec_id());
+    cx.load_lib(&bitwise).unwrap();
+    let json = JsonCodecLib::new(cx.registry_mut().fresh_codec_id());
+    cx.load_lib(&json).unwrap();
+    let lisp = LispCodecLib::new(cx.registry_mut().fresh_codec_id()).unwrap();
+    cx.load_lib(&lisp).unwrap();
+    let algol = AlgolCodecLib::new(cx.registry_mut().fresh_codec_id());
+    cx.load_lib(&algol).unwrap();
+
+    let record = platform_record();
+    for codec in ["binary", "bitwise", "json", "lisp", "algol"] {
+        assert_eq!(roundtrip(&mut cx, codec, &record), record);
+    }
+}
+```
+
+### `feature/sim-codecs/openai-provider-wires`
+
+Specimen `spec-test/sim-codecs/crates/sim-codec-chat/src/tests/openai_responses` is checked by `cargo test`.
+
+Source `crates/sim-codec-chat/src/tests/openai_responses.rs`:
+
+```rust
+// conformance: OpenAI Responses payloads preserve the canonical model exchange record.
+
+use sim_codec::{DecodeLimits, Input};
+use sim_kernel::{Error, Expr, Symbol};
+use sim_value::access::field as map_field;
+
+use crate::{
+    OpenAiRequestOptions, RequestWire, StreamWire, decode_openai_response,
+    decode_openai_responses_request, decode_openai_responses_response,
+    decode_openai_responses_response_with_limits, decode_openai_responses_stream,
+    encode_openai_request, encode_openai_responses_request, openai_profile,
+    openai_responses_profile, validate_chat_transcript,
+};
+
+use super::{request_expr, request_expr_with_extra};
+
+const REQUEST: &[u8] = include_bytes!("fixtures/openai_responses/request.json");
+const RESPONSE: &[u8] = include_bytes!("fixtures/openai_responses/response.json");
+const STREAM: &[u8] = include_bytes!("fixtures/openai_responses/stream.sse");
+const REFUSAL: &[u8] = include_bytes!("fixtures/openai_responses/refusal.json");
+const STRUCTURED: &[u8] = include_bytes!("fixtures/openai_responses/structured.json");
+const MALFORMED: &[u8] = include_bytes!("fixtures/openai_responses/malformed.sse");
+const TRUNCATED: &[u8] = include_bytes!("fixtures/openai_responses/truncated.sse");
+
+#[test]
+fn responses_profile_is_explicit_and_shares_openai_identity() {
+    let chat = openai_profile();
+    let responses = openai_responses_profile();
+    assert_eq!(chat.codec, responses.codec);
+    assert_eq!(chat.provider, responses.provider);
+    assert_eq!(chat.request_wire, RequestWire::OpenAiChat);
+    assert_eq!(responses.request_wire, RequestWire::OpenAiResponses);
+    assert_eq!(responses.stream_wire, StreamWire::Sse);
+}
+
+#[test]
+fn responses_request_matches_golden_and_roundtrips() {
+    let body = encode_openai_responses_request(
+        &request_expr(),
+        &OpenAiRequestOptions::new("gpt-5-mini", true, true),
+    )
+    .unwrap();
+    assert_eq!(body, trim_newline(REQUEST));
+    let decoded =
+        decode_openai_responses_request(Input::Text(String::from_utf8(body).unwrap())).unwrap();
+    validate_chat_transcript(&decoded).unwrap();
+    assert_eq!(
+        map_field(&decoded, "task"),
+        Some(&Expr::String("summarize this file".into()))
+    );
+}
+
+#[test]
+fn responses_structured_output_and_open_params_are_projected() {
+    let request = request_expr_with_extra(vec![
+        key(
+            "output-grammar",
+            Expr::String(r#"{"type":"object","required":["answer"]}"#.into()),
+        ),
+        key(
+            "output-grammar-dialect",
+            Expr::Symbol(Symbol::new("json-schema")),
+        ),
+        key("output-grammar-required", Expr::Bool(true)),
+        key(
+            "bridge-calls",
+            Expr::Vector(vec![Expr::Map(vec![key(
+                "model-params",
+                Expr::Map(vec![
+                    key("temperature", Expr::Nil),
+                    key("top-p", Expr::String("0.9".into())),
+                ]),
+            )])]),
+        ),
+    ]);
+    let body = encode_openai_responses_request(
+        &request,
+        &OpenAiRequestOptions::new("gpt-5-mini", false, false),
+    )
+    .unwrap();
+    let actual: serde_json::Value = serde_json::from_slice(&body).unwrap();
+    let expected: serde_json::Value = serde_json::from_slice(STRUCTURED).unwrap();
+    assert_eq!(actual, expected);
+    assert!(actual.get("tools").is_none());
+    assert!(actual["temperature"].is_null());
+}
+
+#[test]
+fn responses_function_tools_are_flattened_to_the_native_wire() {
+    let request = request_expr_with_extra(vec![key(
+        "tools",
+        Expr::List(vec![Expr::Map(vec![
+            key("type", Expr::Symbol(Symbol::new("function"))),
+            key(
+                "function",
+                Expr::Map(vec![
+                    key("name", Expr::String("inspect".into())),
+                    key("description", Expr::String("Inspect a file".into())),
+                    key(
+                        "parameters",
+                        Expr::Map(vec![key("type", Expr::String("object".into()))]),
+                    ),
+                ]),
+            ),
+        ])]),
+    )]);
+    let body = encode_openai_responses_request(
+        &request,
+        &OpenAiRequestOptions::new("gpt-5-mini", false, true),
+    )
+    .unwrap();
+    let json: serde_json::Value = serde_json::from_slice(&body).unwrap();
+    assert_eq!(json["tools"][0]["type"], "function");
+    assert_eq!(json["tools"][0]["name"], "inspect");
+    assert_eq!(json["tools"][0]["parameters"]["type"], "object");
+    assert!(json["tools"][0].get("function").is_none());
+}
+
+#[test]
+fn responses_response_stream_refusal_and_tool_call_are_canonical() {
+    for body in [RESPONSE, REFUSAL] {
+        let expr = decode_openai_responses_response(Symbol::new("remote"), "fallback", body, true)
+            .unwrap();
+        validate_chat_transcript(&expr).unwrap();
+    }
+    let response =
+        decode_openai_responses_response(Symbol::new("remote"), "fallback", RESPONSE, false)
+            .unwrap();
+    let rendered = format!("{response:?}");
+    assert!(rendered.contains("provider-request-id"));
+    assert!(rendered.contains("tool-call"));
+    assert!(rendered.contains("input-tokens"));
+
+    let streamed =
+        decode_openai_responses_stream(Symbol::new("remote"), "fallback", STREAM, true).unwrap();
+    validate_chat_transcript(&streamed).unwrap();
+    assert!(format!("{streamed:?}").contains("raw-provider-response"));
+}
+
+#[test]
+fn responses_malformed_truncated_and_bounded_inputs_fail_closed() {
+    for body in [MALFORMED, TRUNCATED] {
+        assert!(
+            decode_openai_responses_stream(Symbol::new("remote"), "model", body, false).is_err()
+        );
+    }
+    let err = decode_openai_responses_response_with_limits(
+        Symbol::new("remote"),
+        "model",
+        RESPONSE,
+        false,
+        DecodeLimits {
+            max_string_bytes: 3,
+            ..DecodeLimits::default()
+        },
+    )
+    .unwrap_err();
+    assert!(
+        matches!(err, Error::CodecError { ref message, .. } if message.contains("string bytes"))
+    );
+    let nested = br#"{"status":"completed","output":[{"type":"function_call","call_id":"c","name":"f","arguments":"{\"a\":{\"b\":1}}"}]}"#;
+    let err = decode_openai_responses_response_with_limits(
+        Symbol::new("remote"),
+        "model",
+        nested,
+        false,
+        DecodeLimits {
+            max_depth: 1,
+            ..DecodeLimits::default()
+        },
+    )
+    .unwrap_err();
+    assert!(
+        matches!(err, Error::CodecError { ref message, .. } if message.contains("recursion depth"))
+    );
+}
+
+#[test]
+fn chat_and_responses_wires_differ_but_decode_equivalently() {
+    let options = OpenAiRequestOptions::new("gpt-5-mini", false, false);
+    let chat = encode_openai_request(&request_expr(), &options).unwrap();
+    let responses = encode_openai_responses_request(&request_expr(), &options).unwrap();
+    assert_ne!(chat, responses);
+
+    let chat_response = decode_openai_response(
+        Symbol::new("remote"), "gpt-5-mini",
+        br#"{"choices":[{"finish_reason":"stop","message":{"role":"assistant","content":"compiled"}}],"usage":{"prompt_tokens":12,"completion_tokens":3,"total_tokens":15}}"#,
+        false,
+    ).unwrap();
+    let responses_response = decode_openai_responses_response(
+        Symbol::new("remote"), "gpt-5-mini",
+        br#"{"status":"completed","output":[{"type":"message","role":"assistant","content":[{"type":"output_text","text":"compiled"}]}],"usage":{"input_tokens":12,"output_tokens":3,"total_tokens":15}}"#,
+        false,
+    ).unwrap();
+    assert!(chat_response.canonical_eq(&responses_response));
+}
+
+#[test]
+fn existing_chat_request_bytes_remain_golden() {
+    let bytes = encode_openai_request(
+        &request_expr(),
+        &OpenAiRequestOptions::new("gpt-5-mini", true, true),
+    )
+    .unwrap();
+    assert_eq!(bytes, br#"{"model":"gpt-5-mini","stream":true,"messages":[{"role":"system","content":[{"type":"text","text":"Answer in precise prose."}]},{"role":"user","content":[{"type":"text","text":"Summarize src/lib.rs"}]},{"role":"user","content":[{"type":"text","text":"summarize this file"}]}],"tools":[],"stream_options":{"include_usage":true}}"#);
+}
+
+fn trim_newline(bytes: &[u8]) -> &[u8] {
+    bytes.strip_suffix(b"\n").unwrap_or(bytes)
+}
+fn key(name: &str, value: Expr) -> (Expr, Expr) {
+    (Expr::Symbol(Symbol::new(name)), value)
+}
+```
+
+### `feature/sim-codecs/classfile-inspection`
 
 Specimen `spec-test/sim-codecs/crates/sim-codec-classfile/tests/index_coverage` is checked by `cargo test`.
 
@@ -660,7 +2192,9 @@ Source `crates/sim-codec-classfile/tests/index_coverage.rs`:
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::sync::atomic::{AtomicU64, Ordering};
+
+static NEXT_MOUNT: AtomicU64 = AtomicU64::new(1);
 
 fn crate_root() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -675,10 +2209,7 @@ fn run(root: &Path, arguments: &[&str]) -> std::process::Output {
 }
 
 fn scratch_copy() -> PathBuf {
-    let nonce = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .expect("clock after epoch")
-        .as_nanos();
+    let nonce = NEXT_MOUNT.fetch_add(1, Ordering::Relaxed);
     let destination = std::env::temp_dir().join(format!(
         "sim-codec-classfile-index-{}-{nonce}",
         std::process::id()
@@ -1731,6 +3262,522 @@ fn crate_has_no_foreign_python_dependency_or_artifact() {
 }
 ```
 
+### `feature/sim-codecs/sql-projection`
+
+Specimen `spec-test/sim-codecs/crates/sim-codec-sql/src/tests` is checked by `cargo test`.
+
+Source `crates/sim-codec-sql/src/tests.rs`:
+
+```rust
+// conformance: SQL syntax round-trips through the canonical relation plan vocabulary.
+
+use super::*;
+use sim_kernel::{Datum, Symbol};
+use sim_relation_core::*;
+use sim_relation_plan::*;
+use sim_relation_schema::*;
+
+fn name<T: TryFrom<Symbol>>(value: &str) -> T
+where
+    T::Error: std::fmt::Debug,
+{
+    T::try_from(Symbol::new(value)).unwrap()
+}
+fn i64_datum(value: i64) -> Datum {
+    Datum::Number(sim_kernel::NumberLiteral {
+        domain: Symbol::qualified("core", "i64"),
+        canonical: value.to_string(),
+    })
+}
+fn fixture() -> (DomainCatalog, Schema) {
+    let domains = DomainCatalog::new([BaseDomain::I64.spec(), BaseDomain::Text.spec()]).unwrap();
+    let table = TableBuilder::new(name("order"))
+        .column(ColumnBuilder::required(name("id"), BaseDomain::I64.id()).build())
+        .column(ColumnBuilder::required(name("select"), BaseDomain::Text.id()).build())
+        .constraint(Constraint::Primary(PrimaryKey {
+            name: name("pk"),
+            columns: vec![name("id")],
+        }))
+        .build();
+    let schema = SchemaBuilder::new(name("app"))
+        .table(table)
+        .build(&domains, &AcceptAllValues)
+        .unwrap();
+    (domains, schema)
+}
+fn checked_query() -> CheckedQuery {
+    let (domains, schema) = fixture();
+    let bind: BindingName = name("x\"; DROP TABLE audit; --");
+    let plan = Rel::Filter {
+        input: Box::new(Rel::Scan {
+            source: name("main"),
+            table: name("order"),
+            bind: bind.clone(),
+        }),
+        predicate: Scalar::Call(
+            ScalarOp::Eq,
+            vec![
+                Scalar::Field(FieldRef {
+                    binding: bind,
+                    field: name("select"),
+                }),
+                Scalar::Literal(Cell::new(
+                    BaseDomain::Text.id(),
+                    Some(Datum::String("Robert'); DROP TABLE students;--".into())),
+                )),
+            ],
+        ),
+    };
+    admit_query(
+        plan,
+        &schema,
+        &domains,
+        RowType::new([]).unwrap(),
+        AdmissionLimits::default(),
+    )
+    .unwrap()
+}
+
+#[test]
+fn dialects_quote_the_same_attack_and_bind_every_value_differently() {
+    let query = checked_query();
+    let sqlite = prepare_query(&query, &SqliteDialect).unwrap();
+    let postgres = prepare_query(&query, &PostgreSqlDialect).unwrap();
+    assert!(sqlite.text().contains("\"x\"\"; DROP TABLE audit; --\""));
+    assert!(!sqlite.text().contains("Robert"));
+    assert!(sqlite.text().contains("?1"));
+    assert!(
+        sqlite.text().contains(
+            ") AS \"x\"\"; DROP TABLE audit; --\" WHERE (\"x\"\"; DROP TABLE audit; --\".\"select\""
+        ),
+        "{}",
+        sqlite.text()
+    );
+    assert!(postgres.text().contains("$1"));
+    assert_ne!(sqlite.text(), postgres.text());
+    assert_eq!(sqlite.bindings().len(), 1);
+    assert_eq!(sqlite.cache_key().schema_id, *query.schema_id());
+    assert_eq!(sqlite.cache_key().catalog_id, *query.catalog_id());
+    assert_eq!(sqlite.cache_key().plan_id, *query.plan_id());
+    assert_eq!(sqlite.role(), StatementRole::Query);
+}
+
+#[test]
+fn sqlite_values_and_unary_relations_keep_executable_binding_scope() {
+    let (domains, schema) = fixture();
+    let input: BindingName = name("input");
+    let row_type = RowType::new([
+        FieldType {
+            name: name("id"),
+            domain: BaseDomain::I64.id(),
+            nullable: false,
+        },
+        FieldType {
+            name: name("select"),
+            domain: BaseDomain::Text.id(),
+            nullable: false,
+        },
+    ])
+    .unwrap();
+    let row = Row::new(
+        row_type.clone(),
+        [
+            Cell::new(BaseDomain::I64.id(), Some(i64_datum(7))),
+            Cell::new(BaseDomain::Text.id(), Some(Datum::String("kept".into()))),
+        ],
+    )
+    .unwrap();
+    let mutation = admit_mutation(
+        Mutation::Insert {
+            table: name("order"),
+            columns: vec![name("id"), name("select")],
+            input: Box::new(Rel::Values {
+                bind: input,
+                row_type,
+                rows: vec![row],
+            }),
+            conflict: ConflictAction::Fail,
+            returning: vec![],
+        },
+        &schema,
+        &domains,
+        RowType::new([]).unwrap(),
+        AdmissionLimits::default(),
+    )
+    .unwrap();
+    let prepared = prepare_mutation(&mutation, &SqliteDialect).unwrap();
+    assert_eq!(
+        prepared.text(),
+        "INSERT INTO \"order\" (\"id\", \"select\") SELECT * FROM (SELECT ?1 AS \"id\", ?2 AS \"select\") AS \"input\""
+    );
+
+    let row_binding: BindingName = name("row");
+    let query = admit_query(
+        Rel::Project {
+            input: Box::new(Rel::Limit {
+                input: Box::new(Rel::Order {
+                    input: Box::new(Rel::Filter {
+                        input: Box::new(Rel::Scan {
+                            source: name("main"),
+                            table: name("order"),
+                            bind: row_binding.clone(),
+                        }),
+                        predicate: Scalar::Call(
+                            ScalarOp::Eq,
+                            vec![
+                                Scalar::Field(FieldRef {
+                                    binding: row_binding.clone(),
+                                    field: name("id"),
+                                }),
+                                Scalar::Literal(Cell::new(
+                                    BaseDomain::I64.id(),
+                                    Some(i64_datum(7)),
+                                )),
+                            ],
+                        ),
+                    }),
+                    keys: vec![OrderKey {
+                        scalar: Scalar::Field(FieldRef {
+                            binding: row_binding.clone(),
+                            field: name("id"),
+                        }),
+                        direction: OrderDirection::Asc,
+                    }],
+                }),
+                count: Some(1),
+                offset: 0,
+            }),
+            bind: name("output"),
+            fields: vec![NamedScalar {
+                name: name("select"),
+                scalar: Scalar::Field(FieldRef {
+                    binding: row_binding,
+                    field: name("select"),
+                }),
+            }],
+        },
+        &schema,
+        &domains,
+        RowType::new([]).unwrap(),
+        AdmissionLimits::default(),
+    )
+    .unwrap();
+    let prepared = prepare_query(&query, &SqliteDialect).unwrap();
+    assert!(
+        prepared
+            .text()
+            .contains("AS \"row\" WHERE (\"row\".\"id\" = ?1)"),
+        "{}",
+        prepared.text()
+    );
+    assert!(
+        prepared
+            .text()
+            .contains("AS \"row\" ORDER BY \"row\".\"id\" ASC")
+    );
+    assert!(prepared.text().contains("AS \"row\" LIMIT 1 OFFSET 0"));
+    assert!(prepared.text().ends_with("AS \"row\""));
+    assert!(!prepared.text().contains("AS \"output\""));
+}
+
+#[test]
+fn sqlite_project_over_join_preserves_both_input_bindings() {
+    let (domains, schema) = fixture();
+    let left: BindingName = name("left_order");
+    let right: BindingName = name("right_order");
+    let query = admit_query(
+        Rel::Project {
+            input: Box::new(Rel::Join {
+                left: Box::new(Rel::Scan {
+                    source: name("main"),
+                    table: name("order"),
+                    bind: left.clone(),
+                }),
+                right: Box::new(Rel::Scan {
+                    source: name("archive"),
+                    table: name("order"),
+                    bind: right.clone(),
+                }),
+                kind: JoinKind::Inner,
+                on: Scalar::Call(
+                    ScalarOp::Eq,
+                    vec![
+                        Scalar::Field(FieldRef {
+                            binding: left.clone(),
+                            field: name("id"),
+                        }),
+                        Scalar::Field(FieldRef {
+                            binding: right.clone(),
+                            field: name("id"),
+                        }),
+                    ],
+                ),
+            }),
+            bind: name("joined"),
+            fields: vec![
+                NamedScalar {
+                    name: name("id"),
+                    scalar: Scalar::Field(FieldRef {
+                        binding: left,
+                        field: name("id"),
+                    }),
+                },
+                NamedScalar {
+                    name: name("select"),
+                    scalar: Scalar::Field(FieldRef {
+                        binding: right,
+                        field: name("select"),
+                    }),
+                },
+            ],
+        },
+        &schema,
+        &domains,
+        RowType::new([]).unwrap(),
+        AdmissionLimits::default(),
+    )
+    .unwrap();
+
+    let prepared = prepare_query(&query, &SqliteDialect).unwrap();
+    assert!(
+        prepared.text().contains(
+            "AS \"left_order\" INNER JOIN (SELECT * FROM \"archive\".\"order\" AS \"right_order\") AS \"right_order\" ON (\"left_order\".\"id\" = \"right_order\".\"id\")"
+        ),
+        "{}",
+        prepared.text()
+    );
+    assert!(prepared.text().starts_with(
+        "SELECT \"left_order\".\"id\" AS \"id\", \"right_order\".\"select\" AS \"select\" FROM "
+    ));
+}
+
+#[test]
+fn sqlite_set_wraps_ordered_groups_and_filters_group_output() {
+    let (domains, schema) = fixture();
+    let grouped = |source_name: &str, row_name: &str, group_name: &str| {
+        let row: BindingName = name(row_name);
+        let group: BindingName = name(group_name);
+        Rel::Order {
+            input: Box::new(Rel::Group {
+                input: Box::new(Rel::Scan {
+                    source: name(source_name),
+                    table: name("order"),
+                    bind: row.clone(),
+                }),
+                bind: group.clone(),
+                keys: vec![NamedScalar {
+                    name: name("id"),
+                    scalar: Scalar::Field(FieldRef {
+                        binding: row,
+                        field: name("id"),
+                    }),
+                }],
+                aggregates: vec![NamedAggregate {
+                    name: name("total"),
+                    aggregate: Aggregate::CountAll,
+                }],
+                having: Some(Scalar::Call(
+                    ScalarOp::Ge,
+                    vec![
+                        Scalar::Field(FieldRef {
+                            binding: group.clone(),
+                            field: name("total"),
+                        }),
+                        Scalar::Literal(Cell::new(BaseDomain::I64.id(), Some(i64_datum(1)))),
+                    ],
+                )),
+            }),
+            keys: vec![OrderKey {
+                scalar: Scalar::Field(FieldRef {
+                    binding: group,
+                    field: name("id"),
+                }),
+                direction: OrderDirection::Asc,
+            }],
+        }
+    };
+    let query = admit_query(
+        Rel::Set {
+            op: SetOp::UnionAll,
+            inputs: vec![
+                grouped("main", "row_a", "group_a"),
+                grouped("archive", "row_b", "group_b"),
+            ],
+        },
+        &schema,
+        &domains,
+        RowType::new([]).unwrap(),
+        AdmissionLimits::default(),
+    )
+    .unwrap();
+
+    let prepared = prepare_query(&query, &SqliteDialect).unwrap();
+    assert!(
+        prepared
+            .text()
+            .starts_with("SELECT * FROM (SELECT * FROM (")
+    );
+    assert!(
+        prepared.text().contains(
+            ") AS \"group_a\" WHERE (\"group_a\".\"total\" >= ?1)) AS \"group_a\" ORDER BY"
+        )
+    );
+    assert!(
+        prepared
+            .text()
+            .contains(") AS \"set_input_0\" UNION ALL SELECT * FROM (")
+    );
+    assert!(!prepared.text().contains(" HAVING "));
+}
+
+#[test]
+fn sqlite_insert_select_disambiguates_conflict_from_join() {
+    let (domains, schema) = fixture();
+    let row_type = RowType::new([
+        FieldType {
+            name: name("id"),
+            domain: BaseDomain::I64.id(),
+            nullable: false,
+        },
+        FieldType {
+            name: name("select"),
+            domain: BaseDomain::Text.id(),
+            nullable: false,
+        },
+    ])
+    .unwrap();
+    let mutation = admit_mutation(
+        Mutation::Insert {
+            table: name("order"),
+            columns: vec![name("id"), name("select")],
+            input: Box::new(Rel::Values {
+                bind: name("input"),
+                row_type: row_type.clone(),
+                rows: vec![
+                    Row::new(
+                        row_type,
+                        [
+                            Cell::new(BaseDomain::I64.id(), Some(i64_datum(7))),
+                            Cell::new(BaseDomain::Text.id(), Some(Datum::String("kept".into()))),
+                        ],
+                    )
+                    .unwrap(),
+                ],
+            }),
+            conflict: ConflictAction::DoNothing {
+                target: sim_relation_plan::ConflictTarget::PrimaryKey,
+            },
+            returning: vec![],
+        },
+        &schema,
+        &domains,
+        RowType::new([]).unwrap(),
+        AdmissionLimits::default(),
+    )
+    .unwrap();
+
+    assert_eq!(
+        prepare_mutation(&mutation, &SqliteDialect).unwrap().text(),
+        "INSERT INTO \"order\" (\"id\", \"select\") SELECT * FROM (SELECT * FROM (SELECT ?1 AS \"id\", ?2 AS \"select\") AS \"input\") AS \"__sim_insert\" WHERE TRUE ON CONFLICT DO NOTHING"
+    );
+}
+
+#[test]
+fn capabilities_are_explicit_and_behavior_is_not_a_string_map() {
+    let sqlite = SqliteDialect.caps();
+    let postgres = PostgreSqlDialect.caps();
+    assert!(sqlite.attach && sqlite.transaction_immediate && !sqlite.transaction_serializable);
+    assert!(
+        !postgres.attach && !postgres.transaction_immediate && postgres.transaction_serializable
+    );
+    assert!(sqlite.returning && postgres.returning && sqlite.conflict && postgres.ddl);
+}
+
+#[test]
+fn emitted_ddl_round_trips_but_never_becomes_a_trusted_schema() {
+    let codec = DdlCodec;
+    let draft = codec
+        .decode(
+            "CREATE TABLE \"odd\"\"name\" (\"id\" INTEGER NOT NULL, body TEXT);",
+            LegacyDdl::Sqlite,
+        )
+        .unwrap();
+    let encoded = codec.encode(&draft).unwrap();
+    let decoded = codec.decode(&encoded, LegacyDdl::Sqlite).unwrap();
+    assert_eq!(decoded.tables, draft.tables);
+    assert_eq!(decoded.tables[0].name, "odd\"name");
+    // SchemaDraft intentionally exposes no admission-free Schema conversion.
+    assert_eq!(decoded.grammar, LegacyDdl::Sqlite);
+}
+
+#[test]
+fn exact_legacy_forms_lift_and_arbitrary_statements_fail_closed() {
+    let codec = DdlCodec;
+    let sqlite = codec
+        .decode(
+            "CREATE TEMP TABLE note (id INTEGER PRIMARY KEY, body TEXT)",
+            LegacyDdl::Sqlite,
+        )
+        .unwrap();
+    let hsqldb = codec.decode("CREATE CACHED TABLE ENTRY(ID INTEGER NOT NULL,NAME VARCHAR(255),CONSTRAINT PK PRIMARY KEY(ID))", LegacyDdl::Hsqldb).unwrap();
+    assert_eq!(sqlite.tables[0].columns.len(), 2);
+    assert_eq!(hsqldb.tables[0].name, "ENTRY");
+    assert!(!hsqldb.diagnostics.is_empty());
+    assert!(
+        codec
+            .decode("SELECT * FROM note", LegacyDdl::Sqlite)
+            .is_err()
+    );
+    assert!(
+        codec
+            .decode("CREATE TABLE t (x TEXT); DROP TABLE t", LegacyDdl::Sqlite)
+            .is_err()
+    );
+}
+
+#[test]
+fn hsqldb_ledger_ddl_inventory_is_explicit_and_diagnostic() {
+    let draft = DdlCodec
+        .decode(
+            r#"CREATE CACHED TABLE "konto"("k_nr" INTEGER NOT NULL PRIMARY KEY,"k_namn" VARCHAR(50))
+CREATE MEMORY TABLE "ver"("v_nr" INTEGER NOT NULL,CONSTRAINT "ver_pk" PRIMARY KEY("v_nr"))
+ALTER TABLE "ver" ALTER COLUMN "v_nr" RESTART WITH 11612
+SET TABLE "ver" INDEX'134576 94648 11611'"#,
+            LegacyDdl::Hsqldb,
+        )
+        .unwrap();
+    assert_eq!(draft.tables[0].primary_key, ["k_nr"]);
+    assert_eq!(draft.tables[1].primary_key, ["v_nr"]);
+    assert_eq!(draft.tables[1].restart_with, Some(11_612));
+    assert_eq!(draft.tables[1].index_roots, [134_576, 94_648]);
+    assert!(matches!(
+        DdlCodec.decode("SET DATABASE COLLATION SQL_TEXT", LegacyDdl::Hsqldb),
+        Err(SqlError::Ddl(message)) if message.contains("bounded CREATE TABLE domain")
+    ));
+    assert!(matches!(
+        DdlCodec.decode("DELETE FROM ledger", LegacyDdl::Hsqldb),
+        Err(SqlError::Ddl(message)) if message.contains("bounded CREATE TABLE domain")
+    ));
+}
+
+#[test]
+fn registrations_keep_statement_decode_out_of_the_runtime_domain() {
+    let registrations = sql_codec_registrations();
+    assert_eq!(
+        registrations
+            .iter()
+            .filter(|v| v.name == "codec/sql-statement" && v.decoder)
+            .count(),
+        0
+    );
+    assert!(registrations.contains(&SqlCodecRegistration {
+        name: "codec/sql-ddl",
+        decoder: true,
+        position: CodecPosition::Data
+    }));
+}
+```
+
 ### `feature/sim-codecs/javascript-source-frontend`
 
 Specimen `spec-test/sim-codecs/crates/sim-codec-javascript/tests/conformance` is checked by `cargo test`.
@@ -1793,7 +3840,11 @@ use crate::{
 };
 
 fn cx() -> sim_kernel::Cx {
-    let mut cx = sim_kernel::Cx::new(Arc::new(EagerPolicy), Arc::new(DefaultFactory));
+    let mut cx = sim_kernel::Cx::new(
+        Arc::new(EagerPolicy),
+        Arc::new(DefaultFactory),
+        sim_kernel::HandleSeed::new(1),
+    );
     sim_test_support::register_core_classes(&mut cx);
     let lib = JsonCodecLib::new(cx.registry_mut().fresh_codec_id());
     cx.load_lib(&lib).unwrap();
@@ -2312,6 +4363,339 @@ fn malformed_tree_encode_returns_error() {
 }
 ```
 
+### `feature/sim-codecs/index-vault-codec`
+
+Specimen `spec-test/sim-codecs/crates/sim-codec-index-vault/tests/conformance` is checked by `cargo test`.
+
+Source `crates/sim-codec-index-vault/tests/conformance.rs`:
+
+```rust
+// conformance: every vault profile round-trips semantically and rejects corrupted or false legacy claims.
+
+use sim_codec_index_vault::{
+    LegacyVaultBundle, LegacyVaultEntry, PROFILES, VaultDecoder, VaultEncoder,
+    legacy_projection_v1, resolve_legacy_profile, resolve_profile, verify_legacy_v1, verify_v2,
+};
+use sim_index_core::{
+    AnchorId, DeclarationFact, DeclarationRole, DiscoveredAnchor, DiscoveredSpecimen,
+    DiscoveredSurface, FeatureDraft, FeatureId, FeatureRecord, GrammarContract, IndexDoc,
+    IndexEdge, ProtocolRelation, ProtocolResolution, RouteId, RouteRecord, RouteStep,
+    SourceCompleteness, SourceLocation, SourceReachability, SourceUnit, SpecimenId, SubjectId,
+    SubjectRecord, SurfaceId, SyntaxBound, UnresolvedReason, Visibility, canonical_feature_key,
+};
+use sim_index_vault_core::IndexRow;
+use sim_index_vault_core::{VaultGranularity, VaultProjection};
+
+fn fixture() -> IndexDoc {
+    let subject = SubjectId::new("crate/edge-case");
+    let anchor = AnchorId::new("anchor/edge-case/value");
+    let surface = SurfaceId::new("syntax/edge-case");
+    let specimen = SpecimenId::new("recipe/edge-case/value");
+    let feature = FeatureId::new("feature/edge-case/value");
+    IndexDoc {
+        schema: "sim.index".into(),
+        generated_by: "vault-v2-test".into(),
+        visibility: Visibility::Public,
+        subjects: vec![SubjectRecord {
+            id: subject.clone(),
+            kind: "crate".into(),
+            title: "Empty differs from absent".into(),
+        }],
+        anchors: vec![
+            DiscoveredAnchor {
+                id: anchor.clone(),
+                subject: subject.clone(),
+                kind: "export".into(),
+            },
+            DiscoveredAnchor {
+                id: AnchorId::new("doc/edge-case/value"),
+                subject: subject.clone(),
+                kind: "doc".into(),
+            },
+        ],
+        source_units: vec![SourceUnit {
+            subject: subject.clone(),
+            path: "src/lib.rs".into(),
+            reachability: SourceReachability::Reachable,
+            completeness: SourceCompleteness::Complete,
+            reason: String::new(),
+            retained_bound: SyntaxBound {
+                max_bytes: 32,
+                truncated: false,
+            },
+            declaration_count: 1,
+        }],
+        declarations: vec![DeclarationFact {
+            anchor: anchor.clone(),
+            role: DeclarationRole::Struct,
+            module_path: "edge::Value".into(),
+            generics: String::new(),
+            members: vec![],
+            location: SourceLocation {
+                file: "src/lib.rs".into(),
+                declaration: 0,
+            },
+            syntax_bound: SyntaxBound {
+                max_bytes: 32,
+                truncated: true,
+            },
+        }],
+        protocol_relations: vec![
+            ProtocolRelation {
+                anchor: anchor.clone(),
+                implementor: "Value".into(),
+                source_spelling: "Display".into(),
+                body_fingerprint: String::new(),
+                body_bound: SyntaxBound {
+                    max_bytes: 32,
+                    truncated: false,
+                },
+                resolution: ProtocolResolution::Resolved {
+                    protocol: "core::fmt::Display".into(),
+                },
+            },
+            ProtocolRelation {
+                anchor: anchor.clone(),
+                implementor: "Value".into(),
+                source_spelling: "Mystery".into(),
+                body_fingerprint: "body".into(),
+                body_bound: SyntaxBound {
+                    max_bytes: 32,
+                    truncated: false,
+                },
+                resolution: ProtocolResolution::Unresolved {
+                    reason: UnresolvedReason::ExternalMetadataAbsent,
+                    candidates: vec![],
+                },
+            },
+        ],
+        surfaces: vec![DiscoveredSurface {
+            id: surface.clone(),
+            subject: subject.clone(),
+            kind: "syntax".into(),
+        }],
+        specimens: vec![DiscoveredSpecimen {
+            id: specimen.clone(),
+            subject: subject.clone(),
+            kind: "recipe".into(),
+            path: "recipes/value".into(),
+            language: None,
+            runnable: true,
+            checked: true,
+            checked_by: Some("cargo test".into()),
+            doc_anchor: None,
+        }],
+        drafts: vec![FeatureDraft {
+            id: FeatureId::new("feature/edge-case/draft"),
+            subject: subject.clone(),
+            title: "Draft".into(),
+            summary: String::new(),
+            claims_anchors: vec![],
+            claims_surfaces: vec![],
+            claims_specimens: vec![],
+            literal_anchors: vec![],
+            literal_surfaces: vec![],
+            literal_specimens: vec![],
+            grammar_contracts: vec![],
+            doc_anchor: None,
+        }],
+        features: vec![FeatureRecord {
+            id: feature.clone(),
+            key: canonical_feature_key(&subject, feature.as_str()),
+            subject: subject.clone(),
+            title: "Value".into(),
+            summary: "all families".into(),
+            anchors: vec![anchor.clone()],
+            surfaces: vec![surface.clone()],
+            specimens: vec![specimen.clone()],
+            grammar_contracts: vec![GrammarContract {
+                id: "grammar/edge-case".into(),
+                decoder: Some(anchor),
+                encoder: None,
+                surface: Some(surface),
+                round_trip: true,
+            }],
+            doc_anchor: None,
+        }],
+        routes: vec![RouteRecord {
+            id: RouteId::new("route/edge-case/value"),
+            title: "Use value".into(),
+            audiences: vec!["framework".into()],
+            steps: vec![
+                RouteStep::Feature {
+                    id: feature.clone(),
+                    why: "learn".into(),
+                },
+                RouteStep::Specimen {
+                    id: specimen,
+                    why: "run".into(),
+                },
+            ],
+            doc_anchor: None,
+        }],
+        edges: vec![IndexEdge::relates(feature.clone(), "supports", feature)],
+    }
+}
+
+#[test]
+fn all_four_profiles_encode_both_complete_granularities_exactly_once() {
+    let doc = fixture();
+    for profile in PROFILES {
+        assert_eq!(resolve_profile(profile.id.as_str()).unwrap(), profile);
+        for granularity in [VaultGranularity::Compact, VaultGranularity::Full] {
+            let projection = VaultProjection::from_complete(&doc, granularity).unwrap();
+            let bundle = VaultEncoder::new(profile).encode(&projection).unwrap();
+            let decoded = VaultDecoder::new(profile).decode(&bundle).unwrap();
+            assert_eq!(decoded.projection, projection);
+            assert!(decoded.fidelity_exact);
+            assert!(decoded.declared_projection_equal);
+            let verification = verify_v2(&bundle, &projection, 16, 256).unwrap();
+            assert!(verification.is_success());
+            assert_eq!(bundle.profile, profile.id);
+            assert_eq!(
+                bundle
+                    .entries
+                    .iter()
+                    .filter(|e| e.note_id == "README")
+                    .count(),
+                1
+            );
+            let claimed: usize = bundle
+                .entries
+                .iter()
+                .flat_map(|e| e.claim_families.values())
+                .sum();
+            assert_eq!(claimed, doc.inventory().1.len());
+            assert_eq!(
+                bundle.entries.iter().map(|e| &e.path).collect::<Vec<_>>(),
+                {
+                    let mut p = bundle.entries.iter().map(|e| &e.path).collect::<Vec<_>>();
+                    p.sort();
+                    p
+                }
+            );
+            let text = bundle
+                .entries
+                .iter()
+                .map(|e| String::from_utf8_lossy(&e.bytes))
+                .collect::<String>();
+            assert!(text.contains("truncated") && text.contains("true"));
+            assert!(text.to_lowercase().contains("unresolved"));
+            assert!(text.to_lowercase().contains("resolved"));
+        }
+    }
+}
+
+#[test]
+fn decode_rejects_digest_path_profile_and_valid_markdown_semantic_corruption() {
+    let projection = VaultProjection::from_complete(&fixture(), VaultGranularity::Compact).unwrap();
+    let bundle = VaultEncoder::new(PROFILES[0]).encode(&projection).unwrap();
+
+    let mut content = bundle.clone();
+    let entry = content
+        .entries
+        .iter_mut()
+        .find(|e| e.note_kind.is_some())
+        .unwrap();
+    let text = String::from_utf8(entry.bytes.clone()).unwrap();
+    entry.bytes = text.replacen("Draft", "Mystery", 1).into_bytes();
+    assert_ne!(entry.bytes, text.as_bytes());
+    assert!(VaultDecoder::new(PROFILES[0]).decode(&content).is_err());
+
+    let mut path = bundle.clone();
+    let entry = path
+        .entries
+        .iter_mut()
+        .find(|e| e.note_kind.is_some())
+        .unwrap();
+    entry.path = "wrong/place.md".into();
+    assert!(VaultDecoder::new(PROFILES[0]).decode(&path).is_err());
+
+    assert!(VaultDecoder::new(PROFILES[1]).decode(&bundle).is_err());
+}
+
+#[test]
+fn bytes_and_semantic_identity_ignore_input_permutation() {
+    for granularity in [VaultGranularity::Compact, VaultGranularity::Full] {
+        let doc = fixture();
+        let expected = VaultEncoder::new(PROFILES[0])
+            .encode(&VaultProjection::from_complete(&doc, granularity).unwrap())
+            .unwrap();
+        let mut permuted = doc.clone();
+        permuted.anchors.reverse();
+        let actual = VaultEncoder::new(PROFILES[0])
+            .encode(&VaultProjection::from_complete(&permuted, granularity).unwrap())
+            .unwrap();
+        assert_eq!(actual, expected);
+    }
+}
+
+#[test]
+fn every_canonical_row_variant_has_one_semantic_site() {
+    let projection = VaultProjection::from_complete(&fixture(), VaultGranularity::Full).unwrap();
+    let mut families = std::collections::BTreeSet::new();
+    for row in projection.certificate().primary_rows() {
+        families.insert(match row {
+            IndexRow::Subject(_) => "subject",
+            IndexRow::Anchor(_) => "anchor",
+            IndexRow::SourceUnit(_) => "source",
+            IndexRow::Declaration(_) => "declaration",
+            IndexRow::ProtocolRelation(_) => "protocol",
+            IndexRow::Surface(_) => "surface",
+            IndexRow::Specimen(_) => "specimen",
+            IndexRow::Draft(_) => "draft",
+            IndexRow::Feature(_) => "feature",
+            IndexRow::Route(_) => "route",
+            IndexRow::Edge(_) => "edge",
+        });
+    }
+    assert_eq!(families.len(), 11);
+    assert_eq!(
+        projection.certificate().primary().len(),
+        fixture().inventory().1.len()
+    );
+}
+
+#[test]
+fn v2_deliberate_spelling_changes_are_documented() {
+    let readme = include_str!("../README.md");
+    assert!(readme.contains("not byte-compatible"));
+    for legacy in [
+        "portable-markdown-v1",
+        "obsidian-markdown-v1",
+        "seqlog-markdown-v1",
+        "logseq-file-v1",
+    ] {
+        assert!(!PROFILES.iter().any(|p| p.id.as_str() == legacy));
+    }
+}
+
+#[test]
+fn legacy_v1_is_bounded_decode_only_and_semantically_checked() {
+    let doc = IndexDoc::public("legacy-v1-fixture");
+    let expected = legacy_projection_v1(&doc, VaultGranularity::Compact).unwrap();
+    let bytes = b"---\nsim_profile: \"portable-markdown-v1\"\ngranularity: \"compact\"\nschema: \"sim.index/v1\"\ngenerated-by: \"fixture\"\n---\n\n# SIM Index Vault\n\n## Navigation\n".to_vec();
+    let bundle = LegacyVaultBundle {
+        profile: resolve_legacy_profile("portable-markdown-v1").unwrap(),
+        granularity: VaultGranularity::Compact,
+        entries: vec![LegacyVaultEntry {
+            path: "README.md".into(),
+            bytes,
+        }],
+    };
+    let verified = verify_legacy_v1(&bundle, &expected).unwrap();
+    assert!(verified.note_identities.is_empty());
+    assert_eq!(verified.known_absent_families, &["declaration", "protocol"]);
+
+    let mut drift = bundle;
+    drift.entries[0].bytes = String::from_utf8(drift.entries[0].bytes.clone())
+        .unwrap()
+        .replace("portable-markdown-v1", "foreign-markdown-v1")
+        .into_bytes();
+    assert!(verify_legacy_v1(&drift, &expected).is_err());
+}
+```
+
 ### `feature/sim-codecs/wire-protocol-grammars`
 
 Specimen `spec-test/sim-codecs/crates/sim-codec-binary/src/tests` is checked by `cargo test`.
@@ -2340,7 +4724,11 @@ use crate::{
 };
 
 fn cx() -> sim_kernel::Cx {
-    let mut cx = sim_kernel::Cx::new(Arc::new(EagerPolicy), Arc::new(DefaultFactory));
+    let mut cx = sim_kernel::Cx::new(
+        Arc::new(EagerPolicy),
+        Arc::new(DefaultFactory),
+        sim_kernel::HandleSeed::new(1),
+    );
     sim_test_support::register_core_classes(&mut cx);
     let lib = BinaryCodecLib::new(cx.registry_mut().fresh_codec_id());
     cx.load_lib(&lib).unwrap();
@@ -2930,9 +5318,11 @@ Source `crates/sim-codec-doc/tests/conformance.rs`:
 use std::collections::BTreeSet;
 
 use sim_codec_doc::{
-    AsciiDocBackend, BackendStatus, LatexBackend, MarkdownBackend, MarkupBackend, MarkupBlock,
+    AsciiDocBackend, AttributeEnvelope, BackendStatus, DialectMarkdownBackend, Inline,
+    LatexBackend, LinkDialect, MarkdownBackend, MarkdownDialect, MarkupBackend, MarkupBlock,
     MarkupDecodeOptions, MarkupDoc, MarkupEncodeOptions, TypstBackend, backend_catalog,
 };
+use sim_kernel::Expr;
 
 struct Fixture {
     id: &'static str,
@@ -3084,7 +5474,7 @@ fn assert_semantic_roundtrip(id: &str, backend: &dyn MarkupBackend, source: &str
 fn assert_fixture_coverage() {
     let implemented: BTreeSet<String> = backend_catalog()
         .into_iter()
-        .filter(|info| info.status == BackendStatus::Implemented)
+        .filter(|info| info.status == BackendStatus::Implemented && info.can_read && info.can_write)
         .map(|info| info.id.to_string())
         .collect();
     let fixture_ids: BTreeSet<String> = fixtures()
@@ -3098,6 +5488,128 @@ fn semantic_doc(mut doc: MarkupDoc) -> MarkupDoc {
     doc.source = None;
     doc.blocks = doc.blocks.into_iter().map(block_without_span).collect();
     doc
+}
+
+#[test]
+fn markdown_dialect_matrix_roundtrips_attrs_and_links() {
+    let mut attrs = std::collections::BTreeMap::new();
+    attrs.insert("empty".to_owned(), Expr::String(String::new()));
+    attrs.insert(
+        "quote\"unicode".to_owned(),
+        Expr::String("räksmörgås\\\nline".to_owned()),
+    );
+    attrs.insert(
+        "values".to_owned(),
+        Expr::List(vec![
+            Expr::Nil,
+            Expr::Bool(true),
+            Expr::String("[]|()".to_owned()),
+        ]),
+    );
+    let doc = MarkupDoc {
+        title: None,
+        blocks: vec![MarkupBlock::Paragraph {
+            content: vec![Inline::Link {
+                label: vec![Inline::Text("label | [] () \\ 世界".to_owned())],
+                target: "target-unicode-世界".to_owned(),
+            }],
+            span: None,
+        }],
+        attrs,
+        source: None,
+    };
+    for attributes in [
+        AttributeEnvelope::JsonFrontMatter,
+        AttributeEnvelope::DoubleColon,
+    ] {
+        for links in [LinkDialect::CommonMark, LinkDialect::WikiLink] {
+            let backend = DialectMarkdownBackend::new(MarkdownDialect {
+                attributes,
+                links,
+                ..MarkdownDialect::default()
+            })
+            .unwrap();
+            let (encoded, fidelity) = backend
+                .encode(&doc, &MarkupEncodeOptions::default())
+                .unwrap();
+            assert!(fidelity.dropped.is_empty());
+            let (decoded, fidelity) = backend
+                .decode(
+                    &encoded,
+                    &MarkupDecodeOptions {
+                        preserve_source: false,
+                        preserve_raw: true,
+                    },
+                )
+                .unwrap();
+            assert!(fidelity.dropped.is_empty());
+            assert_eq!(decoded.attrs, doc.attrs);
+            assert_eq!(first_link(&decoded), first_link(&doc));
+        }
+    }
+}
+
+fn first_link(doc: &MarkupDoc) -> (String, String) {
+    let MarkupBlock::Paragraph { content, .. } = &doc.blocks[0] else {
+        panic!("expected paragraph")
+    };
+    let Inline::Link { label, target } = &content[0] else {
+        panic!("expected link")
+    };
+    let label = label
+        .iter()
+        .map(|inline| match inline {
+            Inline::Text(text) => text.as_str(),
+            _ => panic!("expected plain link label"),
+        })
+        .collect();
+    (label, target.clone())
+}
+
+#[test]
+fn markdown_default_is_byte_identical_and_dialect_errors_are_typed() {
+    let source = include_str!("fixtures/simple.md");
+    let opts = MarkupDecodeOptions {
+        preserve_source: false,
+        preserve_raw: true,
+    };
+    let (doc, old_fidelity) = MarkdownBackend.decode(source, &opts).unwrap();
+    let configured = DialectMarkdownBackend::new(MarkdownDialect::default()).unwrap();
+    let (same_doc, new_fidelity) = configured.decode(source, &opts).unwrap();
+    assert_eq!(doc, same_doc);
+    assert_eq!(old_fidelity, new_fidelity);
+    assert_eq!(
+        MarkdownBackend
+            .encode(&doc, &MarkupEncodeOptions::default())
+            .unwrap(),
+        configured
+            .encode(&doc, &MarkupEncodeOptions::default())
+            .unwrap()
+    );
+
+    let json = DialectMarkdownBackend::new(MarkdownDialect {
+        attributes: AttributeEnvelope::JsonFrontMatter,
+        ..MarkdownDialect::default()
+    })
+    .unwrap();
+    assert!(
+        json.decode(
+            "---json\n{\"x\":{\"$expr\":\"nil\"},\"x\":{\"$expr\":\"nil\"}}\n---\nbody",
+            &opts
+        )
+        .is_err()
+    );
+    let wiki = DialectMarkdownBackend::new(MarkdownDialect {
+        links: LinkDialect::WikiLink,
+        ..MarkdownDialect::default()
+    })
+    .unwrap();
+    for malformed in ["[[", "[[]]", "[[bad\0link]]", "[[bad\\q]]"] {
+        assert!(
+            wiki.decode(malformed, &opts).is_err(),
+            "accepted {malformed:?}"
+        );
+    }
 }
 
 fn block_without_span(block: MarkupBlock) -> MarkupBlock {
@@ -3342,5 +5854,702 @@ fn decode_lanes_fallback_and_no_text_pipeline_are_deterministic() {
         decode_typescript(&mut read, &tagged, &mut fallback_budget).unwrap(),
         Expr::Bool(true)
     );
+}
+```
+
+### `feature/sim-codecs/saved-web-documents`
+
+Specimen `spec-test/sim-codecs/crates/sim-codec-doc/src/html` is checked by `cargo test`.
+
+Source `crates/sim-codec-doc/src/html.rs`:
+
+```rust
+//! Bounded, inert HTML projection into the shared markup model.
+//! conformance: bounded HTML decoding produces the shared document model.
+
+use sim_kernel::Expr;
+
+use crate::{
+    BackendId, Inline, MarkupBackend, MarkupBlock, MarkupDecodeOptions, MarkupDoc,
+    MarkupEncodeOptions, MarkupError, MarkupFidelity, SourceDoc, Span, SpanState,
+};
+
+/// Resource limits and an optional authoritative HTTP charset.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct HtmlDecodeOptions {
+    /// Maximum accepted source bytes.
+    pub max_input_bytes: usize,
+    /// Maximum tags examined.
+    pub max_nodes: usize,
+    /// Maximum element nesting.
+    pub max_depth: usize,
+    /// Maximum normalized text bytes.
+    pub max_text_bytes: usize,
+    /// Charset supplied by HTTP, which takes precedence over a document declaration.
+    pub http_charset: Option<String>,
+}
+
+impl Default for HtmlDecodeOptions {
+    fn default() -> Self {
+        Self {
+            max_input_bytes: 2 * 1024 * 1024,
+            max_nodes: 100_000,
+            max_depth: 256,
+            max_text_bytes: 1024 * 1024,
+            http_charset: None,
+        }
+    }
+}
+
+/// Tolerant HTML backend. It never resolves URLs or executes active content.
+#[derive(Clone, Debug, Default)]
+pub struct HtmlBackend;
+
+impl MarkupBackend for HtmlBackend {
+    fn id(&self) -> BackendId {
+        BackendId::new("html")
+    }
+    fn decode(
+        &self,
+        input: &str,
+        opts: &MarkupDecodeOptions,
+    ) -> Result<(MarkupDoc, MarkupFidelity), MarkupError> {
+        decode_html_text(
+            input,
+            opts.preserve_source,
+            HtmlDecodeOptions::default(),
+            Vec::new(),
+        )
+    }
+    fn encode(
+        &self,
+        doc: &MarkupDoc,
+        _opts: &MarkupEncodeOptions,
+    ) -> Result<(String, MarkupFidelity), MarkupError> {
+        if let Some(source) = &doc.source
+            && source.backend.as_str() == "html"
+        {
+            return Ok((source.text.clone(), MarkupFidelity::exact(self.id())));
+        }
+        Err(MarkupError::Encode(
+            "HTML is an extraction backend; encoding requires preserved HTML source".into(),
+        ))
+    }
+}
+
+/// Decode HTML bytes with HTTP/document charset precedence and replacement warnings.
+pub fn decode_html_bytes(
+    input: &[u8],
+    opts: &HtmlDecodeOptions,
+) -> Result<(MarkupDoc, MarkupFidelity), MarkupError> {
+    if input.len() > opts.max_input_bytes {
+        return Err(MarkupError::Decode("HTML input byte limit exceeded".into()));
+    }
+    let declared = opts.http_charset.clone().or_else(|| sniff_charset(input));
+    let mut warnings = Vec::new();
+    let text = match declared.as_deref().map(|v| v.to_ascii_lowercase()) {
+        Some(label) if label == "iso-8859-1" || label == "windows-1252" => {
+            input.iter().map(|&b| char::from(b)).collect()
+        }
+        Some(label) if label != "utf-8" && label != "utf8" => {
+            warnings.push(format!("unsupported charset {label}; decoded as UTF-8"));
+            String::from_utf8_lossy(input).into_owned()
+        }
+        _ => String::from_utf8_lossy(input).into_owned(),
+    };
+    if std::str::from_utf8(input).is_err()
+        && !matches!(declared.as_deref(), Some("iso-8859-1" | "windows-1252"))
+    {
+        warnings.push("invalid UTF-8 replaced during decode".into());
+    }
+    decode_html_text(&text, true, opts.clone(), warnings)
+}
+
+fn sniff_charset(input: &[u8]) -> Option<String> {
+    let head = String::from_utf8_lossy(&input[..input.len().min(4096)]).to_ascii_lowercase();
+    let at = head.find("charset=")? + 8;
+    Some(
+        head[at..]
+            .trim_start_matches(['\'', '"'])
+            .split(|c: char| c == '\'' || c == '"' || c == ';' || c.is_whitespace() || c == '>')
+            .next()?
+            .to_owned(),
+    )
+}
+
+fn decode_html_text(
+    input: &str,
+    preserve_source: bool,
+    limits: HtmlDecodeOptions,
+    warnings: Vec<String>,
+) -> Result<(MarkupDoc, MarkupFidelity), MarkupError> {
+    if input.len() > limits.max_input_bytes {
+        return Err(MarkupError::Decode("HTML input byte limit exceeded".into()));
+    }
+    let mut p = Parser {
+        source: input,
+        pos: 0,
+        nodes: 0,
+        depth: 0,
+        text_bytes: 0,
+        limits,
+        blocks: Vec::new(),
+        stack: Vec::new(),
+        title: None,
+        attrs: Default::default(),
+        warnings,
+        suppressed: 0,
+    };
+    p.parse()?;
+    p.extract_structures();
+    let mut fidelity = MarkupFidelity::exact(BackendId::new("html"));
+    fidelity.warnings = p.warnings;
+    let doc = MarkupDoc {
+        title: p.title,
+        blocks: p.blocks,
+        attrs: p.attrs,
+        source: preserve_source.then(|| SourceDoc {
+            backend: BackendId::new("html"),
+            text: input.to_owned(),
+        }),
+    };
+    Ok((doc, fidelity))
+}
+
+struct Frame {
+    tag: String,
+    start: usize,
+    text: String,
+    href: Option<String>,
+    lang: Option<String>,
+}
+struct Parser<'a> {
+    source: &'a str,
+    pos: usize,
+    nodes: usize,
+    depth: usize,
+    text_bytes: usize,
+    limits: HtmlDecodeOptions,
+    blocks: Vec<MarkupBlock>,
+    stack: Vec<Frame>,
+    title: Option<String>,
+    attrs: std::collections::BTreeMap<String, Expr>,
+    warnings: Vec<String>,
+    suppressed: usize,
+}
+impl Parser<'_> {
+    fn extract_structures(&mut self) {
+        for (tag, ordered) in [("ul", false), ("ol", true)] {
+            for list in html_elements(self.source, tag) {
+                let items = html_elements(list, "li")
+                    .into_iter()
+                    .map(|item| {
+                        vec![MarkupBlock::Paragraph {
+                            content: vec![Inline::Text(normalize(&strip_tags(item)))],
+                            span: None,
+                        }]
+                    })
+                    .collect::<Vec<_>>();
+                if !items.is_empty() {
+                    self.blocks.push(MarkupBlock::List {
+                        ordered,
+                        items,
+                        span: None,
+                    });
+                }
+            }
+        }
+        for table in html_elements(self.source, "table") {
+            let mut rows = html_elements(table, "tr")
+                .into_iter()
+                .map(|row| {
+                    let mut cells = html_elements(row, "th");
+                    if cells.is_empty() {
+                        cells = html_elements(row, "td");
+                    }
+                    cells
+                        .into_iter()
+                        .map(|cell| vec![Inline::Text(normalize(&strip_tags(cell)))])
+                        .collect::<Vec<_>>()
+                })
+                .filter(|r| !r.is_empty())
+                .collect::<Vec<_>>();
+            if !rows.is_empty() {
+                let header = rows.remove(0);
+                self.blocks.push(MarkupBlock::Table {
+                    header,
+                    rows,
+                    span: None,
+                });
+            }
+        }
+        let readable = self
+            .blocks
+            .iter()
+            .filter_map(|b| match b {
+                MarkupBlock::Heading { text, .. }
+                | MarkupBlock::Paragraph { content: text, .. } => Some(
+                    text.iter()
+                        .filter_map(|i| {
+                            if let Inline::Text(v) = i {
+                                Some(v.as_str())
+                            } else {
+                                None
+                            }
+                        })
+                        .collect::<Vec<_>>()
+                        .join(" "),
+                ),
+                _ => None,
+            })
+            .collect::<Vec<_>>()
+            .join("\n");
+        self.attrs
+            .insert("readable-text".into(), Expr::String(readable));
+    }
+    fn parse(&mut self) -> Result<(), MarkupError> {
+        while self.pos < self.source.len() {
+            if self.source.as_bytes()[self.pos] == b'<' {
+                self.tag()?;
+            } else {
+                self.text()?;
+            }
+        }
+        while let Some(frame) = self.stack.pop() {
+            self.finish(frame, self.source.len());
+        }
+        Ok(())
+    }
+    fn tag(&mut self) -> Result<(), MarkupError> {
+        let start = self.pos;
+        let Some(rel) = self.source[start..].find('>') else {
+            self.pos = self.source.len();
+            return Ok(());
+        };
+        let end = start + rel + 1;
+        self.nodes += 1;
+        if self.nodes > self.limits.max_nodes {
+            return Err(MarkupError::Decode("HTML node limit exceeded".into()));
+        }
+        let raw = &self.source[start + 1..end - 1];
+        self.pos = end;
+        if raw.starts_with('!') || raw.starts_with('?') {
+            return Ok(());
+        }
+        let closing = raw.trim_start().starts_with('/');
+        let body = raw.trim().trim_start_matches('/').trim();
+        let name = body
+            .split_whitespace()
+            .next()
+            .unwrap_or("")
+            .trim_end_matches('/')
+            .to_ascii_lowercase();
+        if name.is_empty() {
+            return Ok(());
+        }
+        if closing {
+            if let Some(ix) = self.stack.iter().rposition(|f| f.tag == name) {
+                while self.stack.len() > ix {
+                    let f = self.stack.pop().unwrap();
+                    self.finish(f, end);
+                }
+            }
+            return Ok(());
+        }
+        if name == "meta"
+            && let Some(v) = attr(body, "name").zip(attr(body, "content"))
+        {
+            self.attrs.insert(
+                format!("meta:{}", v.0.to_ascii_lowercase()),
+                Expr::String(v.1),
+            );
+        }
+        if name == "link"
+            && attr(body, "rel").is_some_and(|v| v.eq_ignore_ascii_case("canonical"))
+            && let Some(v) = attr(body, "href")
+        {
+            self.attrs.insert("canonical-link".into(), Expr::String(v));
+        }
+        if name == "html"
+            && let Some(v) = attr(body, "lang")
+        {
+            self.attrs.insert("language".into(), Expr::String(v));
+        }
+        let active = matches!(
+            name.as_str(),
+            "script" | "style" | "form" | "object" | "embed" | "iframe"
+        );
+        if active {
+            self.suppressed += 1;
+            self.warnings
+                .push(format!("active or embedded <{name}> content omitted"));
+        }
+        if body.contains("on")
+            && body
+                .split_whitespace()
+                .any(|a| a.to_ascii_lowercase().starts_with("on") && a.contains('='))
+        {
+            self.warnings
+                .push(format!("event handler stripped from <{name}>"));
+        }
+        if !body.ends_with('/')
+            && !matches!(
+                name.as_str(),
+                "meta" | "link" | "img" | "br" | "hr" | "input" | "source"
+            )
+        {
+            self.depth += 1;
+            if self.depth > self.limits.max_depth {
+                return Err(MarkupError::Decode("HTML depth limit exceeded".into()));
+            }
+            self.stack.push(Frame {
+                tag: name,
+                start,
+                text: String::new(),
+                href: attr(body, "href"),
+                lang: attr(body, "class")
+                    .and_then(|v| v.strip_prefix("language-").map(str::to_owned)),
+            });
+        }
+        Ok(())
+    }
+    fn text(&mut self) -> Result<(), MarkupError> {
+        let end = self.source[self.pos..]
+            .find('<')
+            .map_or(self.source.len(), |v| self.pos + v);
+        let raw = &self.source[self.pos..end];
+        self.pos = end;
+        if self.suppressed == 0 {
+            let decoded = entities(raw);
+            self.text_bytes += decoded.len();
+            if self.text_bytes > self.limits.max_text_bytes {
+                return Err(MarkupError::Decode("HTML text limit exceeded".into()));
+            }
+            for f in &mut self.stack {
+                f.text.push_str(&decoded);
+            }
+        }
+        Ok(())
+    }
+    fn finish(&mut self, f: Frame, end: usize) {
+        self.depth = self.depth.saturating_sub(1);
+        if matches!(
+            f.tag.as_str(),
+            "script" | "style" | "form" | "object" | "embed" | "iframe"
+        ) {
+            self.suppressed = self.suppressed.saturating_sub(1);
+            return;
+        }
+        let text = normalize(&f.text);
+        if text.is_empty() {
+            return;
+        }
+        let span = Some(Span {
+            start: f.start,
+            end,
+            state: SpanState::Preserved,
+        });
+        let inline = || {
+            vec![if let Some(target) = &f.href {
+                Inline::Link {
+                    label: vec![Inline::Text(text.clone())],
+                    target: target.clone(),
+                }
+            } else {
+                Inline::Text(text.clone())
+            }]
+        };
+        match f.tag.as_str() {
+            "title" => self.title = Some(text),
+            "h1" | "h2" | "h3" | "h4" | "h5" | "h6" => self.blocks.push(MarkupBlock::Heading {
+                level: f.tag[1..].parse().unwrap_or(1),
+                text: inline(),
+                id: None,
+                span,
+            }),
+            "pre" => self.blocks.push(MarkupBlock::CodeBlock {
+                lang: f.lang,
+                code: text,
+                span,
+            }),
+            "blockquote" => self.blocks.push(MarkupBlock::Quote {
+                blocks: vec![MarkupBlock::Paragraph {
+                    content: inline(),
+                    span: span.clone(),
+                }],
+                span,
+            }),
+            "p" | "li" | "td" | "th" => self.blocks.push(MarkupBlock::Paragraph {
+                content: inline(),
+                span,
+            }),
+            _ => {}
+        }
+    }
+}
+fn attr(body: &str, wanted: &str) -> Option<String> {
+    for token in body.split_whitespace().skip(1) {
+        let (k, v) = token.split_once('=')?;
+        if k.eq_ignore_ascii_case(wanted) {
+            return Some(v.trim_matches(['\'', '"', '>']).to_owned());
+        }
+    }
+    None
+}
+fn normalize(s: &str) -> String {
+    s.split_whitespace().collect::<Vec<_>>().join(" ")
+}
+fn entities(s: &str) -> String {
+    s.replace("&amp;", "&")
+        .replace("&lt;", "<")
+        .replace("&gt;", ">")
+        .replace("&quot;", "\"")
+        .replace("&#39;", "'")
+        .replace("&nbsp;", " ")
+}
+fn html_elements<'a>(s: &'a str, tag: &str) -> Vec<&'a str> {
+    let mut out = Vec::new();
+    let open = format!("<{tag}");
+    let close = format!("</{tag}>");
+    let mut rest = s;
+    while let Some(a) = rest.to_ascii_lowercase().find(&open) {
+        let x = &rest[a..];
+        let Some(gt) = x.find('>') else { break };
+        let Some(b) = x[gt + 1..].to_ascii_lowercase().find(&close) else {
+            break;
+        };
+        out.push(&x[gt + 1..gt + 1 + b]);
+        rest = &x[gt + 1 + b + close.len()..];
+    }
+    out
+}
+fn strip_tags(s: &str) -> String {
+    let mut out = String::new();
+    let mut inside = false;
+    for c in s.chars() {
+        match c {
+            '<' => inside = true,
+            '>' => inside = false,
+            _ if !inside => out.push(c),
+            _ => {}
+        }
+    }
+    entities(&out)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn inert_and_chunk_equivalent() {
+        let html=b"<html lang='en'><head><link rel='canonical' href='https://e/x'><script>panic()</script></head><body><h1>Hello &amp; hi</h1><p>Safe <a href='/x'>link</a></p></body></html>";
+        let (a, f) = decode_html_bytes(html, &Default::default()).unwrap();
+        let joined = [&html[..31], &html[31..]].concat();
+        let (b, _) = decode_html_bytes(&joined, &Default::default()).unwrap();
+        assert_eq!(a, b);
+        assert!(!format!("{:?}", a.blocks).contains("panic"));
+        assert!(f.warnings.iter().any(|w| w.contains("omitted")));
+    }
+}
+// conformance: bounded HTML decoding produces the shared document model.
+```
+
+### `feature/sim-codecs/searxng-search-wire`
+
+Specimen `spec-test/sim-codecs/crates/sim-codec-search-searxng/src/tests` is checked by `cargo test`.
+
+Source `crates/sim-codec-search-searxng/src/tests.rs`:
+
+```rust
+// conformance: SearXNG results preserve provider claims without constructing citations.
+
+use super::*;
+use sim_lib_search_core::SearchQuery;
+use sim_lib_web_core::DecodeLimits;
+fn q(s: &str) -> SearchQuery {
+    SearchQuery::checked(s.into(), vec![], None, 10).unwrap()
+}
+#[test]
+fn post_and_sensitive_get() {
+    let c = SearxngCodec;
+    let w = c
+        .encode(
+            &q("rust privacy"),
+            &RequestOptions::default(),
+            DecodeLimits::default(),
+        )
+        .unwrap();
+    assert_eq!(w.body, b"q=rust+privacy&format=json");
+    let o = RequestOptions {
+        method: SearchMethod::Get,
+        ..Default::default()
+    };
+    assert!(c.encode(&q("secret"), &o, DecodeLimits::default()).is_err())
+}
+#[test]
+fn bang_receipt() {
+    let c = SearxngCodec;
+    assert!(
+        c.encode(
+            &q("!!google x"),
+            &RequestOptions::default(),
+            DecodeLimits::default()
+        )
+        .is_err()
+    );
+    let o = RequestOptions {
+        bang_policy: BangPolicy::Permit {
+            policy: "operator".into(),
+            receipt: "r:1".into(),
+        },
+        ..Default::default()
+    };
+    assert_eq!(
+        c.encode(&q("!!google x"), &o, DecodeLimits::default())
+            .unwrap()
+            .bang_receipt
+            .as_deref(),
+        Some("r:1")
+    )
+}
+#[test]
+fn config_is_observation_only() {
+    let c = SearxngCodec
+        .config(
+            include_bytes!("../fixtures/v1/config.json"),
+            DecodeLimits::default(),
+        )
+        .unwrap();
+    assert_eq!(c.engines, ["alpha", "beta"]);
+    assert_eq!(c.json_search, JsonSupport::Unknown)
+}
+#[test]
+fn partial_page_survives() {
+    let d = SearxngCodec
+        .response(
+            200,
+            &[],
+            include_bytes!("../fixtures/v1/partial.json"),
+            &q("sim kernel"),
+            DecodeLimits::default(),
+        )
+        .unwrap();
+    assert_eq!(d.results.len(), 2);
+    assert_eq!(
+        d.notices
+            .iter()
+            .find(|n| n.code == "row-decode")
+            .and_then(|n| n.index),
+        Some(1)
+    );
+    assert_eq!(
+        d.raw_response,
+        include_bytes!("../fixtures/v1/partial.json")
+    )
+}
+#[test]
+fn status_mapping_no_html() {
+    assert_eq!(
+        SearxngCodec.response(
+            403,
+            &[],
+            include_bytes!("../fixtures/v1/disabled-json.html"),
+            &q("x"),
+            DecodeLimits::default()
+        ),
+        Err(ResponseError::FormatDisabled)
+    );
+    assert_eq!(
+        SearxngCodec.response(
+            429,
+            &[("Retry-After".into(), "120".into())],
+            b"",
+            &q("x"),
+            DecodeLimits::default()
+        ),
+        Err(ResponseError::RateLimited {
+            retry_after: Some(120)
+        })
+    );
+    assert_eq!(
+        SearxngCodec.response(401, &[], b"", &q("x"), DecodeLimits::default()),
+        Err(ResponseError::PrincipalRejected)
+    );
+    assert_eq!(
+        SearxngCodec.response(503, &[], b"", &q("x"), DecodeLimits::default()),
+        Err(ResponseError::SiteUnavailable)
+    )
+}
+#[test]
+fn correction_and_open_fields() {
+    let d = SearxngCodec
+        .response(
+            200,
+            &[],
+            include_bytes!("../fixtures/v1/correction-only.json"),
+            &q("searxngg"),
+            DecodeLimits::default(),
+        )
+        .unwrap();
+    assert_eq!(d.supplemental.len(), 1);
+    let d = SearxngCodec
+        .response(
+            200,
+            &[],
+            include_bytes!("../fixtures/v1/open-fields.json"),
+            &q("open result"),
+            DecodeLimits::default(),
+        )
+        .unwrap();
+    assert!(d.results[0].extra.contains_key("future_field"));
+    assert_eq!(
+        d.page.observations[0]
+            .claim
+            .as_ref()
+            .unwrap()
+            .snippet
+            .as_deref(),
+        Some("provider text")
+    )
+}
+#[test]
+fn bounds_invalid_url_and_snapshots() {
+    let l = DecodeLimits {
+        max_items: 2,
+        ..Default::default()
+    };
+    assert!(
+        SearxngCodec
+            .response(
+                200,
+                &[],
+                include_bytes!("../fixtures/v1/oversized.json"),
+                &q("many"),
+                l
+            )
+            .is_err()
+    );
+    assert!(
+        SearxngCodec
+            .response(
+                200,
+                &[],
+                include_bytes!("../fixtures/v1/invalid-url.json"),
+                &q("bad"),
+                DecodeLimits::default()
+            )
+            .is_err()
+    );
+    let w = SearxngCodec
+        .encode(
+            &q("rust privacy"),
+            &RequestOptions::default(),
+            DecodeLimits::default(),
+        )
+        .unwrap();
+    assert_eq!(
+        std::str::from_utf8(&w.body).unwrap(),
+        include_str!("../fixtures/v1/request.snapshot").trim()
+    )
 }
 ```

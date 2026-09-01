@@ -1,0 +1,1 @@
+{"query":"open result","results":[{"url":"https://example.test/page","title":"Open","content":"provider text","engines":["alpha","beta"],"category":"general","publishedDate":"2026-08-24","thumbnail":"https://example.test/thumb.png","future_field":{"nested":[1,true,"kept"]}}],"answers":[],"corrections":[],"infoboxes":[],"suggestions":[],"unresponsive_engines":[]}

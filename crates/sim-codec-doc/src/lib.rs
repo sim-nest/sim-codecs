@@ -41,6 +41,7 @@ mod edit;
 #[cfg(test)]
 mod edit_tests;
 mod functions;
+mod html;
 mod latex;
 #[cfg(test)]
 mod latex_tests;
@@ -69,8 +70,11 @@ pub use document::{
     ChunkOp, DocBlock, DocBlockKind, DocChunk, DocFormat, DocValue, chunk, decode_document,
 };
 pub use edit::{MarkupEdit, apply_edit, invert_edit};
+pub use html::{HtmlBackend, HtmlDecodeOptions, decode_html_bytes};
 pub use latex::LatexBackend;
-pub use markdown::MarkdownBackend;
+pub use markdown::{
+    AttributeEnvelope, DialectMarkdownBackend, LinkDialect, MarkdownBackend, MarkdownDialect,
+};
 pub use markup::{
     BackendId, Inline, MarkupBlock, MarkupDoc, MathSource, SourceDoc, Span, SpanState,
     decode_markup_doc,

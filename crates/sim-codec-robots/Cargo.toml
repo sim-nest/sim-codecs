@@ -1,0 +1,17 @@
+[package]
+name = "sim-codec-robots"
+version = "0.1.0"
+edition = "2024"
+license = "MPL-2.0"
+description = "Bounded RFC 9309 robots.txt parser and matcher for SIM."
+readme = "README.md"
+publish = true
+repository = "https://github.com/sim-nest/sim-codecs"
+homepage = "https://github.com/sim-nest/sim-codecs"
+
+[dependencies]
+sim-cookbook = { version = "0.3.0" }
+[build-dependencies]
+sim-cookbook-build = { version = "0.1.0" }
+[lints]
+workspace = true

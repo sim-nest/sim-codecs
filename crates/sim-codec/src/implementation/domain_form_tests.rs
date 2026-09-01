@@ -80,7 +80,11 @@ fn projected_domain_form_is_accepted_by_table_shape() {
         ],
         TableExtraPolicy::Reject,
     );
-    let mut cx = Cx::new(Arc::new(NoopEvalPolicy), Arc::new(DefaultFactory));
+    let mut cx = Cx::new(
+        Arc::new(NoopEvalPolicy),
+        Arc::new(DefaultFactory),
+        sim_kernel::HandleSeed::new(1),
+    );
 
     assert!(shape.check_expr(&mut cx, &expr).unwrap().accepted);
 }

@@ -10,7 +10,6 @@ use sim_kernel::{
     Args, Callable, ClassRef, Cx, Error, Expr, Lib, LibManifest, Linker, LoadCx, Object, Result,
     Symbol, Value,
 };
-use std::path::Path;
 use std::sync::Arc;
 
 /// A kernel [`Lib`] backed by an instantiated guest module.
@@ -50,22 +49,6 @@ pub fn load_wasm_lib_from_bytes(runtime: Arc<dyn WasmRuntime>, bytes: &[u8]) -> 
     let module = runtime.instantiate_bytes(bytes)?;
     let host: Arc<dyn WasmHost> = runtime;
     WasmLib::instantiate(host, module)
-}
-
-/// Reads a wasm module from `path` and loads it as a [`WasmLib`] on `runtime`.
-///
-/// Errors if the file cannot be read.
-pub fn load_wasm_lib_from_file(
-    runtime: Arc<dyn WasmRuntime>,
-    path: impl AsRef<Path>,
-) -> Result<WasmLib> {
-    let bytes = std::fs::read(path.as_ref()).map_err(|err| {
-        Error::HostError(format!(
-            "failed to read wasm module {}: {err}",
-            path.as_ref().display()
-        ))
-    })?;
-    load_wasm_lib_from_bytes(runtime, &bytes)
 }
 
 impl Lib for WasmLib {

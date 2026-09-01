@@ -62,7 +62,7 @@ fn model_param_key(expr: &Expr) -> Result<String> {
     }
 }
 
-fn model_param_value(expr: &Expr) -> Value {
+pub(super) fn model_param_value(expr: &Expr) -> Value {
     match expr {
         Expr::Nil => Value::Null,
         Expr::Bool(flag) => Value::Bool(*flag),

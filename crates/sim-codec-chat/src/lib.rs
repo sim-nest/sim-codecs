@@ -55,12 +55,15 @@ pub use providers::lm_studio::{
 pub use providers::openai::{
     OpenAiCodec, OpenAiCodecLib, OpenAiCodecOptions, OpenAiRequestOptions, decode_openai_request,
     decode_openai_request_with_limits, decode_openai_response, decode_openai_response_with_limits,
+    decode_openai_responses_request, decode_openai_responses_request_with_limits,
+    decode_openai_responses_response, decode_openai_responses_response_with_limits,
+    decode_openai_responses_stream, decode_openai_responses_stream_with_limits,
     decode_openai_stream, decode_openai_stream_with_limits, encode_openai_request,
-    encode_openai_response, openai_codec_symbol,
+    encode_openai_response, encode_openai_responses_request, openai_codec_symbol,
 };
 pub use providers::profile::{
     CodecProfile, RequestWire, StreamWire, anthropic_profile, lemonade_profile, lm_studio_profile,
-    ollama_profile, openai_profile,
+    ollama_profile, openai_profile, openai_responses_profile,
 };
 
 /// Cookbook recipes for this codec, embedded at build time.

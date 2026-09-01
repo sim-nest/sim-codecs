@@ -31,17 +31,13 @@ claims_anchors = [
   "anchor/crate/sim-codec-binary-base64",
   "anchor/crate/sim-codec-bitwise",
   "anchor/crate/sim-codec-bitwise-base64",
-  "anchor/crate/sim-codec-chat",
   "anchor/crate/sim-codec-compare",
   "anchor/crate/sim-codec-config",
   "anchor/crate/sim-codec-doc",
   "anchor/crate/sim-codec-index",
-  "anchor/crate/sim-codec-json",
   "anchor/crate/sim-codec-lisp",
   "anchor/crate/sim-codec-lua",
-  "anchor/crate/sim-codec-mcp",
   "anchor/crate/sim-test-support",
-  "anchor/crate/sim-wasm-abi",
   "anchor/export/sim-codec-binary-base64/codec/binary-base64",
   "anchor/export/sim-codec-binary/codec/binary",
   "anchor/export/sim-codec-bitwise-base64/codec/bitwise-base64",
@@ -63,7 +59,6 @@ claims_anchors = [
   "anchor/runtime-lib/sim-codec-chat/lemonade-codec-lib",
   "anchor/runtime-lib/sim-codec-chat/lm-studio-codec-lib",
   "anchor/runtime-lib/sim-codec-chat/ollama-codec-lib",
-  "anchor/runtime-lib/sim-codec-chat/open-ai-codec-lib",
   "anchor/runtime-lib/sim-codec-config/config-codec-lib",
   "anchor/runtime-lib/sim-codec-doc/doc-codec-lib",
   "anchor/runtime-lib/sim-codec-doc/markup-codec-lib",
@@ -73,10 +68,80 @@ claims_anchors = [
   "anchor/runtime-lib/sim-codec-lua/lua-codec-lib",
   "anchor/runtime-lib/sim-codec-mcp/mcp-codec-lib",
   "anchor/runtime-lib/sim-codec/domain-codec-lib",
-  "anchor/runtime-lib/sim-wasm-abi/wasm-lib",
 ]
 claims_specimens = [
   "spec-test/sim-codecs/crates/sim-codec/src/implementation/runtime",
+]
+
+[[feature]]
+id = "feature/sim-codecs/json-schema-2020-12"
+title = "Bounded JSON Schema 2020-12 organ"
+summary = "Retain, identify, compile, validate, diagnose, and conservatively adapt complete Draft 2020-12 schema documents without ambient resource access."
+owner = "crate/sim-codec-json"
+audiences = ["code", "framework"]
+guidance = "Use SchemaDocument as the authoritative schema at JSON, MCP, skill HTTP, and OpenAI boundaries. Inject an explicit bounded retriever for external resources; never substitute Shape when shape_projection returns None."
+claims_anchors = ["anchor/crate/sim-codec-json"]
+claims_specimens = ["spec-test/sim-codecs/crates/sim-codec-json/src/schema_document/tests"]
+supports = ["feature/sim-codecs/codec"]
+
+[[feature]]
+id = "feature/sim-codecs/mcp-schema-oracle"
+title = "Dated MCP schema coverage oracle"
+summary = "Own the final MCP 2026-07-28 and delivered 2025-03-26 wire profiles, typed metadata and messages, extension negotiation, full JSON Schema values, header projection, cache policy, and exhaustive schema coverage."
+owner = "crate/sim-codec-mcp"
+audiences = ["code", "framework"]
+guidance = "Use sim-codec-mcp as the sole transport-independent MCP wire authority. Extend its checked method registry and one-to-one coverage ledger when MCP behavior evolves; preserve full SchemaDocument and semantic extension JSON, and derive rather than reinterpret headers."
+claims_anchors = ["anchor/crate/sim-codec-mcp", "anchor/export/sim-codec-mcp/server/discover"]
+claims_specimens = [
+  "spec-test/sim-codecs/crates/sim-codec-mcp/tests/schema_oracle",
+  "spec-test/sim-codecs/crates/sim-codec-mcp/src/wire_authority",
+]
+supports = ["feature/sim-codecs/codec"]
+
+[[feature]]
+id = "feature/sim-codecs/wasm-abi-contract"
+title = "Pure wasm ABI contract"
+summary = "Describe wasm manifests, byte frames, imports, and exports without observing the host that carries them."
+owner = "crate/sim-wasm-abi"
+audiences = ["code", "framework"]
+guidance = "Pass admitted module bytes to load_wasm_lib_from_bytes through the platform-selected LoaderPort. Treat audio import and export names as declarations only; perform loader, mount, clock, and audio work through platform and audio ports. The ABI crate never reads paths, chooses devices, samples clocks, or adds a codec-specific host API."
+claims_anchors = ["anchor/crate/sim-wasm-abi", "anchor/runtime-lib/sim-wasm-abi/wasm-lib"]
+claims_specimens = ["spec-test/sim-codecs/crates/sim-wasm-abi/src/tests/roundtrip", "spec-test/sim-codecs/crates/sim-codec-compare/src/platform_roundtrip_tests"]
+supports = ["feature/sim-codecs/codec"]
+
+[[feature]]
+id = "feature/sim-codecs/openai-provider-wires"
+title = "Canonical OpenAI chat and Responses wires"
+summary = "Project one bounded canonical model contract through the explicit OpenAI Chat Completions and Responses request, response, and SSE wire families."
+owner = "crate/sim-codec-chat"
+audiences = ["code", "framework"]
+guidance = "Select openai_profile for Chat Completions compatibility or openai_responses_profile for the native Responses input/output protocol. Both decode to the same canonical ModelResponse; Responses reasoning payloads remain provider-private."
+claims_anchors = [
+  "anchor/crate/sim-codec-chat",
+  "anchor/runtime-lib/sim-codec-chat/open-ai-codec-lib",
+]
+claims_specimens = [
+  "spec-test/sim-codecs/crates/sim-codec-chat/src/tests/openai_responses",
+]
+supports = ["feature/sim-codecs/codec"]
+
+[[route]]
+id = "route/carry-a-wasm-library"
+task = "Carry a wasm library across an explicit host boundary"
+audiences = ["code", "framework"]
+steps = [
+  { feature = "feature/sim-codecs/wasm-abi-contract", why = "The ABI row owns inert manifests, byte frames, imports, and exports while the selected platform loader retains host authority." },
+  { specimen = "spec-test/sim-codecs/crates/sim-wasm-abi/src/tests/roundtrip", why = "The checked round-trip specimen proves ABI records remain pure data." },
+  { specimen = "spec-test/sim-codecs/crates/sim-codec-compare/src/platform_roundtrip_tests", why = "The cross-platform specimen proves the same contract survives platform codec projection." },
+]
+
+[[route]]
+id = "route/encode-openai-provider-wire"
+task = "Encode canonical model traffic for an OpenAI provider wire"
+audiences = ["code", "framework"]
+steps = [
+  { feature = "feature/sim-codecs/openai-provider-wires", why = "The wire row selects Chat Completions or Responses while preserving one canonical bounded model contract." },
+  { specimen = "spec-test/sim-codecs/crates/sim-codec-chat/src/tests/openai_responses", why = "The checked specimen covers Responses requests, responses, SSE events, and provider-private reasoning payloads." },
 ]
 
 [[feature]]
@@ -91,7 +156,6 @@ claims_anchors = [
   "anchor/runtime-lib/sim-codec-classfile/classfile-codec-lib",
 ]
 claims_specimens = [
-  "recipe/sim-codecs/crates/sim-codec-classfile/01-inspection/retained-classfile",
   "spec-test/sim-codecs/crates/sim-codec-classfile/tests/index_coverage",
 ]
 supports = [
@@ -143,6 +207,17 @@ supports = [
 ]
 
 [[feature]]
+id = "feature/sim-codecs/sql-projection"
+title = "Behavior-backed bounded SQL projection"
+summary = "Lower admitted relational plans and migrations through sealed SQLite and PostgreSQL dialect behavior, and decode the bounded SQLite and HSQLDB table, column, key, identity-restart, and cache-index DDL subset into diagnostic untrusted drafts."
+owner = "crate/sim-codec-sql"
+audiences = ["code", "framework"]
+guidance = "Use sim-codec-sql at SQL-backed provider boundaries and as the sole owner of bounded legacy SQL grammar. Pass admitted plans, select executable dialect behavior, and admit decoded SchemaDraft values separately against the product domain catalog; unknown statements and domains fail closed, and parsed DDL is never executable or trusted schema."
+claims_anchors = ["anchor/crate/sim-codec-sql", "anchor/export/sim-codec-sql/codec/sql-ddl", "anchor/export/sim-codec-sql/codec/sql-statement"]
+claims_specimens = ["spec-test/sim-codecs/crates/sim-codec-sql/src/tests"]
+supports = ["feature/sim-codecs/codec"]
+
+[[feature]]
 id = "feature/sim-codecs/javascript-source-frontend"
 title = "Bounded ECMAScript 2026 codec"
 summary = "Tokenize and structurally parse frozen ECMAScript 2026 Script and Module goals, lower every accepted form to stable javascript/* expressions, and round-trip through plain, located, and tree codec lanes."
@@ -170,7 +245,7 @@ title = "Domain syntax grammars"
 summary = "Read and write binary, bitwise, chat, config, document, index, and MCP grammar surfaces."
 owner = "crate/sim-codec"
 audiences = ["code", "framework"]
-guidance = "Use this row when finding a domain codec grammar for data, packets, configuration, or generated index text."
+guidance = "Use this row when finding a domain codec grammar for data, packets, configuration, generated index text, or a Markdown dialect. Generic CommonMark links, wikilinks, attribute envelopes, and outline mappings are bounded MarkdownDialect evidence owned by sim-codec-doc; domain profiles compose its shared MarkupDoc parser/writer and must not implement a parallel Markdown parser."
 claims_surfaces = [
   "syntax/binary",
   "syntax/binary-base64",
@@ -187,6 +262,24 @@ claims_specimens = [
 ]
 supports = [
   "feature/sim-codecs/codec",
+]
+
+[[feature]]
+id = "feature/sim-codecs/index-vault-codec"
+title = "SIM Index vault bundle codec"
+summary = "Encode and semantically verify deterministic v2 portable, Obsidian, SeqLog, and Logseq file-graph bundles, while reading bounded historical v1 bundles for migration."
+owner = "crate/sim-codec-index-vault"
+audiences = ["code", "framework"]
+guidance = "Compose sim-index-vault-core projection with this pure codec before any filesystem materialization. The codec owns v2 profiles, bounded decode-only v1 readers, semantic verification, compatibility fixtures, and migration evidence; decode reconstructs data and never imports notes or mutates a vault. Logseq support is limited to Markdown file graphs, never DB graphs."
+claims_anchors = [
+  "anchor/crate/sim-codec-index-vault",
+]
+claims_specimens = [
+  "spec-test/sim-codecs/crates/sim-codec-index-vault/tests/conformance",
+]
+supports = [
+  "feature/sim-codecs/domain-syntax-grammars",
+  "feature/sim-foundation/index-vault-projection",
 ]
 
 [[feature]]
@@ -379,4 +472,52 @@ steps = [
   { feature = "feature/sim-codecs/expression-syntax-grammars", why = "The expression syntax row carries language and grammar subjects." },
   { feature = "feature/sim-codecs/domain-syntax-grammars", why = "The domain syntax row carries data, document, config, and packet syntax contracts." },
   { feature = "feature/sim-codecs/wire-protocol-grammars", why = "The wire row carries packet and byte-level grammar contracts." },
+]
+
+[[feature]]
+id = "feature/sim-codecs/saved-web-documents"
+title = "Saved web document codecs"
+summary = "Interpret saved HTML, RSS 2.0, Atom 1.0, JSON Feed, and RFC 9309 robots bytes as bounded inert records."
+owner = "crate/sim-codec-doc"
+audiences = ["code", "framework"]
+guidance = "Use the HTML MarkupBackend for shared document semantics, sim-codec-feed for one FeedDoc, and sim-codec-robots for parser and match precedence. Supply bytes explicitly; fetching, HTTP policy, ranking, and citation are outside these codecs."
+claims_anchors = [
+  "anchor/crate/sim-codec-feed",
+  "anchor/crate/sim-codec-robots",
+  "anchor/export/sim-codec-feed/codec/feed",
+  "anchor/export/sim-codec-robots/codec/robots",
+]
+claims_specimens = ["spec-test/sim-codecs/crates/sim-codec-doc/src/html"]
+supports = ["feature/sim-codecs/codec"]
+
+[[route]]
+id = "route/interpret-saved-web-documents"
+task = "Interpret saved HTML, feeds, and robots"
+audiences = ["code", "framework"]
+steps = [
+  { feature = "feature/sim-codecs/saved-web-documents", why = "The codec organ owns bounded inert parsing and projections for all three saved web formats." },
+  { specimen = "spec-test/sim-codecs/crates/sim-codec-doc/src/html", why = "The checked document specimen proves bounded inert HTML decoding into the shared document model." },
+]
+
+[[feature]]
+id = "feature/sim-codecs/searxng-search-wire"
+title = "SearXNG search wire codec"
+summary = "Translate generic search queries and caller-supplied SearXNG config and JSON search responses with bounded open fields, provider claims, and honest partial failures."
+owner = "crate/sim-codec-search-searxng"
+audiences = ["code", "framework"]
+guidance = "Compose this pure codec behind SearchWireCodec and the generic HTTP search transport for an operator-selected SearXNG site. Default to form-encoded POST, retain raw JSON and partial-row notices, and never use it for HTTP, provider discovery, ranking, HTML fallback, page observations, or citations."
+claims_anchors = ["anchor/crate/sim-codec-search-searxng", "anchor/export/sim-codec-search-searxng/codec/search-searxng"]
+claims_specimens = [
+  "spec-test/sim-codecs/crates/sim-codec-search-searxng/src/tests",
+]
+supports = ["feature/sim-codecs/codec"]
+
+[[route]]
+id = "route/add-a-search-wire-site"
+task = "Add a search wire codec site"
+audiences = ["code", "framework"]
+steps = [
+  { feature = "feature/sim-codecs/codec", why = "Begin with the shared bounded codec contract and wire-syntax ownership rules." },
+  { feature = "feature/sim-codecs/searxng-search-wire", why = "The SearXNG row demonstrates one transport-free SearchWireCodec site without becoming the search architecture." },
+  { specimen = "recipe/sim-codecs/crates/sim-codec-search-searxng/01-basics/request-response", why = "The checked pure recipe supplies request and saved-response bytes without opening a socket." },
 ]

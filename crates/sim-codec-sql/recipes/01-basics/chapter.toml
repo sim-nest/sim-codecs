@@ -1,0 +1,2 @@
+title = "Safe projection"
+recipes = ["inspect-ddl"]

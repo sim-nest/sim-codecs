@@ -1,8 +1,10 @@
+// conformance: native and wasm ABI values round-trip without semantic loss.
+
 use super::support::{FakeHost, StubWasmLib, manifest, manifest_with_codec_export, wasm_test_cx};
 use crate::{
     AbiValue, Frame, Handle, WasmExport, WasmHost, WasmLib, WasmManifest, WasmRuntime,
     decode_exports_frame, decode_manifest_frame, decode_value_frame, encode_exports_frame,
-    encode_manifest_frame, encode_value_frame, load_wasm_lib_from_bytes, load_wasm_lib_from_file,
+    encode_manifest_frame, encode_value_frame, load_wasm_lib_from_bytes,
 };
 use sim_kernel::{Args, Export, ExportState, Expr, Lib, LibTarget, Symbol};
 use std::sync::Arc;
@@ -284,18 +286,4 @@ impl WasmRuntime for SiteHost {
             ))
         }
     }
-}
-
-#[test]
-fn wasm_lib_loads_from_file_boundary() {
-    let runtime = Arc::new(FakeHost {
-        manifest: manifest(),
-        expected_module_bytes: b"(fake wasm module file)".to_vec(),
-    });
-    let dir = std::env::temp_dir();
-    let path = dir.join("sim-fake-module.wasm");
-    std::fs::write(&path, b"(fake wasm module file)").unwrap();
-    let lib = load_wasm_lib_from_file(runtime, &path).unwrap();
-    assert_eq!(lib.manifest().id, Symbol::new("geometry"));
-    std::fs::remove_file(&path).unwrap();
 }

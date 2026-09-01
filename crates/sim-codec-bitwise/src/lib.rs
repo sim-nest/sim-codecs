@@ -50,7 +50,7 @@
 //! use sim_codec_bitwise::{BitwiseCodecLib, canonical_bytes};
 //! use sim_kernel::{Cx, DefaultFactory, EagerPolicy, Expr, ReadPolicy, Symbol};
 //!
-//! let mut cx = Cx::new(std::sync::Arc::new(EagerPolicy), std::sync::Arc::new(DefaultFactory));
+//! let mut cx = Cx::new(std::sync::Arc::new(EagerPolicy), std::sync::Arc::new(DefaultFactory), sim_kernel::HandleSeed::new(0x348f_6bb5_0ecf_0c9f));
 //! sim_test_support::register_core_classes(&mut cx);
 //! let lib = BitwiseCodecLib::new(cx.registry_mut().fresh_codec_id());
 //! cx.load_lib(&lib)?;

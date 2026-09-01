@@ -17,6 +17,7 @@
 | `cookbook/codec/config` | `cookbook-recipe` | `sim-codec-config` | Configuration tables for library defaults and shared launcher files. |
 | `cookbook/codec/core` | `cookbook-recipe` | `sim-codec` | Shared codec runtime traits, positions, and limits. |
 | `cookbook/codec/doc` | `cookbook-recipe` | `sim-codec-doc` | Document decoding and provenance-preserving chunk descriptors. |
+| `cookbook/codec/feed` | `cookbook-recipe` | `sim-codec-feed` | Decode and encode bounded feed records. |
 | `cookbook/codec/javascript` | `cookbook-recipe` | `sim-codec-javascript` | Bounded, lossless JavaScript source parsing. |
 | `cookbook/codec/json` | `cookbook-recipe` | `sim-codec-json` | Tagged JSON expression forms. |
 | `cookbook/codec/lisp` | `cookbook-recipe` | `sim-codec-lisp` | Lisp surface forms for SIM expressions. |
@@ -24,5 +25,8 @@
 | `cookbook/codec/mcp` | `cookbook-recipe` | `sim-codec-mcp` | MCP JSON-RPC request, response, notification, and error envelopes. |
 | `cookbook/codec/pratt` | `cookbook-recipe` | `sim-codec-pratt` | Shared Pratt parsing substrate for codec lexers. |
 | `cookbook/codec/python` | `cookbook-recipe` | `sim-codec-python` | Bounded lossless Python source parsing. |
+| `cookbook/codec/robots` | `cookbook-recipe` | `sim-codec-robots` | Parse and match bounded robots.txt policy without network access. |
+| `cookbook/codec/search-searxng` | `cookbook-recipe` | `sim-codec-search-searxng` | Pure request and response translation for an operator-selected SearXNG site. |
+| `cookbook/codec/sql` | `cookbook-recipe` | `sim-codec-sql` | Prepare checked SQL forms for relation providers. |
 | `cookbook/codec/typescript` | `cookbook-recipe` | `sim-codec-typescript` | Bounded, lossless TypeScript and TSX source parsing. |
 | `registry/catalog` | `browse-registry` | `workspace` | registry catalog browse card |

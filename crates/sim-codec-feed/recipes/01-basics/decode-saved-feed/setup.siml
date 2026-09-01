@@ -1,0 +1,7 @@
+(expr:map
+  [kind "saved-feed-decode"]
+  [format "RSS or JSON Feed"]
+  [input "caller-supplied bounded bytes"]
+  [output "inert feed records"]
+  [network "none"]
+  [proof "crate decoder tests"])

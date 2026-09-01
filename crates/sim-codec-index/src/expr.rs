@@ -1,11 +1,15 @@
 //! Conversion between `IndexDoc` records and the codec expression grammar.
 
+mod encode;
+
+use encode::*;
+
 use sim_index_core::{
     AnchorId, CanonicalFeatureKey, DeclarationFact, DeclarationRole, DiscoveredAnchor,
     DiscoveredSpecimen, DiscoveredSurface, FeatureDraft, FeatureId, FeatureRecord, GrammarContract,
     IndexDoc, IndexEdge, ProtocolRelation, ProtocolResolution, RouteId, RouteRecord, RouteStep,
-    SourceLocation, SpecimenId, SubjectId, SubjectRecord, SurfaceId, SyntaxBound, UnresolvedReason,
-    Visibility,
+    SourceCompleteness, SourceLocation, SourceReachability, SourceUnit, SpecimenId, SubjectId,
+    SubjectRecord, SurfaceId, SyntaxBound, UnresolvedReason, Visibility,
 };
 use sim_kernel::{Expr, NumberLiteral, Symbol};
 use sim_value::build::entry as field;
@@ -22,6 +26,12 @@ pub fn expr_from_index_doc(doc: &IndexDoc) -> Expr {
         field("subjects", list(doc.subjects.iter().map(subject_expr))),
         field("anchors", list(doc.anchors.iter().map(anchor_expr))),
     ];
+    if !doc.source_units.is_empty() {
+        entries.push(field(
+            "source-units",
+            list(doc.source_units.iter().map(source_unit_expr)),
+        ));
+    }
     if !doc.declarations.is_empty() {
         entries.push(field(
             "declarations",
@@ -54,6 +64,7 @@ pub fn index_doc_from_expr(expr: &Expr) -> Result<IndexDoc, CodecError> {
         visibility: visibility_from_name(string_field(root, "visibility")?)?,
         subjects: map_list_field(root, "subjects", subject_from_expr)?,
         anchors: map_list_field(root, "anchors", anchor_from_expr)?,
+        source_units: optional_map_list_field(root, "source-units", source_unit_from_expr)?,
         declarations: optional_map_list_field(root, "declarations", declaration_from_expr)?,
         protocol_relations: optional_map_list_field(
             root,
@@ -67,176 +78,6 @@ pub fn index_doc_from_expr(expr: &Expr) -> Result<IndexDoc, CodecError> {
         routes: map_list_field(root, "routes", route_from_expr)?,
         edges: map_list_field(root, "edges", edge_from_expr)?,
     })
-}
-
-fn declaration_expr(fact: &DeclarationFact) -> Expr {
-    map(vec![
-        field("anchor", text(fact.anchor.as_str())),
-        field("role", text(fact.role.as_str())),
-        field("module-path", text(&fact.module_path)),
-        field("generics", text(&fact.generics)),
-        field("members", strings(fact.members.iter())),
-        field("location", source_location_expr(&fact.location)),
-        field("syntax-bound", syntax_bound_expr(fact.syntax_bound)),
-    ])
-}
-
-fn source_location_expr(location: &SourceLocation) -> Expr {
-    map(vec![
-        field("file", text(&location.file)),
-        field("declaration", unsigned(location.declaration)),
-    ])
-}
-
-fn syntax_bound_expr(bound: SyntaxBound) -> Expr {
-    map(vec![
-        field("max-bytes", unsigned(bound.max_bytes)),
-        field("truncated", Expr::Bool(bound.truncated)),
-    ])
-}
-
-fn protocol_relation_expr(relation: &ProtocolRelation) -> Expr {
-    map(vec![
-        field("anchor", text(relation.anchor.as_str())),
-        field("implementor", text(&relation.implementor)),
-        field("source-spelling", text(&relation.source_spelling)),
-        field("body-fingerprint", text(&relation.body_fingerprint)),
-        field("body-bound", syntax_bound_expr(relation.body_bound)),
-        field("resolution", resolution_expr(&relation.resolution)),
-    ])
-}
-
-fn resolution_expr(resolution: &ProtocolResolution) -> Expr {
-    match resolution {
-        ProtocolResolution::Resolved { protocol } => map(vec![
-            field("state", text("resolved")),
-            field("protocol", text(protocol)),
-        ]),
-        ProtocolResolution::Unresolved { reason, candidates } => map(vec![
-            field("state", text("unresolved")),
-            field("reason", text(unresolved_reason_name(*reason))),
-            field("candidates", strings(candidates.iter())),
-        ]),
-    }
-}
-
-fn subject_expr(subject: &SubjectRecord) -> Expr {
-    map(vec![
-        field("id", text(subject.id.as_str())),
-        field("kind", text(&subject.kind)),
-        field("title", text(&subject.title)),
-    ])
-}
-
-fn anchor_expr(anchor: &DiscoveredAnchor) -> Expr {
-    map(vec![
-        field("id", text(anchor.id.as_str())),
-        field("subject", text(anchor.subject.as_str())),
-        field("kind", text(&anchor.kind)),
-    ])
-}
-
-fn surface_expr(surface: &DiscoveredSurface) -> Expr {
-    map(vec![
-        field("id", text(surface.id.as_str())),
-        field("subject", text(surface.subject.as_str())),
-        field("kind", text(&surface.kind)),
-    ])
-}
-
-fn specimen_expr(specimen: &DiscoveredSpecimen) -> Expr {
-    map(vec![
-        field("id", text(specimen.id.as_str())),
-        field("subject", text(specimen.subject.as_str())),
-        field("kind", text(&specimen.kind)),
-        field("path", text(&specimen.path)),
-        field("language", optional_text(specimen.language.as_ref())),
-        field("runnable", Expr::Bool(specimen.runnable)),
-        field("checked", Expr::Bool(specimen.checked)),
-        field("checked-by", optional_text(specimen.checked_by.as_ref())),
-        field("doc-anchor", optional_id(specimen.doc_anchor.as_ref())),
-    ])
-}
-
-fn draft_expr(draft: &FeatureDraft) -> Expr {
-    map(vec![
-        field("id", text(draft.id.as_str())),
-        field("subject", text(draft.subject.as_str())),
-        field("title", text(&draft.title)),
-        field("summary", text(&draft.summary)),
-        field("claims-anchors", ids(draft.claims_anchors.iter())),
-        field("claims-surfaces", ids(draft.claims_surfaces.iter())),
-        field("claims-specimens", ids(draft.claims_specimens.iter())),
-        field("literal-anchors", strings(draft.literal_anchors.iter())),
-        field("literal-surfaces", strings(draft.literal_surfaces.iter())),
-        field("literal-specimens", strings(draft.literal_specimens.iter())),
-        field(
-            "grammar-contracts",
-            list(draft.grammar_contracts.iter().map(grammar_expr)),
-        ),
-        field("doc-anchor", optional_id(draft.doc_anchor.as_ref())),
-    ])
-}
-
-fn feature_expr(feature: &FeatureRecord) -> Expr {
-    map(vec![
-        field("id", text(feature.id.as_str())),
-        field("key", text(feature.key.as_str())),
-        field("subject", text(feature.subject.as_str())),
-        field("title", text(&feature.title)),
-        field("summary", text(&feature.summary)),
-        field("anchors", ids(feature.anchors.iter())),
-        field("surfaces", ids(feature.surfaces.iter())),
-        field("specimens", ids(feature.specimens.iter())),
-        field(
-            "grammar-contracts",
-            list(feature.grammar_contracts.iter().map(grammar_expr)),
-        ),
-        field("doc-anchor", optional_id(feature.doc_anchor.as_ref())),
-    ])
-}
-
-fn grammar_expr(grammar: &GrammarContract) -> Expr {
-    map(vec![
-        field("id", text(&grammar.id)),
-        field("decoder", optional_id(grammar.decoder.as_ref())),
-        field("encoder", optional_id(grammar.encoder.as_ref())),
-        field("surface", optional_id(grammar.surface.as_ref())),
-        field("round-trip", Expr::Bool(grammar.round_trip)),
-    ])
-}
-
-fn route_expr(route: &RouteRecord) -> Expr {
-    map(vec![
-        field("id", text(route.id.as_str())),
-        field("title", text(&route.title)),
-        field("audiences", strings(route.audiences.iter())),
-        field("steps", list(route.steps.iter().map(step_expr))),
-        field("doc-anchor", optional_id(route.doc_anchor.as_ref())),
-    ])
-}
-
-fn step_expr(step: &RouteStep) -> Expr {
-    match step {
-        RouteStep::Feature { id, why } => map(vec![
-            field("kind", text("feature")),
-            field("id", text(id.as_str())),
-            field("why", text(why)),
-        ]),
-        RouteStep::Specimen { id, why } => map(vec![
-            field("kind", text("specimen")),
-            field("id", text(id.as_str())),
-            field("why", text(why)),
-        ]),
-    }
-}
-
-fn edge_expr(edge: &IndexEdge) -> Expr {
-    map(vec![
-        field("from", text(&edge.from)),
-        field("rel", text(&edge.rel)),
-        field("to", text(&edge.to)),
-    ])
 }
 
 fn subject_from_expr(expr: &Expr) -> Result<SubjectRecord, CodecError> {

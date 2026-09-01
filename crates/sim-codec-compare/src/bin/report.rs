@@ -7,5 +7,19 @@ fn main() {
     println!("## Size (bytes, mean per category; ratio < 1.0 = bitwise smaller)\n");
     println!("{}", sim_codec_compare::report::size_table());
     println!("\n## Speed (bitwise/binary slowdown; > 1.0 = bitwise slower)\n");
-    println!("{}", sim_codec_compare::report::speed_table(200));
+    let mut clock = HostClock;
+    println!(
+        "{}",
+        sim_codec_compare::report::speed_table(200, &mut clock)
+    );
+}
+
+struct HostClock;
+
+impl sim_codec_compare::speed::BenchmarkClock for HostClock {
+    fn measure(&mut self, operation: &mut dyn FnMut()) -> std::time::Duration {
+        let started = std::time::Instant::now();
+        operation();
+        started.elapsed()
+    }
 }

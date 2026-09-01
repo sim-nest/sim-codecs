@@ -326,13 +326,17 @@ fn classfile_shapes() -> Vec<(Symbol, Arc<dyn sim_kernel::Shape>)> {
 mod tests {
     use super::*;
     use sim_codec::{DecodeLimits, Encoder};
-    use sim_kernel::{Cx, DefaultFactory, EagerPolicy, EncodeOptions, WriteCx};
+    use sim_kernel::{Cx, DefaultFactory, EagerPolicy, EncodeOptions, HandleSeed, WriteCx};
 
     const POSITIVE: &[u8] = include_bytes!("../fixtures/positive.class");
 
     #[test]
     fn runtime_registers_codec_and_inspection_shapes() {
-        let mut cx = Cx::new(Arc::new(EagerPolicy), Arc::new(DefaultFactory));
+        let mut cx = Cx::new(
+            Arc::new(EagerPolicy),
+            Arc::new(DefaultFactory),
+            HandleSeed::new(1),
+        );
         cx.load_lib(&ClassfileCodecLib::new(CodecId(73))).unwrap();
         assert!(
             cx.registry()
@@ -382,7 +386,11 @@ mod tests {
             .expect("instruction has an absolute byte offset");
         assert!(offset < POSITIVE.len());
 
-        let mut cx = Cx::new(Arc::new(EagerPolicy), Arc::new(DefaultFactory));
+        let mut cx = Cx::new(
+            Arc::new(EagerPolicy),
+            Arc::new(DefaultFactory),
+            HandleSeed::new(1),
+        );
         let codec = ClassfileCodec;
         let mut write = WriteCx {
             cx: &mut cx,

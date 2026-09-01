@@ -1,0 +1,1 @@
+(codec/decode 'codec/sql-ddl "CREATE TABLE notes (id INTEGER NOT NULL, body TEXT)")

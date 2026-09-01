@@ -204,7 +204,11 @@ pub(super) fn collab_packet() -> BridgePacket {
 }
 
 pub(super) fn cx() -> sim_kernel::Cx {
-    let mut cx = sim_kernel::Cx::new(Arc::new(EagerPolicy), Arc::new(DefaultFactory));
+    let mut cx = sim_kernel::Cx::new(
+        Arc::new(EagerPolicy),
+        Arc::new(DefaultFactory),
+        sim_kernel::HandleSeed::new(1),
+    );
     sim_test_support::register_core_classes(&mut cx);
     let lib = BridgeCodecLib::new(cx.registry_mut().fresh_codec_id());
     cx.load_lib(&lib).unwrap();

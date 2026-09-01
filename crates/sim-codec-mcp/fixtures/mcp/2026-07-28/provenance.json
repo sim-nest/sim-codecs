@@ -1,0 +1,9 @@
+{
+  "sourceUrl": "https://modelcontextprotocol.io/specification/2026-07-28/schema",
+  "revisionLabel": "2026-07-28 (final)",
+  "normalizedSchemaSha256": "dade902fe7f60499b33d5db1cbb7e9bf0e600431793080615d2047e6dec055cc",
+  "acquiredOn": "2026-08-23",
+  "license": "Copyright Model Context Protocol contributors; source specification distributed under the MIT License. This normalized inventory retains only protocol names, JSON Pointers, and structural facts required for deterministic conformance coverage.",
+  "normativeExampleSource": "https://modelcontextprotocol.io/specification/2026-07-28/basic",
+  "normalization": "Minimal closed inventory of definitions exercised by the SIM roadmap; documentation prose and mutable site assets are excluded."
+}

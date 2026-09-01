@@ -23,7 +23,7 @@
 //! use sim_codec_bitwise_base64::BitwiseBase64CodecLib;
 //! use sim_kernel::{Cx, DefaultFactory, EagerPolicy, Expr, ReadPolicy, Symbol};
 //!
-//! let mut cx = Cx::new(Arc::new(EagerPolicy), Arc::new(DefaultFactory));
+//! let mut cx = Cx::new(Arc::new(EagerPolicy), Arc::new(DefaultFactory), sim_kernel::HandleSeed::new(1));
 //! sim_test_support::register_core_classes(&mut cx);
 //!
 //! let lib = BitwiseBase64CodecLib::new(cx.registry_mut().fresh_codec_id());
@@ -49,7 +49,7 @@
 //! use sim_codec_bitwise_base64::BitwiseBase64CodecLib;
 //! use sim_kernel::{Cx, DefaultFactory, EagerPolicy, ReadPolicy, Symbol};
 //!
-//! let mut cx = Cx::new(Arc::new(EagerPolicy), Arc::new(DefaultFactory));
+//! let mut cx = Cx::new(Arc::new(EagerPolicy), Arc::new(DefaultFactory), sim_kernel::HandleSeed::new(1));
 //! sim_test_support::register_core_classes(&mut cx);
 //! let lib = BitwiseBase64CodecLib::new(cx.registry_mut().fresh_codec_id());
 //! cx.load_lib(&lib)?;

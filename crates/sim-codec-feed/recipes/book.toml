@@ -1,0 +1,5 @@
+book = "codec/feed"
+title = "Feed codec recipes"
+summary = "Decode and encode bounded feed records."
+order = 10
+chapters = ["01-basics"]

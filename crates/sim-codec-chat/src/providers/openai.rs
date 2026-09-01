@@ -7,6 +7,7 @@
 mod common;
 mod decode;
 mod encode;
+mod responses;
 mod runtime;
 
 pub use decode::{
@@ -19,6 +20,12 @@ pub(in crate::providers) use decode::{
 };
 pub(in crate::providers) use encode::encode_openai_response_for_codec;
 pub use encode::{encode_openai_request, encode_openai_response};
+pub use responses::{
+    decode_openai_responses_request, decode_openai_responses_request_with_limits,
+    decode_openai_responses_response, decode_openai_responses_response_with_limits,
+    decode_openai_responses_stream, decode_openai_responses_stream_with_limits,
+    encode_openai_responses_request,
+};
 pub use runtime::{OpenAiCodec, OpenAiCodecLib};
 
 use sim_kernel::{CodecId, Symbol};

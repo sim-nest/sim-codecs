@@ -5,7 +5,8 @@ use sim_value::build::entry as field;
 use crate::expr::{decode_chat_text, encode_chat_text};
 use crate::{
     CodecProfile, RequestWire, StreamWire, anthropic_profile, lemonade_profile, lm_studio_profile,
-    model_response_expr, ollama_profile, openai_profile, text_part, validate_chat_transcript,
+    model_response_expr, ollama_profile, openai_profile, openai_responses_profile, text_part,
+    validate_chat_transcript,
 };
 
 pub(crate) fn transcript_roundtrip_symbol() -> Symbol {
@@ -70,6 +71,7 @@ impl Callable for ChatProviderProfilesReport {
         }
         let profiles = [
             openai_profile(),
+            openai_responses_profile(),
             anthropic_profile(),
             ollama_profile(),
             lm_studio_profile(),

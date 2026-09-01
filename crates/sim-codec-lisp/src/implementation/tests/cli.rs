@@ -1,8 +1,14 @@
-use std::{fs, path::PathBuf};
+use std::{
+    fs,
+    path::PathBuf,
+    sync::atomic::{AtomicU64, Ordering},
+};
 
 use super::*;
 use crate::implementation::cli::cli_main_symbol;
 use sim_kernel::Lib;
+
+static NEXT_MODEL_MOUNT: AtomicU64 = AtomicU64::new(1);
 
 #[derive(Clone)]
 struct AddFunction;
@@ -212,12 +218,9 @@ fn optional_string(cx: &mut Cx, value: Option<&str>) -> Value {
 
 fn temp_script(source: &str) -> PathBuf {
     let path = std::env::temp_dir().join(format!(
-        "sim-codec-lisp-cli-{}-{}.sim",
+        "sim-codec-lisp-cli-model-mount-{}-{}.sim",
         std::process::id(),
-        std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .unwrap()
-            .as_nanos()
+        NEXT_MODEL_MOUNT.fetch_add(1, Ordering::Relaxed)
     ));
     fs::write(&path, source).unwrap();
     path

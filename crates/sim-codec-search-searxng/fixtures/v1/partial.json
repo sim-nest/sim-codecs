@@ -1,0 +1,12 @@
+{
+  "query":"sim kernel",
+  "results":[
+    {"url":"https://alpha.example/a","title":"Alpha","content":"claim A","engines":["alpha"],"score":1.0},
+    {"title":"missing identity","engines":["broken"]},
+    {"url":"https://beta.example/b","title":"Beta","content":"claim B","engines":["beta"],"category":"general"}
+  ],
+  "answers":["provider answer"],
+  "infoboxes":[{"infobox":"Fixture","content":"provider infobox"}],
+  "suggestions":["sim runtime"],
+  "unresponsive_engines":[["slow-engine","timeout"]]
+}

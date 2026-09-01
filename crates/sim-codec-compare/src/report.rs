@@ -2,7 +2,7 @@
 
 use crate::corpus::{CATEGORIES, Category, category_name, corpus};
 use crate::size::measure_size;
-use crate::speed::measure_speed;
+use crate::speed::{BenchmarkClock, measure_speed};
 
 /// A per-category size summary: mean bytes and the bitwise/binary ratio.
 pub struct SizeRow {
@@ -76,7 +76,7 @@ pub fn size_table() -> String {
 }
 
 /// Render a per-category SPEED table (bitwise/binary slowdown, encode + decode).
-pub fn speed_table(reps: u32) -> String {
+pub fn speed_table(reps: u32, clock: &mut dyn BenchmarkClock) -> String {
     let samples = corpus();
     let mut out = String::from(
         "| category   | enc slowdown | dec slowdown |\n\
@@ -85,7 +85,7 @@ pub fn speed_table(reps: u32) -> String {
     for &cat in &CATEGORIES {
         let (mut enc, mut dec, mut n) = (0.0f64, 0.0f64, 0u32);
         for s in samples.iter().filter(|s| s.category == cat) {
-            let t = measure_speed(&s.expr, reps);
+            let t = measure_speed(&s.expr, reps, clock);
             let be = t.binary_encode.as_nanos().max(1) as f64;
             let bd = t.binary_decode.as_nanos().max(1) as f64;
             enc += t.bitwise_encode.as_nanos() as f64 / be;

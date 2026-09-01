@@ -32,7 +32,7 @@
 //!     Cx, DefaultFactory, EagerPolicy, Expr, ReadPolicy, Symbol,
 //! };
 //!
-//! let mut cx = Cx::new(Arc::new(EagerPolicy), Arc::new(DefaultFactory));
+//! let mut cx = Cx::new(Arc::new(EagerPolicy), Arc::new(DefaultFactory), sim_kernel::HandleSeed::new(1));
 //! sim_test_support::register_core_classes(&mut cx);
 //! sim_test_support::register_f64_number_domain(&mut cx);
 //!

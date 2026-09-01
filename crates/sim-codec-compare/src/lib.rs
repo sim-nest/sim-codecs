@@ -28,6 +28,8 @@ pub mod speed;
 #[cfg(test)]
 mod findings_tests;
 #[cfg(test)]
+mod platform_roundtrip_tests;
+#[cfg(test)]
 mod speed_smoke_tests;
 
 /// Cookbook recipes for this codec, embedded at build time.

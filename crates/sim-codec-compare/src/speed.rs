@@ -3,7 +3,7 @@
 //! Timings are machine-relative, so the report leans on RATIOS (bitwise/binary),
 //! which are stable across machines, rather than absolute nanoseconds.
 
-use std::time::{Duration, Instant};
+use std::time::Duration;
 
 use sim_kernel::{CodecId, Expr};
 
@@ -20,24 +20,24 @@ pub struct Timings {
     pub bitwise_decode: Duration,
 }
 
-fn median_time(reps: u32, mut op: impl FnMut()) -> Duration {
+/// Explicit clock supplied by the benchmark rind.
+pub trait BenchmarkClock {
+    /// Performs `operation` once and returns its modeled or observed duration.
+    fn measure(&mut self, operation: &mut dyn FnMut()) -> Duration;
+}
+
+fn median_time(reps: u32, clock: &mut dyn BenchmarkClock, mut op: impl FnMut()) -> Duration {
     let warm = reps.clamp(1, 16);
     for _ in 0..warm {
         op();
     }
-    let mut samples: Vec<Duration> = (0..reps.max(1))
-        .map(|_| {
-            let t = Instant::now();
-            op();
-            t.elapsed()
-        })
-        .collect();
+    let mut samples: Vec<Duration> = (0..reps.max(1)).map(|_| clock.measure(&mut op)).collect();
     samples.sort_unstable();
     samples[samples.len() / 2]
 }
 
 /// Time all four operations for `expr` (median of `reps`).
-pub fn measure_speed(expr: &Expr, reps: u32) -> Timings {
+pub fn measure_speed(expr: &Expr, reps: u32, clock: &mut dyn BenchmarkClock) -> Timings {
     let binary_bytes = sim_codec_binary::encode_frame(expr)
         .expect("binary encode")
         .0;
@@ -46,18 +46,18 @@ pub fn measure_speed(expr: &Expr, reps: u32) -> Timings {
         .0;
 
     Timings {
-        binary_encode: median_time(reps, || {
+        binary_encode: median_time(reps, clock, || {
             let _ = std::hint::black_box(sim_codec_binary::encode_frame(expr).unwrap());
         }),
-        binary_decode: median_time(reps, || {
+        binary_decode: median_time(reps, clock, || {
             let _ = std::hint::black_box(
                 sim_codec_binary::decode_frame(CodecId(1), &binary_bytes).unwrap(),
             );
         }),
-        bitwise_encode: median_time(reps, || {
+        bitwise_encode: median_time(reps, clock, || {
             let _ = std::hint::black_box(sim_codec_bitwise::encode_frame(expr).unwrap());
         }),
-        bitwise_decode: median_time(reps, || {
+        bitwise_decode: median_time(reps, clock, || {
             let _ = std::hint::black_box(
                 sim_codec_bitwise::decode_frame(CodecId(1), &bitwise_bytes).unwrap(),
             );
@@ -75,12 +75,12 @@ fn ratio(slow: Duration, fast: Duration) -> f64 {
 /// Mean bitwise/binary slowdown factor for encode and for decode across the corpus.
 ///
 /// A factor > 1.0 means bitwise is slower than binary (the expected direction).
-pub fn slowdown_factors(reps: u32) -> (f64, f64) {
+pub fn slowdown_factors(reps: u32, clock: &mut dyn BenchmarkClock) -> (f64, f64) {
     let samples = crate::corpus::corpus();
     let mut enc = 0.0;
     let mut dec = 0.0;
     for s in &samples {
-        let t = measure_speed(&s.expr, reps);
+        let t = measure_speed(&s.expr, reps, clock);
         enc += ratio(t.bitwise_encode, t.binary_encode);
         dec += ratio(t.bitwise_decode, t.binary_decode);
     }
