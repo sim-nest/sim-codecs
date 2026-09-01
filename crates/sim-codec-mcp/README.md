@@ -4,20 +4,11 @@
 
 MCP JSON-RPC envelope codec for SIM.
 
-The crate also carries the networkless protocol coverage oracle for the final
-`2026-07-28` schema. `fixtures/mcp/2026-07-28/provenance.json` pins its source,
-revision, digest, acquisition date, and license notice; `coverage.json` maps
-every normalized source path to its Rust owner, positive and negative vectors,
-and delivery phase. The build rejects missing, duplicate, unclassified, or
-unreasoned open-extension rows and generates the public vocabulary constants.
-The delivered `2025-03-26` initialize profile remains separate: no intervening
-revision alias is inferred or advertised.
-
 ## Package Metadata
 
 - Manifest: `crates/sim-codec-mcp/Cargo.toml`
 - Publish: `true`
-- Targets: `custom-build, lib`
+- Targets: `custom-build, lib, test`
 
 ## Crate Documentation
 

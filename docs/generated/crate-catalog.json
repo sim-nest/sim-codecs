@@ -1,6 +1,6 @@
 {
   "generator": "xtask crate-catalog v1",
-  "package_count": 24,
+  "package_count": 29,
   "packages": [
     {
       "description": "SIM workspace package for sim codec algol.",
@@ -149,6 +149,32 @@
       ]
     },
     {
+      "description": "Bounded inert RSS, Atom, and JSON Feed codec for SIM.",
+      "generated_readme": false,
+      "manifest": "crates/sim-codec-feed/Cargo.toml",
+      "name": "sim-codec-feed",
+      "publish": "true",
+      "readme": "crates/sim-codec-feed/README.md",
+      "root": "crates/sim-codec-feed",
+      "target_kinds": [
+        "custom-build",
+        "lib"
+      ]
+    },
+    {
+      "description": "Pure v2 Markdown bundle codec for complete SIM Index vault projections.",
+      "generated_readme": false,
+      "manifest": "crates/sim-codec-index-vault/Cargo.toml",
+      "name": "sim-codec-index-vault",
+      "publish": "true",
+      "readme": "crates/sim-codec-index-vault/README.md",
+      "root": "crates/sim-codec-index-vault",
+      "target_kinds": [
+        "lib",
+        "test"
+      ]
+    },
+    {
       "description": "SIM Index codec for checked s-expression and JSON index graph forms.",
       "generated_readme": true,
       "manifest": "crates/sim-codec-index/Cargo.toml",
@@ -224,7 +250,8 @@
       "root": "crates/sim-codec-mcp",
       "target_kinds": [
         "custom-build",
-        "lib"
+        "lib",
+        "test"
       ]
     },
     {
@@ -250,6 +277,44 @@
       "root": "crates/sim-codec-python",
       "target_kinds": [
         "custom-build",
+        "lib"
+      ]
+    },
+    {
+      "description": "Bounded RFC 9309 robots.txt parser and matcher for SIM.",
+      "generated_readme": false,
+      "manifest": "crates/sim-codec-robots/Cargo.toml",
+      "name": "sim-codec-robots",
+      "publish": "true",
+      "readme": "crates/sim-codec-robots/README.md",
+      "root": "crates/sim-codec-robots",
+      "target_kinds": [
+        "custom-build",
+        "lib"
+      ]
+    },
+    {
+      "description": "Pure bounded SearXNG request and response codec for SIM.",
+      "generated_readme": false,
+      "manifest": "crates/sim-codec-search-searxng/Cargo.toml",
+      "name": "sim-codec-search-searxng",
+      "publish": "true",
+      "readme": "crates/sim-codec-search-searxng/README.md",
+      "root": "crates/sim-codec-search-searxng",
+      "target_kinds": [
+        "custom-build",
+        "lib"
+      ]
+    },
+    {
+      "description": "Bounded SQL projection for admitted SIM relational plans and migrations.",
+      "generated_readme": false,
+      "manifest": "crates/sim-codec-sql/Cargo.toml",
+      "name": "sim-codec-sql",
+      "publish": "true",
+      "readme": "crates/sim-codec-sql/README.md",
+      "root": "crates/sim-codec-sql",
+      "target_kinds": [
         "lib"
       ]
     },
