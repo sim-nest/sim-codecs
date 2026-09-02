@@ -17,14 +17,19 @@ Generated from Cargo metadata by `xtask crate-catalog v1`.
 | `sim-codec-compare` | `false` | `bin, custom-build, lib` | Developer harness comparing sim-codec-bitwise vs sim-codec-binary on size and speed. |
 | `sim-codec-config` | `true` | `custom-build, lib` | SIM config codec for per-library and single-file config maps. |
 | `sim-codec-doc` | `true` | `custom-build, lib, test` | Markup document codec backends for SIM. |
+| `sim-codec-feed` | `true` | `custom-build, lib` | Bounded inert RSS, Atom, and JSON Feed codec for SIM. |
+| `sim-codec-index-vault` | `true` | `lib, test` | Pure v2 Markdown bundle codec for complete SIM Index vault projections. |
 | `sim-codec-index` | `true` | `lib` | SIM Index codec for checked s-expression and JSON index graph forms. |
 | `sim-codec-javascript` | `true` | `lib, test` | Bounded, lossless ECMAScript 2026 source frontend for SIM. |
 | `sim-codec-json` | `true` | `custom-build, lib, test` | SIM workspace package for sim codec json. |
 | `sim-codec-lisp` | `true` | `cdylib, custom-build, rlib` | SIM workspace package for sim codec lisp. |
 | `sim-codec-lua` | `true` | `custom-build, lib` | Lua chunk codec with expression, located, and tree round-trip lanes. |
-| `sim-codec-mcp` | `true` | `custom-build, lib` | MCP JSON-RPC envelope codec for SIM. |
+| `sim-codec-mcp` | `true` | `custom-build, lib, test` | MCP JSON-RPC envelope codec for SIM. |
 | `sim-codec-pratt` | `true` | `custom-build, lib` | Shared Pratt expression parser substrate for SIM codecs. |
 | `sim-codec-python` | `true` | `custom-build, lib` | Bounded, lossless Python 3.14 source frontend for SIM. |
+| `sim-codec-robots` | `true` | `custom-build, lib` | Bounded RFC 9309 robots.txt parser and matcher for SIM. |
+| `sim-codec-search-searxng` | `true` | `custom-build, lib` | Pure bounded SearXNG request and response codec for SIM. |
+| `sim-codec-sql` | `true` | `lib` | Bounded SQL projection for admitted SIM relational plans and migrations. |
 | `sim-codec-typescript` | `true` | `lib` | Bounded, lossless TypeScript 7 and TSX syntax frontend for SIM. |
 | `sim-codec` | `true` | `custom-build, lib` | SIM workspace package for sim codec. |
 | `sim-test-support` | `true` | `lib` | Shared test harness for SIM crates. |
