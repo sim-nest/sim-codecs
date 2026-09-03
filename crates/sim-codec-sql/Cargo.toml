@@ -1,6 +1,6 @@
 [package]
 name = "sim-codec-sql"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2024"
 license = "MPL-2.0"
 description = "Bounded SQL projection for admitted SIM relational plans and migrations."
@@ -14,11 +14,11 @@ policy = "rustdoc"
 reason = "SQL safety and dialect behavior are taught by checked rustdoc and conformance fixtures."
 
 [dependencies]
-sim-kernel = { version = "0.3.0" }
-sim-relation-core = { version = "0.1.0" }
-sim-relation-schema = { version = "0.1.0" }
-sim-relation-plan = { version = "0.1.0" }
-sim-relation-migrate = { version = "0.1.0" }
+sim-kernel = { version = "0.4.0" }
+sim-relation-core = { version = "0.2.0" }
+sim-relation-schema = { version = "0.2.0" }
+sim-relation-plan = { version = "0.2.0" }
+sim-relation-migrate = { version = "0.2.0" }
 
 [lints]
 workspace = true

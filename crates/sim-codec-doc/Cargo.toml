@@ -1,6 +1,6 @@
 [package]
 name = "sim-codec-doc"
-version = "0.2.0"
+version = "0.3.0"
 edition = "2024"
 license = "MPL-2.0"
 description = "Markup document codec backends for SIM."
@@ -10,11 +10,11 @@ repository = "https://github.com/sim-nest/sim-codecs"
 homepage = "https://github.com/sim-nest/sim-codecs"
 
 [dependencies]
-sim-codec = { version = "0.2.0", path = "../sim-codec" }
-sim-cookbook = { version = "0.3.0" }
-sim-kernel = { version = "0.3.0" }
-sim-value = { version = "0.3.0" }
-sim-codec-json = { version = "0.3.0", path = "../sim-codec-json" }
+sim-codec = { version = "0.3.0", path = "../sim-codec" }
+sim-cookbook = { version = "0.4.0" }
+sim-kernel = { version = "0.4.0" }
+sim-value = { version = "0.4.0" }
+sim-codec-json = { version = "0.4.0", path = "../sim-codec-json" }
 serde_json = "1"
 serde = "1"
 pulldown-cmark = "0.13.4"
@@ -25,8 +25,8 @@ tree-sitter = "0.25.10"
 codebook-tree-sitter-latex = "0.6.1"
 
 [dev-dependencies]
-sim-codec-lisp = { version = "0.3.0", path = "../sim-codec-lisp" }
+sim-codec-lisp = { version = "0.4.0", path = "../sim-codec-lisp" }
 sim-test-support = { version = "0.1.1", path = "../sim-test-support" }
 
 [build-dependencies]
-sim-cookbook-build = { version = "0.1.0" }
+sim-cookbook-build = { version = "0.2.0" }
