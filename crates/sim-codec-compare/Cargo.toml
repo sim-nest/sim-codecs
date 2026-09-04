@@ -10,18 +10,18 @@ homepage = "https://github.com/sim-nest/sim-codecs"
 publish = false
 
 [dependencies]
-sim-cookbook = { version = "0.3.0" }
-sim-kernel = { version = "0.3.0" }
-sim-value = { version = "0.3.0" }
-sim-codec-binary = { version = "0.3.0", path = "../sim-codec-binary" }
-sim-codec-bitwise = { version = "0.2.0", path = "../sim-codec-bitwise" }
+sim-cookbook = { version = "0.4.0" }
+sim-kernel = { version = "0.4.0" }
+sim-value = { version = "0.4.0" }
+sim-codec-binary = { version = "0.4.0", path = "../sim-codec-binary" }
+sim-codec-bitwise = { version = "0.3.0", path = "../sim-codec-bitwise" }
 
 [dev-dependencies]
-sim-codec-algol = { version = "0.2.0", path = "../sim-codec-algol" }
-sim-codec = { version = "0.2.0", path = "../sim-codec" }
-sim-codec-json = { version = "0.3.0", path = "../sim-codec-json" }
-sim-codec-lisp = { version = "0.3.0", path = "../sim-codec-lisp" }
-sim-kernel = { version = "0.3.0", features = ["test-support"] }
+sim-codec-algol = { version = "0.3.0", path = "../sim-codec-algol" }
+sim-codec = { version = "0.3.0", path = "../sim-codec" }
+sim-codec-json = { version = "0.4.0", path = "../sim-codec-json" }
+sim-codec-lisp = { version = "0.4.0", path = "../sim-codec-lisp" }
+sim-kernel = { version = "0.4.0", features = ["test-support"] }
 sim-test-support = { version = "0.1.2", path = "../sim-test-support" }
 
 [[bin]]
@@ -29,4 +29,4 @@ name = "report"
 path = "src/bin/report.rs"
 
 [build-dependencies]
-sim-cookbook-build = { version = "0.1.0" }
+sim-cookbook-build = { version = "0.2.0" }
