@@ -1,6 +1,6 @@
 [package]
 name = "sim-codec-index"
-version = "0.3.0"
+version = "0.3.1"
 edition = "2024"
 license = "MPL-2.0"
 description = "SIM Index codec for checked s-expression and JSON index graph forms."
@@ -18,7 +18,7 @@ serde_json = "1"
 sim-codec = { version = "0.3.0", path = "../sim-codec" }
 sim-codec-json = { version = "0.4.0", path = "../sim-codec-json" }
 sim-codec-lisp = { version = "0.4.0", path = "../sim-codec-lisp" }
-sim-index-core = { version = "0.4.0", git = "https://github.com/sim-nest/sim-foundation", rev = "99ac3f21ac9fe2d256c054278cd5b6091dd9bc97" }
+sim-index-core = { version = "0.4.0" }
 sim-kernel = { version = "0.4.0" }
 sim-value = "0.4.0"
 
