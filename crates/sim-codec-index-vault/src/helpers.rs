@@ -34,7 +34,9 @@ pub(super) fn validate_metadata(
     if attr_text(doc, "sim_granularity")? != granularity_name(bundle.granularity) {
         return Err(VaultCodecError::GranularityDisagreement);
     }
-    if attr_text(doc, "sim_projection_digest")? != content_text(&bundle.projection_digest) {
+    if attr_text(doc, "sim_projection_digest")?
+        != content_text(bundle.projection_digest.content_id())
+    {
         return Err(VaultCodecError::ProjectionDigest);
     }
     if attr_text(doc, "sim_compatibility_evidence")? != profile.compatibility_evidence {
@@ -208,30 +210,90 @@ pub(super) fn link_target(source: &str, target: &str, links: LinkDialect) -> Str
         }
     }
 }
-pub(super) fn projection_digest(projection: &VaultProjection) -> ContentId {
-    let mut h = Sha256::new();
-    h.update(b"sim.index-vault.projection.v2\0");
-    h.update(granularity_name(projection.granularity()));
-    for note in projection.notes() {
-        h.update(kind_name(note.kind));
-        h.update([0]);
-        h.update(note.id.as_str());
-        for row in &note.rows {
-            h.update([0]);
-            h.update(format!("{row:#?}"));
-        }
-    }
-    finish(h)
+pub(super) fn projection_digest(
+    projection: &VaultProjection,
+) -> Result<VaultProjectionId, VaultCodecError> {
+    projection_datum(projection).and_then(|datum| {
+        datum
+            .content_id()
+            .map(VaultProjectionId)
+            .map_err(|error| VaultCodecError::RowCodec(error.to_string()))
+    })
 }
-pub(super) fn bundle_digest(entries: &[VaultEntry]) -> ContentId {
-    let mut h = Sha256::new();
-    h.update(b"sim.index-vault.bundle.v2\0");
-    for entry in entries {
-        h.update(entry.path.as_bytes());
-        h.update([0]);
-        h.update(entry.content_digest.bytes);
-    }
-    finish(h)
+fn projection_datum(projection: &VaultProjection) -> Result<Datum, VaultCodecError> {
+    let notes = projection
+        .notes()
+        .iter()
+        .map(|note| {
+            Ok(Datum::Node {
+                tag: Symbol::qualified("index-vault", "ProjectionNoteV1"),
+                fields: vec![
+                    (
+                        Symbol::new("kind"),
+                        Datum::Symbol(Symbol::new(kind_name(note.kind))),
+                    ),
+                    (
+                        Symbol::new("id"),
+                        Datum::String(note.id.as_str().to_owned()),
+                    ),
+                    (
+                        Symbol::new("rows"),
+                        Datum::List(
+                            note.rows
+                                .iter()
+                                .map(super::codec::row_datum)
+                                .collect::<Result<Vec<_>, _>>()?,
+                        ),
+                    ),
+                ],
+            })
+        })
+        .collect::<Result<Vec<_>, VaultCodecError>>()?;
+    Ok(Datum::Node {
+        tag: Symbol::qualified("index-vault", "ProjectionIdentityV3"),
+        fields: vec![
+            (
+                Symbol::new("granularity"),
+                Datum::Symbol(Symbol::new(granularity_name(projection.granularity()))),
+            ),
+            (Symbol::new("notes"), Datum::List(notes)),
+        ],
+    })
+}
+pub(super) fn bundle_digest(
+    profile: VaultProfileId,
+    granularity: VaultGranularity,
+    projection: &VaultProjectionId,
+    entries: &[VaultEntry],
+) -> Result<VaultBundleId, VaultCodecError> {
+    let datum = Datum::Node {
+        tag: Symbol::qualified("index-vault", "BundleIdentityV3"),
+        fields: vec![
+            (
+                Symbol::new("profile"),
+                Datum::String(profile.as_str().to_owned()),
+            ),
+            (
+                Symbol::new("granularity"),
+                Datum::Symbol(Symbol::new(granularity_name(granularity))),
+            ),
+            (
+                Symbol::new("projection"),
+                content_id_datum(projection.content_id()),
+            ),
+            (
+                Symbol::new("entries"),
+                Datum::List(entries.iter().map(bundle_entry_datum).collect()),
+            ),
+        ],
+    };
+    datum
+        .content_id()
+        .map(VaultBundleId)
+        .map_err(|error| VaultCodecError::RowCodec(error.to_string()))
+}
+pub(super) fn artifact_id(bytes: &[u8]) -> VaultArtifactId {
+    VaultArtifactId(content_id(b"sim.index-vault.content.v2\0", bytes))
 }
 pub(super) fn content_id(domain: &[u8], bytes: &[u8]) -> ContentId {
     let mut h = Sha256::new();
@@ -244,12 +306,64 @@ pub(super) fn finish(h: Sha256) -> ContentId {
 }
 pub(super) fn content_text(id: &ContentId) -> String {
     format!(
-        "sha256:{}",
+        "{}:{}",
+        id.algorithm,
         id.bytes
             .iter()
             .map(|b| format!("{b:02x}"))
             .collect::<String>()
     )
+}
+
+fn bundle_entry_datum(entry: &VaultEntry) -> Datum {
+    Datum::Node {
+        tag: Symbol::qualified("index-vault", "BundleEntryV1"),
+        fields: vec![
+            (Symbol::new("path"), Datum::String(entry.path.clone())),
+            (
+                Symbol::new("content"),
+                content_id_datum(entry.content_digest.content_id()),
+            ),
+            (Symbol::new("note-id"), Datum::String(entry.note_id.clone())),
+            (
+                Symbol::new("note-kind"),
+                entry
+                    .note_kind
+                    .map(|kind| Datum::Symbol(Symbol::new(kind_name(kind))))
+                    .unwrap_or(Datum::Nil),
+            ),
+            (
+                Symbol::new("claim-families"),
+                Datum::Map(
+                    entry
+                        .claim_families
+                        .iter()
+                        .map(|(family, count)| (Datum::String(family.clone()), usize_datum(*count)))
+                        .collect(),
+                ),
+            ),
+        ],
+    }
+}
+
+fn content_id_datum(id: &ContentId) -> Datum {
+    Datum::Node {
+        tag: Symbol::qualified("core", "ContentId"),
+        fields: vec![
+            (
+                Symbol::new("algorithm"),
+                Datum::Symbol(id.algorithm.clone()),
+            ),
+            (Symbol::new("bytes"), Datum::Bytes(id.bytes.to_vec())),
+        ],
+    }
+}
+
+fn usize_datum(value: usize) -> Datum {
+    Datum::Number(NumberLiteral {
+        domain: Symbol::qualified("numbers", "usize"),
+        canonical: value.to_string(),
+    })
 }
 pub(super) fn granularity_name(value: VaultGranularity) -> &'static str {
     match value {

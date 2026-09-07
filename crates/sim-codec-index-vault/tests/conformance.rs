@@ -2,7 +2,8 @@
 
 use sim_codec_index_vault::{
     LegacyVaultBundle, LegacyVaultEntry, PROFILES, VaultDecoder, VaultEncoder,
-    legacy_projection_v1, resolve_legacy_profile, resolve_profile, verify_legacy_v1, verify_v2,
+    legacy_projection_v1, refresh_bundle_identities, resolve_legacy_profile, resolve_profile,
+    verify_legacy_v1, verify_v2,
 };
 use sim_index_core::{
     AnchorId, DeclarationFact, DeclarationRole, DiscoveredAnchor, DiscoveredSpecimen,
@@ -13,6 +14,7 @@ use sim_index_core::{
 };
 use sim_index_vault_core::IndexRow;
 use sim_index_vault_core::{VaultGranularity, VaultProjection};
+use sim_kernel::datum_content_algorithm;
 
 fn fixture() -> IndexDoc {
     let subject = SubjectId::new("crate/edge-case");
@@ -256,6 +258,64 @@ fn bytes_and_semantic_identity_ignore_input_permutation() {
             .unwrap();
         assert_eq!(actual, expected);
     }
+}
+
+#[test]
+fn semantic_bundle_identity_covers_role_and_metadata_while_bytes_stay_distinct() {
+    let projection = VaultProjection::from_complete(&fixture(), VaultGranularity::Full).unwrap();
+    let bundle = VaultEncoder::new(PROFILES[0]).encode(&projection).unwrap();
+    assert_eq!(
+        bundle.projection_digest.content_id().algorithm,
+        datum_content_algorithm()
+    );
+    assert_eq!(
+        bundle.bundle_root.content_id().algorithm,
+        datum_content_algorithm()
+    );
+    assert!(bundle.entries.iter().all(|entry| {
+        entry
+            .content_digest
+            .content_id()
+            .algorithm
+            .as_qualified_str()
+            == "core/sha256"
+    }));
+
+    let changed_root = |mut changed: sim_codec_index_vault::VaultBundle| {
+        refresh_bundle_identities(&mut changed).unwrap();
+        assert_ne!(changed.bundle_root, bundle.bundle_root);
+    };
+    let mut changed = bundle.clone();
+    changed.profile = PROFILES[1].id;
+    changed_root(changed);
+    let mut changed = bundle.clone();
+    changed.granularity = VaultGranularity::Compact;
+    changed_root(changed);
+    let mut changed = bundle.clone();
+    let compact_projection =
+        VaultProjection::from_complete(&fixture(), VaultGranularity::Compact).unwrap();
+    changed.projection_digest = VaultEncoder::new(PROFILES[0])
+        .encode(&compact_projection)
+        .unwrap()
+        .projection_digest;
+    changed_root(changed);
+    let mut changed = bundle.clone();
+    changed.entries[0].note_id.push_str("-changed");
+    changed_root(changed);
+    let mut changed = bundle.clone();
+    changed.entries[0]
+        .claim_families
+        .insert("changed".into(), 1);
+    changed_root(changed);
+    let mut changed = bundle.clone();
+    changed.entries.reverse();
+    changed_root(changed);
+    let mut changed = bundle.clone();
+    changed.entries[0].bytes.push(b'\n');
+    let old_content = changed.entries[0].content_digest.clone();
+    refresh_bundle_identities(&mut changed).unwrap();
+    assert_ne!(changed.entries[0].content_digest, old_content);
+    assert_ne!(changed.bundle_root, bundle.bundle_root);
 }
 
 #[test]

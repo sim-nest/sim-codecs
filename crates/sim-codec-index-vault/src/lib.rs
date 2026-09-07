@@ -26,7 +26,7 @@ use sim_index_core::IndexDoc;
 use sim_index_vault_core::{
     IndexRow, VaultGranularity, VaultNoteKind, VaultNotePlan, VaultProjection,
 };
-use sim_kernel::{ContentId, Expr, Symbol};
+use sim_kernel::{ContentId, Datum, Expr, NumberLiteral, Symbol};
 
 const MAX_NOTES: usize = 50_000;
 const MAX_ROWS: usize = 100_000;

@@ -2,6 +2,45 @@
 
 use super::*;
 
+/// Byte-address identity for one exact encoded vault artifact.
+///
+/// ```compile_fail
+/// use sim_codec_index_vault::{VaultArtifactId, VaultProjectionId};
+/// fn semantic(_: VaultProjectionId) {}
+/// fn crossing(location: VaultArtifactId) { semantic(location); }
+/// ```
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct VaultArtifactId(pub(super) ContentId);
+
+impl VaultArtifactId {
+    /// Borrows the registered byte identity.
+    pub const fn content_id(&self) -> &ContentId {
+        &self.0
+    }
+}
+
+/// Semantic identity of the complete projected Index meaning.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct VaultProjectionId(pub(super) ContentId);
+
+impl VaultProjectionId {
+    /// Borrows the canonical semantic identity.
+    pub const fn content_id(&self) -> &ContentId {
+        &self.0
+    }
+}
+
+/// Semantic identity of an ordered, profiled vault bundle.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct VaultBundleId(pub(super) ContentId);
+
+impl VaultBundleId {
+    /// Borrows the canonical semantic identity.
+    pub const fn content_id(&self) -> &ContentId {
+        &self.0
+    }
+}
+
 /// One sorted in-memory artifact.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct VaultEntry {
@@ -16,7 +55,7 @@ pub struct VaultEntry {
     /// Row-family counts claimed here.
     pub claim_families: BTreeMap<String, usize>,
     /// Content digest.
-    pub content_digest: ContentId,
+    pub content_digest: VaultArtifactId,
 }
 
 /// Complete, deterministic in-memory bundle.
@@ -27,11 +66,28 @@ pub struct VaultBundle {
     /// Projection density.
     pub granularity: VaultGranularity,
     /// Semantic projection identity.
-    pub projection_digest: ContentId,
+    pub projection_digest: VaultProjectionId,
     /// Ordered artifact-root identity.
-    pub bundle_root: ContentId,
+    pub bundle_root: VaultBundleId,
     /// Sorted entries, including README navigation.
     pub entries: Vec<VaultEntry>,
+}
+
+/// Recomputes every byte address and the codec-owned semantic bundle identity.
+///
+/// Tooling that changes entry bytes must call this boundary rather than
+/// duplicating the codec's identity construction.
+pub fn refresh_bundle_identities(bundle: &mut VaultBundle) -> Result<(), VaultCodecError> {
+    for entry in &mut bundle.entries {
+        entry.content_digest = artifact_id(&entry.bytes);
+    }
+    bundle.bundle_root = bundle_digest(
+        bundle.profile,
+        bundle.granularity,
+        &bundle.projection_digest,
+        &bundle.entries,
+    )?;
+    Ok(())
 }
 
 /// Pure configured encoder.
@@ -154,7 +210,7 @@ pub fn verify_v2(
         total_mismatches,
         truncated,
         projection_identity_equal: decoded.declared_projection_equal
-            && projection_digest(expected) == projection_digest(&decoded.projection),
+            && projection_digest(expected)? == projection_digest(&decoded.projection)?,
         claims_closed: decoded.projection.certificate().is_closed(),
         document_codec_exact: decoded.fidelity_exact,
     })
@@ -193,7 +249,7 @@ impl VaultDecoder {
             if !seen_paths.insert(entry.path.clone()) {
                 return Err(VaultCodecError::PathConflict(entry.path.clone()));
             }
-            if content_id(b"sim.index-vault.content.v2\0", &entry.bytes) != entry.content_digest {
+            if artifact_id(&entry.bytes) != entry.content_digest {
                 return Err(VaultCodecError::ContentDigest(entry.path.clone()));
             }
             let text = std::str::from_utf8(&entry.bytes)
@@ -235,8 +291,14 @@ impl VaultDecoder {
         }
         let projection = VaultProjection::from_complete(&rebuilt, bundle.granularity)
             .map_err(|e| VaultCodecError::Reconstruction(e.to_string()))?;
-        let declared_projection_equal = projection_digest(&projection) == bundle.projection_digest;
-        if bundle_digest(&bundle.entries) != bundle.bundle_root {
+        let declared_projection_equal = projection_digest(&projection)? == bundle.projection_digest;
+        if bundle_digest(
+            bundle.profile,
+            bundle.granularity,
+            &bundle.projection_digest,
+            &bundle.entries,
+        )? != bundle.bundle_root
+        {
             return Err(VaultCodecError::BundleDigest);
         }
         Ok(DecodedVault {
@@ -260,7 +322,7 @@ impl VaultEncoder {
         if row_count > MAX_ROWS || projection.notes().len() > MAX_NOTES {
             return Err(VaultCodecError::BoundExceeded("projection"));
         }
-        let projection_digest = projection_digest(projection);
+        let projection_digest = projection_digest(projection)?;
         let mut entries = Vec::with_capacity(projection.notes().len() + 1);
         let paths = projection
             .notes()
@@ -287,7 +349,7 @@ impl VaultEncoder {
                 note_id: note.id.as_str().into(),
                 note_kind: Some(note.kind),
                 claim_families: family_counts(note),
-                content_digest: content_id(b"sim.index-vault.content.v2\0", &bytes),
+                content_digest: artifact_id(&bytes),
             });
         }
         let readme = readme_doc(projection, self.profile, &projection_digest, &paths);
@@ -298,14 +360,19 @@ impl VaultEncoder {
             note_id: "README".into(),
             note_kind: None,
             claim_families: BTreeMap::new(),
-            content_digest: content_id(b"sim.index-vault.content.v2\0", &bytes),
+            content_digest: artifact_id(&bytes),
         });
         entries.sort_by(|a, b| a.path.cmp(&b.path));
         let total: usize = entries.iter().map(|e| e.bytes.len()).sum();
         if total > MAX_BUNDLE_BYTES {
             return Err(VaultCodecError::BoundExceeded("bundle bytes"));
         }
-        let bundle_root = bundle_digest(&entries);
+        let bundle_root = bundle_digest(
+            self.profile.id,
+            projection.granularity(),
+            &projection_digest,
+            &entries,
+        )?;
         Ok(VaultBundle {
             profile: self.profile.id,
             granularity: projection.granularity(),
@@ -344,7 +411,7 @@ fn note_doc(
     note: &VaultNotePlan,
     projection: &VaultProjection,
     profile: VaultProfile,
-    digest: &ContentId,
+    digest: &VaultProjectionId,
     source_path: &str,
     all_paths: &[String],
 ) -> Result<MarkupDoc, VaultCodecError> {
@@ -389,7 +456,7 @@ fn note_doc(
 fn readme_doc(
     projection: &VaultProjection,
     profile: VaultProfile,
-    digest: &ContentId,
+    digest: &VaultProjectionId,
     paths: &[String],
 ) -> MarkupDoc {
     let attrs = common_attrs(profile, projection.granularity(), digest);
@@ -422,7 +489,7 @@ fn readme_doc(
 fn common_attrs(
     profile: VaultProfile,
     granularity: VaultGranularity,
-    digest: &ContentId,
+    digest: &VaultProjectionId,
 ) -> BTreeMap<String, Expr> {
     BTreeMap::from([
         (
@@ -435,7 +502,7 @@ fn common_attrs(
         ),
         (
             "sim_projection_digest".into(),
-            Expr::String(content_text(digest)),
+            Expr::String(content_text(digest.content_id())),
         ),
         (
             "sim_compatibility_evidence".into(),
@@ -467,6 +534,13 @@ fn row_block(row: &IndexRow) -> Result<MarkupBlock, VaultCodecError> {
         code: value,
         span: None,
     })
+}
+
+pub(super) fn row_datum(row: &IndexRow) -> Result<Datum, VaultCodecError> {
+    let mut doc = IndexDoc::public("sim-codec-index-vault/row-identity-v1");
+    push_row(&mut doc, row.clone());
+    Datum::try_from(expr_from_index_doc(&doc))
+        .map_err(|error| VaultCodecError::RowCodec(error.to_string()))
 }
 pub(super) fn row_family(row: &IndexRow) -> &'static str {
     match row {

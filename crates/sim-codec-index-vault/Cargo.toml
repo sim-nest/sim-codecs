@@ -1,6 +1,6 @@
 [package]
 name = "sim-codec-index-vault"
-version = "0.1.1"
+version = "0.2.0"
 edition = "2024"
 license = "MPL-2.0"
 description = "Pure v2 Markdown bundle codec for complete SIM Index vault projections."
