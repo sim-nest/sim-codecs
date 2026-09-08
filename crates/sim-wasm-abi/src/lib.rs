@@ -25,6 +25,7 @@ mod codec;
 mod library;
 #[cfg(feature = "model")]
 pub mod model;
+mod projection;
 mod runtime;
 mod types;
 
@@ -33,6 +34,10 @@ pub use codec::{
     encode_manifest_frame, encode_value_frame,
 };
 pub use library::{WasmLib, load_wasm_lib_from_bytes, register_stub_exports};
+pub use projection::{
+    DeterministicWasmImport, ProjectionModuleAdmission, ProjectionModuleError,
+    ProjectionModulePolicy, WasmiProjectionRuntime, inspect_projection_module,
+};
 pub use runtime::{InMemoryWasmRuntime, WasmiRuntime};
 pub use types::{
     AbiValue, Frame, FrameRef, Handle, WasmDependency, WasmExport, WasmFrameLimits,
