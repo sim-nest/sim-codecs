@@ -286,3 +286,91 @@ impl BinaryWriter {
         Ok(())
     }
 }
+
+/// Rebuilds a validated tree in the same canonical map/set order used by
+/// `write_expr`, moving every expression together with its origin subtree.
+pub(crate) fn canonicalize_origin_tree(tree: &LocatedExprTree) -> LocatedExprTree {
+    let mut children = tree
+        .children
+        .iter()
+        .map(canonicalize_origin_tree)
+        .collect::<Vec<_>>();
+
+    let expr = match &tree.expr {
+        Expr::Nil => Expr::Nil,
+        Expr::Bool(value) => Expr::Bool(*value),
+        Expr::Number(value) => Expr::Number(value.clone()),
+        Expr::Symbol(value) => Expr::Symbol(value.clone()),
+        Expr::Local(value) => Expr::Local(value.clone()),
+        Expr::String(value) => Expr::String(value.clone()),
+        Expr::Bytes(value) => Expr::Bytes(value.clone()),
+        Expr::List(_) => Expr::List(child_exprs(&children)),
+        Expr::Vector(_) => Expr::Vector(child_exprs(&children)),
+        Expr::Map(_) => {
+            let mut entries = children
+                .chunks_exact(2)
+                .map(|pair| (pair[0].clone(), pair[1].clone()))
+                .collect::<Vec<_>>();
+            entries
+                .sort_by_key(|(key, value)| (key.expr.canonical_key(), value.expr.canonical_key()));
+            children = entries
+                .iter()
+                .flat_map(|(key, value)| [key.clone(), value.clone()])
+                .collect();
+            Expr::Map(
+                entries
+                    .iter()
+                    .map(|(key, value)| (key.expr.clone(), value.expr.clone()))
+                    .collect(),
+            )
+        }
+        Expr::Set(_) => {
+            children.sort_by_key(|child| child.expr.canonical_key());
+            Expr::Set(child_exprs(&children))
+        }
+        Expr::Call { .. } => Expr::Call {
+            operator: Box::new(children[0].expr.clone()),
+            args: child_exprs(&children[1..]),
+        },
+        Expr::Infix { operator, .. } => Expr::Infix {
+            operator: operator.clone(),
+            left: Box::new(children[0].expr.clone()),
+            right: Box::new(children[1].expr.clone()),
+        },
+        Expr::Prefix { operator, .. } => Expr::Prefix {
+            operator: operator.clone(),
+            arg: Box::new(children[0].expr.clone()),
+        },
+        Expr::Postfix { operator, .. } => Expr::Postfix {
+            operator: operator.clone(),
+            arg: Box::new(children[0].expr.clone()),
+        },
+        Expr::Block(_) => Expr::Block(child_exprs(&children)),
+        Expr::Quote { mode, .. } => Expr::Quote {
+            mode: *mode,
+            expr: Box::new(children[0].expr.clone()),
+        },
+        Expr::Annotated { annotations, .. } => Expr::Annotated {
+            expr: Box::new(children[0].expr.clone()),
+            annotations: annotations
+                .iter()
+                .zip(children[1..].iter())
+                .map(|((key, _), child)| (key.clone(), child.expr.clone()))
+                .collect(),
+        },
+        Expr::Extension { tag, .. } => Expr::Extension {
+            tag: tag.clone(),
+            payload: Box::new(children[0].expr.clone()),
+        },
+    };
+
+    LocatedExprTree {
+        expr,
+        origin: tree.origin.clone(),
+        children,
+    }
+}
+
+fn child_exprs(children: &[LocatedExprTree]) -> Vec<Expr> {
+    children.iter().map(|child| child.expr.clone()).collect()
+}

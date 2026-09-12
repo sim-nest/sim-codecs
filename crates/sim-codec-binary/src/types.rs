@@ -13,6 +13,40 @@ pub(crate) const FLAG_NONE: u64 = 0;
 pub(crate) const FLAG_ORIGIN: u64 = 1;
 pub(crate) const FLAG_TREE_ORIGIN: u64 = 2;
 
+/// The origin-carrying lane selected by a binary frame's wire flags.
+///
+/// Canonical decoders require callers to name the expected lane so a frame in
+/// one valid lane cannot be substituted for a byte-distinct frame in another
+/// lane that happens to recover the same expression tree.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum BinaryFrameLane {
+    /// A bare expression frame with no source-origin payload.
+    Bare,
+    /// A located frame carrying one origin for the root expression.
+    Located,
+    /// A located-tree frame carrying an optional origin for every node.
+    LocatedTree,
+}
+
+impl BinaryFrameLane {
+    pub(crate) fn from_flags(flags: u64) -> Option<Self> {
+        match flags {
+            FLAG_NONE => Some(Self::Bare),
+            FLAG_ORIGIN => Some(Self::Located),
+            FLAG_TREE_ORIGIN => Some(Self::LocatedTree),
+            _ => None,
+        }
+    }
+
+    pub(crate) const fn wire_name(self) -> &'static str {
+        match self {
+            Self::Bare => "bare",
+            Self::Located => "located",
+            Self::LocatedTree => "located-tree",
+        }
+    }
+}
+
 /// Fail-closed bounds applied while decoding an untrusted binary frame.
 ///
 /// Every count and length read from a frame is checked against these limits

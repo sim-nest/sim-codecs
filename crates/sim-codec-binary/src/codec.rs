@@ -16,8 +16,11 @@ use sim_kernel::{
 
 use crate::cookbook::{BinaryRoundtripReport, roundtrip_report_symbol};
 use crate::reader::BinaryReader;
-use crate::writer::BinaryWriter;
-use crate::{BinaryFrame, DecodeLimits, FLAG_NONE, FLAG_ORIGIN, FLAG_TREE_ORIGIN, FrameTables};
+use crate::writer::{BinaryWriter, canonicalize_origin_tree};
+use crate::{
+    BinaryFrame, BinaryFrameLane, DecodeLimits, FLAG_NONE, FLAG_ORIGIN, FLAG_TREE_ORIGIN,
+    FrameTables,
+};
 
 /// Binary codec runtime object that round-trips kernel `Expr` values as compact
 /// tagged frames.
@@ -142,6 +145,8 @@ pub fn encode_located_tree_frame(
     include_origin: bool,
 ) -> Result<BinaryFrame> {
     validate_expr_tree(sim_kernel::CodecId(0), tree)?;
+    let tree = canonicalize_origin_tree(tree);
+    validate_expr_tree(sim_kernel::CodecId(0), &tree)?;
     let tables = FrameTables::collect(&tree.expr);
     let mut writer = BinaryWriter::new(tables)?;
     writer.flags = if include_origin {
@@ -152,7 +157,7 @@ pub fn encode_located_tree_frame(
     writer.write_header()?;
     writer.write_expr(&tree.expr)?;
     if writer.flags & FLAG_TREE_ORIGIN != 0 {
-        writer.write_origin_tree(tree)?;
+        writer.write_origin_tree(&tree)?;
     }
     Ok(BinaryFrame(writer.bytes))
 }
@@ -202,6 +207,64 @@ pub fn decode_located_tree_frame_with_limits(
     bytes: &[u8],
     limits: DecodeLimits,
 ) -> Result<(FrameTables, LocatedExprTree)> {
+    decode_located_tree_frame_parts(codec, bytes, limits).map(|(tables, tree, _)| (tables, tree))
+}
+
+/// Decodes one frame under `limits` and requires its bytes to be the canonical
+/// output of the caller-selected `expected_lane`.
+///
+/// This is the strict boundary for callers that bind identity to transport
+/// bytes. It first performs the ordinary bounded decode, including all syntax
+/// and trailing-data checks. It then refuses a frame whose typed lane differs
+/// from `expected_lane`, re-encodes the recovered value through that exact
+/// lane's canonical writer, and accepts only a byte-identical result.
+/// Semantically equivalent frames in another lane, or with non-minimal
+/// integers, unused or differently ordered side-table entries, or
+/// non-canonical collection ordering, are refused.
+///
+/// The returned tables are those decoded from the accepted frame. Because the
+/// byte comparison succeeded, they are also exactly the tables selected by the
+/// expected writer for the recovered value.
+pub fn decode_canonical_located_tree_frame_with_limits(
+    codec: sim_kernel::CodecId,
+    bytes: &[u8],
+    expected_lane: BinaryFrameLane,
+    limits: DecodeLimits,
+) -> Result<(FrameTables, LocatedExprTree)> {
+    let (tables, tree, flags) = decode_located_tree_frame_parts(codec, bytes, limits)?;
+    let actual_lane = BinaryFrameLane::from_flags(flags).ok_or_else(|| Error::CodecError {
+        codec,
+        message: format!("binary frame flags {flags} have no canonical writer lane"),
+    })?;
+    if actual_lane != expected_lane {
+        return Err(Error::CodecError {
+            codec,
+            message: format!(
+                "binary frame lane {} differs from expected {}",
+                actual_lane.wire_name(),
+                expected_lane.wire_name()
+            ),
+        });
+    }
+    let canonical = match actual_lane {
+        BinaryFrameLane::Bare => encode_frame(&tree.expr)?,
+        BinaryFrameLane::Located => encode_located_frame(&tree.located(), true)?,
+        BinaryFrameLane::LocatedTree => encode_located_tree_frame(&tree, true)?,
+    };
+    if canonical.0.as_slice() != bytes {
+        return Err(Error::CodecError {
+            codec,
+            message: "binary frame is not canonical for decoded content".to_owned(),
+        });
+    }
+    Ok((tables, tree))
+}
+
+fn decode_located_tree_frame_parts(
+    codec: sim_kernel::CodecId,
+    bytes: &[u8],
+    limits: DecodeLimits,
+) -> Result<(FrameTables, LocatedExprTree, u64)> {
     let mut reader = BinaryReader::new(codec, bytes, limits)?;
     let tables = reader.read_header()?;
     let expr = reader.read_expr()?;
@@ -219,7 +282,7 @@ pub fn decode_located_tree_frame_with_limits(
             message: "trailing bytes after binary payload".to_owned(),
         });
     }
-    Ok((tables, tree))
+    Ok((tables, tree, reader.flags))
 }
 
 /// [`Lib`] that registers the binary codec with the runtime.

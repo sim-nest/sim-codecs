@@ -13,7 +13,8 @@ use sim_kernel::{
 use sim_value::access::{field as map_field, field_str as field_string};
 
 use crate::{
-    BinaryCodecLib, BinaryFrame, DecodeLimits, decode_frame, decode_located_frame,
+    BinaryCodecLib, BinaryFrame, BinaryFrameLane, DecodeLimits,
+    decode_canonical_located_tree_frame_with_limits, decode_frame, decode_located_frame,
     decode_located_tree_frame, decode_located_tree_frame_with_limits, encode_frame,
     encode_located_frame, encode_located_tree_frame,
 };
@@ -132,6 +133,9 @@ fn frame_is_canonical_for_map_and_set() {
     ]);
     assert_eq!(encode_frame(&left).unwrap(), encode_frame(&right).unwrap());
 }
+
+#[path = "tests/canonical.rs"]
+mod canonical;
 
 #[test]
 fn full_expr_surface_roundtrips() {
