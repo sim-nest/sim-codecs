@@ -1,5 +1,8 @@
 use super::*;
 
+#[path = "canonical/origin.rs"]
+mod origin;
+
 fn strict_decode(
     lane: BinaryFrameLane,
     bytes: &[u8],
@@ -117,9 +120,22 @@ fn strict_canonical_decode_refuses_root_origin_lane_substitution() {
         origin: Some(origin.clone()),
     };
     let tree = LocatedExprTree::without_children(Expr::Nil, Some(origin));
+    let BinaryFrame(bare_bytes) = encode_frame(&Expr::Nil).unwrap();
     let BinaryFrame(located_bytes) = encode_located_frame(&located, true).unwrap();
     let BinaryFrame(tree_bytes) = encode_located_tree_frame(&tree, true).unwrap();
 
+    assert_eq!(
+        strict_decode(BinaryFrameLane::Bare, &bare_bytes)
+            .unwrap()
+            .1
+            .expr,
+        strict_decode(BinaryFrameLane::Located, &located_bytes)
+            .unwrap()
+            .1
+            .expr
+    );
+    assert_wrong_lane(BinaryFrameLane::Bare, &located_bytes, "located", "bare");
+    assert_wrong_lane(BinaryFrameLane::Located, &bare_bytes, "bare", "located");
     assert_ne!(located_bytes, tree_bytes);
     assert_eq!(
         strict_decode(BinaryFrameLane::Located, &located_bytes).unwrap(),
@@ -137,101 +153,6 @@ fn strict_canonical_decode_refuses_root_origin_lane_substitution() {
         "located-tree",
         "located",
     );
-}
-
-#[test]
-fn tree_writer_keeps_reordered_set_items_with_their_origins() {
-    let tree = LocatedExprTree {
-        expr: Expr::Set(vec![
-            Expr::String("z".to_owned()),
-            Expr::String("a".to_owned()),
-        ]),
-        origin: None,
-        children: vec![
-            LocatedExprTree::without_children(
-                Expr::String("z".to_owned()),
-                Some(sample_origin("z.sim", 10)),
-            ),
-            LocatedExprTree::without_children(
-                Expr::String("a".to_owned()),
-                Some(sample_origin("a.sim", 20)),
-            ),
-        ],
-    };
-
-    let BinaryFrame(bytes) = encode_located_tree_frame(&tree, true).unwrap();
-    let (_, decoded) = strict_decode(BinaryFrameLane::LocatedTree, &bytes).unwrap();
-    assert_eq!(
-        decoded.expr,
-        Expr::Set(vec![
-            Expr::String("a".to_owned()),
-            Expr::String("z".to_owned())
-        ])
-    );
-    assert_eq!(decoded.children[0].expr, Expr::String("a".to_owned()));
-    assert_eq!(
-        decoded.children[0].origin.as_ref().unwrap().source.0,
-        "a.sim"
-    );
-    assert_eq!(decoded.children[1].expr, Expr::String("z".to_owned()));
-    assert_eq!(
-        decoded.children[1].origin.as_ref().unwrap().source.0,
-        "z.sim"
-    );
-    assert_eq!(encode_located_tree_frame(&decoded, true).unwrap().0, bytes);
-}
-
-#[test]
-fn tree_writer_keeps_reordered_map_entries_with_their_origins() {
-    let tree = LocatedExprTree {
-        expr: Expr::Map(vec![
-            (Expr::String("z".to_owned()), Expr::Bool(false)),
-            (Expr::String("a".to_owned()), Expr::Bool(true)),
-        ]),
-        origin: None,
-        children: vec![
-            LocatedExprTree::without_children(
-                Expr::String("z".to_owned()),
-                Some(sample_origin("key-z.sim", 10)),
-            ),
-            LocatedExprTree::without_children(
-                Expr::Bool(false),
-                Some(sample_origin("value-z.sim", 11)),
-            ),
-            LocatedExprTree::without_children(
-                Expr::String("a".to_owned()),
-                Some(sample_origin("key-a.sim", 20)),
-            ),
-            LocatedExprTree::without_children(
-                Expr::Bool(true),
-                Some(sample_origin("value-a.sim", 21)),
-            ),
-        ],
-    };
-
-    let BinaryFrame(bytes) = encode_located_tree_frame(&tree, true).unwrap();
-    let (_, decoded) = strict_decode(BinaryFrameLane::LocatedTree, &bytes).unwrap();
-    assert_eq!(decoded.children[0].expr, Expr::String("a".to_owned()));
-    assert_eq!(
-        decoded.children[0].origin.as_ref().unwrap().source.0,
-        "key-a.sim"
-    );
-    assert_eq!(decoded.children[1].expr, Expr::Bool(true));
-    assert_eq!(
-        decoded.children[1].origin.as_ref().unwrap().source.0,
-        "value-a.sim"
-    );
-    assert_eq!(decoded.children[2].expr, Expr::String("z".to_owned()));
-    assert_eq!(
-        decoded.children[2].origin.as_ref().unwrap().source.0,
-        "key-z.sim"
-    );
-    assert_eq!(decoded.children[3].expr, Expr::Bool(false));
-    assert_eq!(
-        decoded.children[3].origin.as_ref().unwrap().source.0,
-        "value-z.sim"
-    );
-    assert_eq!(encode_located_tree_frame(&decoded, true).unwrap().0, bytes);
 }
 
 #[test]
