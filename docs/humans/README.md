@@ -4891,6 +4891,11 @@ Specimen `spec-test/sim-codecs/crates/sim-codec-binary/src/tests` is checked by 
 Source `crates/sim-codec-binary/src/tests.rs`:
 
 ```rust
+// SPDX-License-Identifier: MPL-2.0
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
 use std::sync::Arc;
 
 // conformance: wire protocol grammar preserves binary frames.
@@ -4906,7 +4911,8 @@ use sim_kernel::{
 use sim_value::access::{field as map_field, field_str as field_string};
 
 use crate::{
-    BinaryCodecLib, BinaryFrame, DecodeLimits, decode_frame, decode_located_frame,
+    BinaryCodecLib, BinaryFrame, BinaryFrameLane, DecodeLimits,
+    decode_canonical_located_tree_frame_with_limits, decode_frame, decode_located_frame,
     decode_located_tree_frame, decode_located_tree_frame_with_limits, encode_frame,
     encode_located_frame, encode_located_tree_frame,
 };
@@ -5025,6 +5031,9 @@ fn frame_is_canonical_for_map_and_set() {
     ]);
     assert_eq!(encode_frame(&left).unwrap(), encode_frame(&right).unwrap());
 }
+
+#[path = "tests/canonical.rs"]
+mod canonical;
 
 #[test]
 fn full_expr_surface_roundtrips() {
