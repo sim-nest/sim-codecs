@@ -1,3 +1,8 @@
+// SPDX-License-Identifier: MPL-2.0
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
 //! Binary wire codec for the SIM runtime.
 //!
 //! This crate encodes and decodes kernel `Expr` values as a compact, tagged
@@ -9,8 +14,11 @@
 //! The public surface is the [`BinaryCodec`] runtime object (registered via
 //! [`BinaryCodecLib`]) together with the free `encode_*` / `decode_*` frame
 //! functions and the frame value types ([`BinaryFrame`], [`BinaryTag`],
-//! [`FrameTables`], [`DecodeLimits`]). Decoding is bounded by [`DecodeLimits`]
-//! to fail closed on hostile or malformed input.
+//! [`BinaryFrameLane`], [`FrameTables`], [`DecodeLimits`]). Decoding is bounded
+//! by [`DecodeLimits`] to fail closed on hostile or malformed input.
+//! [`decode_canonical_located_tree_frame_with_limits`] additionally requires a
+//! caller-selected typed lane, re-encodes the bounded result, and accepts only
+//! the one byte-identical canonical frame for that lane.
 //!
 //! # Examples
 //!
@@ -86,11 +94,11 @@ mod writer;
 pub(crate) use types::{FLAG_NONE, FLAG_ORIGIN, FLAG_TREE_ORIGIN, MAGIC, VERSION};
 
 pub use codec::{
-    BinaryCodec, BinaryCodecLib, decode_frame, decode_located_frame, decode_located_tree_frame,
-    decode_located_tree_frame_with_limits, encode_frame, encode_located_frame,
-    encode_located_tree_frame,
+    BinaryCodec, BinaryCodecLib, decode_canonical_located_tree_frame_with_limits, decode_frame,
+    decode_located_frame, decode_located_tree_frame, decode_located_tree_frame_with_limits,
+    encode_frame, encode_located_frame, encode_located_tree_frame,
 };
-pub use types::{BinaryFrame, BinaryTag, DecodeLimits, FrameTables};
+pub use types::{BinaryFrame, BinaryFrameLane, BinaryTag, DecodeLimits, FrameTables};
 
 /// Cookbook recipes for this codec, embedded at build time.
 pub static RECIPES: sim_cookbook::EmbeddedDir =
