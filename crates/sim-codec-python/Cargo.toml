@@ -12,7 +12,7 @@ description = "Bounded, lossless Python 3.14 source frontend for SIM"
 [dependencies]
 serde_json = "1"
 sim-codec = { version = "0.3.0", path = "../sim-codec" }
-sim-codec-json = { version = "0.4.0", path = "../sim-codec-json" }
+sim-codec-json = { version = "0.4.1", path = "../sim-codec-json" }
 sim-cookbook = { version = "0.4.0" }
 sim-codec-pratt = { path = "../sim-codec-pratt", version = "0.3.0" }
 sim-kernel = { version = "0.4.0" }
