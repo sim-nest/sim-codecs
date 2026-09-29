@@ -11,7 +11,7 @@ homepage = "https://github.com/sim-nest/sim-codecs"
 
 [dependencies]
 sim-codec = { version = "0.3.0", path = "../sim-codec" }
-sim-codec-json = { version = "0.4.0", path = "../sim-codec-json" }
+sim-codec-json = { version = "0.4.1", path = "../sim-codec-json" }
 sim-kernel = { version = "0.4.0" }
 sim-lib-search-core = { version = "0.2.0" }
 sim-lib-web-core = { version = "0.2.0" }

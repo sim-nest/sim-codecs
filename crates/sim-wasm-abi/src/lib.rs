@@ -26,6 +26,7 @@ mod library;
 #[cfg(feature = "model")]
 pub mod model;
 mod projection;
+mod projection_boundary;
 mod runtime;
 mod types;
 
@@ -37,6 +38,9 @@ pub use library::{WasmLib, load_wasm_lib_from_bytes, register_stub_exports};
 pub use projection::{
     DeterministicWasmImport, ProjectionModuleAdmission, ProjectionModuleError,
     ProjectionModulePolicy, WasmiProjectionRuntime, inspect_projection_module,
+};
+pub use projection_boundary::{
+    ProjectionWasmBoundaryError, VerifiedProjectionWasmBoundary, verify_projection_wasm_boundary,
 };
 pub use runtime::{InMemoryWasmRuntime, WasmiRuntime};
 pub use types::{

@@ -1,6 +1,6 @@
 [package]
 name = "sim-codec-binary-base64"
-version = "0.3.0"
+version = "0.3.1"
 edition = "2024"
 license = "MPL-2.0"
 description = "SIM workspace package for sim codec binary base64."
@@ -12,7 +12,7 @@ homepage = "https://github.com/sim-nest/sim-codecs"
 [dependencies]
 sim-cookbook = { version = "0.4.0" }
 sim-codec = { version = "0.3.0", path = "../sim-codec" }
-sim-codec-binary = { version = "0.4.0", path = "../sim-codec-binary" }
+sim-codec-binary = { version = "0.4.1", path = "../sim-codec-binary" }
 sim-kernel = { version = "0.4.0" }
 sim-value = { version = "0.4.0" }
 
