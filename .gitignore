@@ -16,3 +16,7 @@
 
 # generated simctl caches (docsite, simdoc, brochure previews)
 .sim/
+
+# Python test bytecode is regenerated from the tracked test source.
+__pycache__/
+*.py[cod]
